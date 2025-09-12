@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.hardware;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -13,28 +13,40 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 public class Cam extends SubsystemBase {
     Limelight3A limelight;
     Order order;
-    public Cam(HardwareMap hardwareMap){
+    String teamColor;
+    public Cam(HardwareMap hardwareMap, String team){ // 1 = red team 2 = blue team
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         limelight.setPollRateHz(100);
         limelight.start();
+        teamColor = team;
     }
     public void setOrder(Order order1){
         order = order1;
     }
     public double getFiducialAngle(){
-        return limelight.getLatestResult().getTx();
+        if (limelight.getLatestResult().isValid() && order != null)
+        {
+            return limelight.getLatestResult().getTx();
+        }
+        return 99.9;
     }
     public Limelight3A getLimelight() {
         return limelight;
     }
-    public Order getOrder(){
+    public Order getOrder() {
         return order;
+    }
+    public int getTeam(){
+        return teamColor.equalsIgnoreCase("red") ? 1:2;
     }
     public Pose getBotPose(){
         Pose3D pose = limelight.getLatestResult().getBotpose();
         return new Pose(pose.getPosition().x,pose.getPosition().y,pose.getPosition().z);
     }
-    public class getMotif extends CommandBase{
+    public getMotif getMotif(){
+        return new getMotif(this);
+    }
+    public static class getMotif extends CommandBase{
         Cam camera;
         Order order;
         public getMotif(Cam temp){
@@ -64,9 +76,10 @@ public class Cam extends SubsystemBase {
         }
         public void end(boolean i){
             camera.setOrder(order);
+            camera.limelight.pipelineSwitch(camera.getTeam());
         }
     }
-    enum Order{
+    public enum Order{
         GPP,
         PGP,
         PPG
