@@ -51,7 +51,7 @@ public class Cam extends SubsystemBase {
         Order order;
         public getMotif(Cam temp){
             camera = temp;
-            addRequirements();
+            addRequirements(camera);
         }
         public void initialize(){
             camera.limelight.pipelineSwitch(3);

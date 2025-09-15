@@ -32,6 +32,22 @@ public class Drive extends SubsystemBase {
         return new HoldPointCommand(follower,new Pose(x,y,z),true);
     }
 
+    public Follower getFollower() {
+        return follower;
+    }
+    public Pose getPose(){
+        return follower.getPose();
+    }
+    public double getX(){
+        return follower.getPose().getX();
+    }
+    public double getY(){
+        return follower.getPose().getY();
+    }
+    public double getZ(){
+        return follower.getPose().getHeading();
+    }
+
     @Override
     public void periodic() {
         follower.update();

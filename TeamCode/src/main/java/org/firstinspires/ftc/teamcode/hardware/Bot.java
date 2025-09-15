@@ -54,7 +54,8 @@ public class Bot extends Robot {
 
         @Override
         public boolean isFinished() {
-            return camera.getFiducialAngle() < sensitivity || camera.getFiducialAngle() > -sensitivity;
+            return camera.getFiducialAngle() < sensitivity || camera.getFiducialAngle() > -sensitivity
+                    && !drive.follower.isBusy();
         }
     }
 }
