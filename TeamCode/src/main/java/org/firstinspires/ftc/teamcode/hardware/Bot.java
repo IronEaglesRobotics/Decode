@@ -1,13 +1,9 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.Robot;
-
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 public class Bot extends Robot {
     Cam camera;
