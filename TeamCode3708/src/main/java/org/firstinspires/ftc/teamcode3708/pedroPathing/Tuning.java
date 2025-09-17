@@ -32,7 +32,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
  * @author Baron Henderson - 20077 The Indubitables
  * @version 1.0, 6/26/2025
  */
-@Config
+//@Config
 @TeleOp(name = "Tuning", group = "Pedro Pathing")
 public class Tuning extends SelectableOpMode {
     public static Follower follower;

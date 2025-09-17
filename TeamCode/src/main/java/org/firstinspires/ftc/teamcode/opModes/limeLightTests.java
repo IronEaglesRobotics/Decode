@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode.opModes;
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -14,6 +15,8 @@ public class limeLightTests extends OpMode {
     @Override
     public void init() {
         robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red");
+        robot.getCamera().getLimelight().pipelineSwitch(2);
+        FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(), 30);
     }
 
     @Override
@@ -25,7 +28,7 @@ public class limeLightTests extends OpMode {
             if (pose != null) {
                 double x = pose.getX();
                 double y = pose.getY();
-                telemetry.addData("MT2 Location:", "(" + x + ", " + y + ")");
+                telemetry.addData("tx: ", robot.getCamera().getFiducialAngle());
             }
         }
     }
