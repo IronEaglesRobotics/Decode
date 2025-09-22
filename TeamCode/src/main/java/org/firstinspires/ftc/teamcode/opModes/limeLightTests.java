@@ -15,8 +15,12 @@ public class limeLightTests extends OpMode {
     @Override
     public void init() {
         robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red");
-        robot.getCamera().getLimelight().pipelineSwitch(2);
+        //robot.getCamera().getLimelight().pipelineSwitch(2);
         FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(), 30);
+    }
+    @Override
+    public void start(){
+        robot.getCamera().getMotif().schedule();
     }
 
     @Override
@@ -31,5 +35,6 @@ public class limeLightTests extends OpMode {
                 telemetry.addData("tx: ", robot.getCamera().getFiducialAngle());
             }
         }
+        telemetry.addData("motif",robot.getCamera().getOrder());
     }
 }

@@ -14,7 +14,7 @@ public class Cam extends SubsystemBase {
     Limelight3A limelight;
     Order order;
     String teamColor;
-    public Cam(HardwareMap hardwareMap, String team){ // 1 = red team 2 = blue team
+    public Cam(HardwareMap hardwareMap, String team){
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         limelight.setPollRateHz(100);
         limelight.start();
