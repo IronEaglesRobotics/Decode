@@ -24,11 +24,11 @@ public class Cam extends SubsystemBase {
         order = order1;
     }
     public double getFiducialAngle(){
-        if (limelight.getLatestResult().isValid() && order != null)
-        {
+//        if (limelight.getLatestResult().isValid() && order != null)
+//        {
             return limelight.getLatestResult().getTx();
-        }
-        return 99.9;
+//        }
+//        return 99.9;
     }
     public Limelight3A getLimelight() {
         return limelight;
