@@ -36,7 +36,7 @@ public class Bot extends Robot {
 
         @Override
         public void initialize() {
-            drive.moveTo(0,0,0).schedule();
+            drive.moveTo(-60,12,30).schedule();
         }
 
         @Override

@@ -21,7 +21,9 @@ public class Drive extends SubsystemBase {
         return new FollowPathCommand(follower,paths);
     }
     public FollowPathCommand moveTo(int x, int y, int z){
-        return new FollowPathCommand(follower,new Path(new BezierLine(follower.getPose(),new Pose(x,y,z))));
+        Path path = new Path(new BezierLine(follower.getPose(),new Pose(x,y,Math.toRadians(z))));
+        path.setConstantHeadingInterpolation(Math.toRadians(z));
+        return new FollowPathCommand(follower,path);
     }
     public HoldPointCommand hold(Pose pose){
         return new HoldPointCommand(follower,pose,true);
