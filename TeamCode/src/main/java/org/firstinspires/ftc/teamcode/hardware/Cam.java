@@ -12,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 public class Cam extends SubsystemBase {
     Limelight3A limelight;
-    Order order;
+    int order;
     String teamColor;
     public Cam(HardwareMap hardwareMap, String team){
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
@@ -21,7 +21,7 @@ public class Cam extends SubsystemBase {
         limelight.start();
         teamColor = team;
     }
-    public void setOrder(Order order1){
+    public void setOrder(int order1){
         order = order1;
     }
     public double getFiducialAngle(){
@@ -34,7 +34,7 @@ public class Cam extends SubsystemBase {
     public Limelight3A getLimelight() {
         return limelight;
     }
-    public Order getOrder() {
+    public int getOrder() {
         return order;
     }
     public int getTeam(){
@@ -49,7 +49,7 @@ public class Cam extends SubsystemBase {
     }
     public static class getMotif extends CommandBase{
         Cam camera;
-        Order order;
+        int order = -1;
         public getMotif(Cam temp){
             camera = temp;
             addRequirements(camera);
@@ -62,18 +62,18 @@ public class Cam extends SubsystemBase {
             for (LLResultTypes.FiducialResult fiducial : result.getFiducialResults())
             {
                 if (fiducial.getFiducialId() == 21){
-                    order = Order.GPP;
+                    order = 0;
                 }
                 if (fiducial.getFiducialId() == 22){
-                    order = Order.PGP;
+                    order = 1;
                 }
                 if (fiducial.getFiducialId() == 23){
-                    order = Order.PPG;
+                    order = 2;
                 }
             }
         }
         public boolean isFinished(){
-            return camera.limelight.getLatestResult() != null && order != null;
+            return camera.limelight.getLatestResult() != null && order != -1;
         }
         public void end(boolean i){
             camera.setOrder(order);

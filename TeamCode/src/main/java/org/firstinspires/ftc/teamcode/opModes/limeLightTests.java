@@ -37,5 +37,8 @@ public class limeLightTests extends CommandOpMode {
         if (robot.getCamera().getFiducialAngle() > .2 && robot.getCamera().getFiducialAngle() < -.2){
             robot.getDrive().getFollower().turn(robot.getCamera().getFiducialAngle(),false);
         }
+        telemetry.addData("pos: ",robot.getCamera().getBotPose());
+        telemetry.addData("angle: ",robot.getCamera().getFiducialAngle());
+        telemetry.update();
     }
 }
