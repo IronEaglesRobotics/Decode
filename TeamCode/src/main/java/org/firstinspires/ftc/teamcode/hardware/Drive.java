@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.pedroCommand.HoldPointCommand;
 
@@ -35,7 +36,7 @@ public class Drive extends SubsystemBase {
         path.setConstantHeadingInterpolation(Math.toRadians(z));
         return new FollowPathCommand(follower, path, speed);
     }
-        public HoldPointCommand hold(Pose pose){
+    public HoldPointCommand hold(Pose pose){
         return new HoldPointCommand(follower,pose,true);
     }
     public HoldPointCommand hold(int x, int y, int z){
@@ -67,6 +68,9 @@ public class Drive extends SubsystemBase {
 
     public Follower getFollower() {
         return follower;
+    }
+    public void setVector(GamepadEx gamepad){
+        follower.setTeleOpDrive(gamepad.getLeftY(),gamepad.getLeftX(),gamepad.getRightX(),true);
     }
     public Pose getPose(){
         return follower.getPose();
