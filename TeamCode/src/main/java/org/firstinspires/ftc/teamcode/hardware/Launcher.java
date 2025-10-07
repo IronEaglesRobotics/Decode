@@ -14,6 +14,8 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 import java.util.Collections;
 import java.util.Set;
 import java.util.Timer;
@@ -44,8 +46,13 @@ public class Launcher extends SubsystemBase {
         chambers[2] = Color.Nothing;
     }
     public Color getColor(RevColorSensorV3 cs){
-        // Todo: color algorith
-        return Color.Purple; // temp
+        if (cs.green() > (cs.red() + cs.blue()) * .9) {
+            return Color.Green;
+        }
+        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < .8) {
+            return Color.Purple;
+        }
+        return Color.Nothing;
     }
     public Command shoot() {
         return new Command() {

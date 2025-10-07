@@ -32,7 +32,7 @@ public class colorsensingtest extends OpMode {
         double distance = colorSensor.getDistance(DistanceUnit.INCH);
         boolean isGreen = green > (red + blue) * .9;
         boolean isPurple = !isGreen && distance < 1.5;
-        boolean isNothing = distance > 1.5;
+        boolean isNothing = distance > .8;
         telemetry.addData("Red: ", red);
         telemetry.addData("Blue: ", blue);
         telemetry.addData("Green: ", green);
