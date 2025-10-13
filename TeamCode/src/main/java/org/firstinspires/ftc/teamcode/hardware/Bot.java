@@ -28,7 +28,7 @@ public class Bot extends Robot {
 
     public class Aim extends CommandBase{
         Bot bot;
-        double sensitivity = .3;
+        double sensitivity = 1.5;
         public Aim(Bot robot){
             bot = robot;
             addRequirements(bot.camera, bot.drive);
@@ -42,7 +42,7 @@ public class Bot extends Robot {
         public void execute() {
             if(!drive.follower.isBusy()){
                 if (camera.getFiducialAngle() < sensitivity && camera.getFiducialAngle() > -sensitivity){
-                    drive.follower.turn(Math.toRadians(camera.getFiducialAngle()),false);
+                    drive.follower.turn(Math.toRadians(camera.getFiducialAngle()*(10-camera.getFiducialAngle())),false);
                 }
             }
         }

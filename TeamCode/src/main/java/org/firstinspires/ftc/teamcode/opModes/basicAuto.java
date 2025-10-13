@@ -35,14 +35,14 @@ public class basicAuto extends CommandOpMode {
                     robot.getCamera().getMotif()
                             .whenFinished(()->telemetry.addData("motif",robot.getCamera().getOrder()))
                             .whenFinished(()->telemetry.update()),
-                    robot.getDrive().moveTo(-50,12,20),//launch
+                    robot.aim(),//launch
                     new WaitCommand(1000),
                     robot.getDrive().moveTo(-12,34,90),//pre pickup 1
                     new WaitCommand(1000),
                     robot.getDrive().moveToWithSpeed(-21,43,90, .1),//pick up
                     new WaitCommand(1000),
-                    robot.getDrive().turn(90),// hit gate
-                    new WaitCommand(2000),
+//                    robot.getDrive().turn(90),// hit gate
+//                    new WaitCommand(2000),
                     robot.getDrive().moveTo(-50,12,20),// return to launch
                     new WaitCommand(1000),
                     robot.getDrive().moveTo(-33,34,90), //pre pickup 2

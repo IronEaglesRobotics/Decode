@@ -26,7 +26,7 @@ public class TeleOp extends OpMode {
 
     @Override
     public void loop() {
-        robot.getDrive().setVector(controller1);
+        robot.getDrive().setVector();
         controller1.readButtons();
 
         controller1.getGamepadButton(GamepadKeys.Button.B)
