@@ -19,9 +19,16 @@ import java.util.Set;
 
 public class Drive extends SubsystemBase {
     Follower follower;
+    GamepadEx controller;
     public Drive(HardwareMap hardwareMap, Pose start){
         follower = Constants.createFollower(hardwareMap);
         follower.setPose(start);
+    }
+    public Drive(HardwareMap hardwareMap, Pose start, GamepadEx gamepadEx){
+        follower = Constants.createFollower(hardwareMap);
+        follower.setPose(start);
+        controller = gamepadEx;
+        follower.startTeleopDrive(true);
     }
     public FollowPathCommand pathCommand(Path paths){
         return new FollowPathCommand(follower,paths);
@@ -69,8 +76,8 @@ public class Drive extends SubsystemBase {
     public Follower getFollower() {
         return follower;
     }
-    public void setVector(GamepadEx gamepad){
-        follower.setTeleOpDrive(gamepad.getLeftY(),gamepad.getLeftX(),gamepad.getRightX(),true);
+    public void setVector(){
+        follower.setTeleOpDrive(controller.getLeftY(),controller.getLeftX(),controller.getRightX(),true);
     }
     public Pose getPose(){
         return follower.getPose();

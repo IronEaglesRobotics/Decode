@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opModes;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.telemetry.SelectScope;
 import com.pedropathing.telemetry.SelectableOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.teamcode.hardware.Intake;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Autonomous(name =  "Auto")
 public class multiAuto extends SelectableOpMode {
     public multiAuto() {
         super("Select a color", s -> {
@@ -107,7 +109,10 @@ class hyperAuto extends CommandOpMode{
 
 
     public hyperAuto(String color, boolean isFar, int lines){
-
+        telemetry.addData("color: ",color);
+        telemetry.addData("starting far: ",isFar);
+        telemetry.addData("lines: ", lines);
+        telemetry.update();
     }
 
 

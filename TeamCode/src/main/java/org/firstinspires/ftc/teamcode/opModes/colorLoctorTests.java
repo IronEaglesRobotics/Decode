@@ -23,12 +23,14 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import android.util.Size;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 import org.firstinspires.ftc.vision.opencv.ColorRange;
@@ -59,7 +61,6 @@ import java.util.List;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@Disabled
 @TeleOp(name = "Concept: Vision Color-Locator", group = "Concept")
 public class colorLoctorTests extends LinearOpMode
 {
@@ -109,14 +110,14 @@ public class colorLoctorTests extends LinearOpMode
         ColorBlobLocatorProcessor greenColorLocator = new ColorBlobLocatorProcessor.Builder()
                 .setTargetColorRange(ColorRange.ARTIFACT_GREEN)         // use a predefined color match
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
-                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
+                .setRoi(ImageRegion.asUnityCenterCoordinates(-1, 1, 1, -1))  // search central 1/4 of camera view
                 .setDrawContours(true)                        // Show contours on the Stream Preview
                 .setBlurSize(5)                               // Smooth the transitions between different colors in image
                 .build();
         ColorBlobLocatorProcessor purpleColorLocator = new ColorBlobLocatorProcessor.Builder()
                 .setTargetColorRange(ColorRange.ARTIFACT_PURPLE)         // use a predefined color match
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
-                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
+                .setRoi(ImageRegion.asUnityCenterCoordinates(-1, 1, 1, -1))  // search central 1/4 of camera view
                 .setDrawContours(true)                        // Show contours on the Stream Preview
                 .setBlurSize(5)                               // Smooth the transitions between different colors in image
                 .build();
@@ -206,6 +207,7 @@ public class colorLoctorTests extends LinearOpMode
                 telemetry.addLine(String.format("%5d  %4.2f  %5.2f %3d %5.3f (%3d,%3d)",
                           b.getContourArea(), b.getDensity(), b.getAspectRatio(), (int) b.getArcLength(), b.getCircularity(), (int) boxFit.center.x, (int) boxFit.center.y));
             }
+            FtcDashboard.getInstance().startCameraStream(portal,30);
 
             telemetry.update();
             sleep(50);
