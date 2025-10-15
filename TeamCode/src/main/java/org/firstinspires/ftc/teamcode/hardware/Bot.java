@@ -8,9 +8,13 @@ import com.seattlesolvers.solverslib.command.Robot;
 public class Bot extends Robot {
     Cam camera;
     Drive drive;
+    Launcher launcher;
+    Intake intake;
     public Bot init(HardwareMap hardwareMap, Pose start, String color){
         camera = new Cam(hardwareMap,color);
         drive = new Drive(hardwareMap, start);
+        launcher = new Launcher(hardwareMap);
+        intake = new Intake(hardwareMap);
         return this;
     }
 
@@ -22,9 +26,19 @@ public class Bot extends Robot {
         return drive;
     }
 
+    public Intake getIntake() {
+        return intake;
+    }
+
+    public Launcher getLauncher() {
+        return launcher;
+    }
+
     public Aim aim(){
         return new Aim(this);
     }
+
+
 
     public class Aim extends CommandBase{
         Bot bot;
@@ -51,6 +65,11 @@ public class Bot extends Robot {
         public boolean isFinished() {
             return camera.getFiducialAngle() < sensitivity && camera.getFiducialAngle() > -sensitivity
                     && !drive.follower.isBusy();
+        }
+
+        @Override
+        public void end(boolean interrupted) {
+            bot.getLauncher().fire().schedule();
         }
     }
 }
