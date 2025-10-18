@@ -21,7 +21,7 @@ public class TeleOp extends OpMode {
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap, new Pose(), "red");
+        robot = new Bot().init(hardwareMap, new Pose(), "red",gamepad1);
     }
 
     @Override
@@ -42,22 +42,10 @@ public class TeleOp extends OpMode {
 
 
 
-
         //  .andThen(new WaitCommand()));
 //        controller1.getGamepadButton(GamepadKeys.Button.A)
 //                .whenPressed(robot.getDrive().getFollower().turnToDegrees(40),);
 
-    }
-
-    private void getClass(Drive drive) {
-    }
-
-    public void setController1(GamepadEx controller1) {
-        this.controller1 = controller1;
-    }
-
-    public Bot getRobot() {
-        return robot;
     }
 
     @Override

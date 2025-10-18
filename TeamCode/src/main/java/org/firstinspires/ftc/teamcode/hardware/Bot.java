@@ -1,16 +1,26 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.Robot;
+import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
 public class Bot extends Robot {
     Cam camera;
     Drive drive;
-    public Bot init(HardwareMap hardwareMap, Pose start, String color){
+    Intake intake;
+    Launcher launcher;
+    public Bot init(HardwareMap hardwareMap, Pose start, String color, Gamepad controller){
         camera = new Cam(hardwareMap,color);
-        drive = new Drive(hardwareMap, start);
+        intake = new Intake(hardwareMap);
+        launcher = new Launcher(hardwareMap);
+        if (controller == null){
+            drive = new Drive(hardwareMap, start);
+        } else {
+            drive = new Drive(hardwareMap,start, new GamepadEx(controller));
+        }
         return this;
     }
 
@@ -20,6 +30,13 @@ public class Bot extends Robot {
 
     public Drive getDrive() {
         return drive;
+    }
+    public Intake getIntake() {
+        return intake;
+    }
+
+    public Launcher getLauncher() {
+        return launcher;
     }
 
     public Aim aim(){
