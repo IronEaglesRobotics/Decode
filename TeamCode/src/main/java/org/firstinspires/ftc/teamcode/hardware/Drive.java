@@ -26,12 +26,16 @@ public class Drive extends SubsystemBase {
     }
     public Drive(HardwareMap hardwareMap, Pose start, GamepadEx gamepadEx){
         follower = Constants.createFollower(hardwareMap);
-        follower.setPose(start);
+        follower.setStartingPose(start);
+        follower.update();
         controller = gamepadEx;
         follower.startTeleopDrive(true);
     }
     public FollowPathCommand pathCommand(Path paths){
         return new FollowPathCommand(follower,paths);
+    }
+    public FollowPathCommand moveTo(Pose pose){
+        return pathCommand(new Path(new BezierLine(follower.getPose(),pose)));
     }
     public FollowPathCommand moveTo(int x, int y, int z){
         Path path = new Path(new BezierLine(follower.getPose(),new Pose(x,y,Math.toRadians(z))));
@@ -77,6 +81,7 @@ public class Drive extends SubsystemBase {
         return follower;
     }
     public void setVector(){
+
         follower.setTeleOpDrive(controller.getLeftY(),controller.getLeftX(),controller.getRightX(),true);
     }
     public Pose getPose(){
@@ -93,7 +98,9 @@ public class Drive extends SubsystemBase {
     }
 
     @Override
-    public void periodic() {
-        follower.update();
+    public void periodic() {follower.update();
     }
+
+
+
 }
