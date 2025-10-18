@@ -35,6 +35,10 @@ public class TeleOp extends OpMode {
                 .whenPressed(robot.getDrive().moveTo(2,5,67));
         controller1.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(robot.getDrive().moveTo(67,67,67));
+        controller1.getGamepadButton(GamepadKeys.Button.Y)
+                .whenHeld(robot.getIntake().start())
+                .whenReleased(robot.getIntake().stop());
+        
 
 
 

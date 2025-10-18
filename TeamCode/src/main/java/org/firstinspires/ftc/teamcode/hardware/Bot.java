@@ -31,6 +31,7 @@ public class Bot extends Robot {
     public Drive getDrive() {
         return drive;
     }
+
     public Intake getIntake() {
         return intake;
     }
@@ -42,6 +43,8 @@ public class Bot extends Robot {
     public Aim aim(){
         return new Aim(this);
     }
+
+
 
     public class Aim extends CommandBase{
         Bot bot;
@@ -68,6 +71,11 @@ public class Bot extends Robot {
         public boolean isFinished() {
             return camera.getFiducialAngle() < sensitivity && camera.getFiducialAngle() > -sensitivity
                     && !drive.follower.isBusy();
+        }
+
+        @Override
+        public void end(boolean interrupted) {
+            bot.getLauncher().fire().schedule();
         }
     }
 }
