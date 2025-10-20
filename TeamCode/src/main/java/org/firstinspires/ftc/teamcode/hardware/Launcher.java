@@ -38,6 +38,7 @@ public class Launcher extends SubsystemBase {
         spinner = hardwareMap.get(DcMotor.class,"spinner");
         spinner.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         spinner.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spinner.setTargetPosition(0);
         spinner.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flyWheel1 = hardwareMap.get(DcMotor.class,"flywheel1");
         flyWheel2 = hardwareMap.get(DcMotor.class,"flywheel2");
@@ -56,6 +57,18 @@ public class Launcher extends SubsystemBase {
             return Color.Purple;
         }
         return Color.Nothing;
+    }
+    public Command flywheelOn(){
+        return new InstantCommand(()->{
+            flyWheel1.setPower(1);
+            flyWheel2.setPower(-1);
+        });
+    }
+    public Command flywheelOff(){
+        return new InstantCommand(()->{
+            flyWheel1.setPower(0);
+            flyWheel2.setPower(0);
+        });
     }
     public Command shoot() {
         return new Command() {

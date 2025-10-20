@@ -30,7 +30,7 @@ public class limeLightTests extends CommandOpMode {
 
     @Override
     public void initialize() {
-        robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red", new GamepadEx(this.gamepad1));
+        robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red",new GamepadEx(gamepad1));
         FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(), 60);
         //robot.aim().schedule();
     }

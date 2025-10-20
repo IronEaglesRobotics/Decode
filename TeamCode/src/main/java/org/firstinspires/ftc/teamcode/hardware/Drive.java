@@ -81,8 +81,10 @@ public class Drive extends SubsystemBase {
         return follower;
     }
     public void setVector(){
-
-        follower.setTeleOpDrive(controller.getLeftY(),controller.getLeftX(),controller.getRightX(),true);
+        follower.setTeleOpDrive(controller.getLeftY(),-controller.getLeftX(),-controller.getRightX(),true);
+    }
+    public void setVector(GamepadEx controller1){
+        follower.setTeleOpDrive(controller1.getLeftY(),controller1.getLeftX(),controller1.getRightX(),true);
     }
     public Pose getPose(){
         return follower.getPose();
@@ -98,8 +100,7 @@ public class Drive extends SubsystemBase {
     }
 
     @Override
-    public void periodic() {follower.update();
-    }
+    public void periodic() {follower.update();}
 
 
 
