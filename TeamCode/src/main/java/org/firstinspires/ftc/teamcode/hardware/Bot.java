@@ -10,16 +10,16 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 public class Bot extends Robot {
     Cam camera;
     Drive drive;
-    Intake intake;
     Launcher launcher;
-    public Bot init(HardwareMap hardwareMap, Pose start, String color, Gamepad controller){
+    Intake intake;
+    public Bot init(HardwareMap hardwareMap, Pose start, String color, GamepadEx gamepad){
         camera = new Cam(hardwareMap,color);
         intake = new Intake(hardwareMap);
         launcher = new Launcher(hardwareMap);
-        if (controller == null){
+        if (gamepad == null){
             drive = new Drive(hardwareMap, start);
         } else {
-            drive = new Drive(hardwareMap,start, new GamepadEx(controller));
+            drive = new Drive(hardwareMap,start,gamepad);
         }
         return this;
     }

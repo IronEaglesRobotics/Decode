@@ -9,6 +9,7 @@ import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -24,8 +25,8 @@ public class Launcher extends SubsystemBase {
     DcMotor spinner;
     DcMotor flyWheel1;
     DcMotor flyWheel2;
-    RevColorSensorV3 cs1;
-    RevColorSensorV3 cs2;
+   // RevColorSensorV3 cs1;
+   // RevColorSensorV3 cs2;
     Servo pusher;
     private static final int CHAMBER1 = 0;
     private static final int CHAMBER2 = 1000;
@@ -33,18 +34,20 @@ public class Launcher extends SubsystemBase {
     Color[] chambers;
 
     public Launcher(HardwareMap hardwareMap){
+        this.chambers = new Color[3];
         spinner = hardwareMap.get(DcMotor.class,"spinner");
+        spinner.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         spinner.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spinner.setTargetPosition(0);
         spinner.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flyWheel1 = hardwareMap.get(DcMotor.class,"flywheel1");
         flyWheel2 = hardwareMap.get(DcMotor.class,"flywheel2");
         pusher = hardwareMap.get(Servo.class,"pusher");
-        cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
-        cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
-//        chambers[0] = Color.Nothing;
-//        chambers[1] = Color.Nothing;
-//        chambers[2] = Color.Nothing;
+      //  cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
+       // cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
+        chambers[0] = Color.Nothing;
+        chambers[1] = Color.Nothing;
+        chambers[2] = Color.Nothing;
     }
     public Color getColor(RevColorSensorV3 cs){
         if (cs.green() > (cs.red() + cs.blue()) * .9) {
@@ -102,6 +105,23 @@ public class Launcher extends SubsystemBase {
             shoot());
     }
 
+    public Command start(){
+
+        return new ParallelCommandGroup(
+                new InstantCommand(() -> flyWheel1.setPower(1)),
+                new InstantCommand(() -> flyWheel2.setPower(1))
+        );
+
+    }
+    public Command stop(){
+
+        return new ParallelCommandGroup(
+                new InstantCommand(() -> flyWheel1.setPower(0)),
+                new InstantCommand(() -> flyWheel2.setPower(0))
+        );
+
+    }
+
     public static class Loading extends CommandBase{
         Launcher launcher;
         int order;
@@ -118,20 +138,20 @@ public class Launcher extends SubsystemBase {
             currentChamber = 0;
         }
 
-        @Override
-        public void execute() {
-            if (!launcher.spinner.isBusy()){
-                if (launcher.getColor(launcher.cs1) != Color.Nothing) {
-                    //launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
-                    currentChamber += 1;
-                    launcher.spinner.setTargetPosition(currentChamber*1000);//will be wrong
-                } else if (launcher.getColor(launcher.cs2) != Color.Nothing) {
-                    //launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
-                    currentChamber += 1;
-                    launcher.spinner.setTargetPosition(currentChamber*1000);//will be wrong
-                }
-            }
-        }
+//        @Override
+//        public void execute() {
+//            if (!launcher.spinner.isBusy()){
+//                if (launcher.getColor(launcher.cs1) != Color.Nothing) {
+//                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
+//                    currentChamber += 1;
+//                    launcher.spinner.setTargetPosition(currentChamber*1000);//will be wrong
+//                } else if (launcher.getColor(launcher.cs2) != Color.Nothing) {
+//                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
+//                    currentChamber += 1;
+//                    launcher.spinner.setTargetPosition(currentChamber*1000);//will be wrong
+//                }
+//            }
+//        }
 
         @Override
         public boolean isFinished() {
