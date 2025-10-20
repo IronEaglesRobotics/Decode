@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
+import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
@@ -29,7 +30,7 @@ public class limeLightTests extends CommandOpMode {
 
     @Override
     public void initialize() {
-        robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red");
+        robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red", new GamepadEx(this.gamepad1));
         FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(), 60);
         //robot.aim().schedule();
     }
