@@ -96,14 +96,14 @@ class hyperAuto extends CommandOpMode{
         robot.aim(),
         pick2,
         farshoot,
-        robot.aim(),
+        robot.aim()
 
     );
 
     Command farBlueline3 = new SequentialCommandGroup(
       farshoot,
       robot.aim(),
-      pick2,
+      pick2
       
     );
 

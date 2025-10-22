@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opModes;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
@@ -16,8 +17,8 @@ public class testTeleop extends OpMode {
     GamepadEx controller1;
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red",controller1);
         controller1 = new GamepadEx(gamepad1);
+        robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red",controller1);
     }
     @Override
     public void loop(){
@@ -31,6 +32,12 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.getLauncher().flywheelOn());
         controller1.getGamepadButton(GamepadKeys.Button.Y)
                 .whenPressed(robot.getLauncher().flywheelOff());
+        controller1.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
+                .whenPressed(robot.getLauncher().shoot());
+//        controller1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+//                .whenPressed(robot.aim());
+        robot.getLauncher().spinner.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.getLauncher().spinner.setPower(-.5);
         CommandScheduler.getInstance().run();
 
     }

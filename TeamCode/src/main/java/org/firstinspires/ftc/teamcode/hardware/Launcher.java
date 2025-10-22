@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.Command;
@@ -15,16 +17,18 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Collections;
 import java.util.Set;
 import java.util.Timer;
 
+@Configurable
 public class Launcher extends SubsystemBase {
-    DcMotor spinner;
-    DcMotor flyWheel1;
-    DcMotor flyWheel2;
+    public DcMotor spinner;
+    DcMotorEx flyWheel1;
+    DcMotorEx flyWheel2;
    // RevColorSensorV3 cs1;
    // RevColorSensorV3 cs2;
     Servo pusher;
@@ -32,6 +36,8 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = 1000;
     private static final int CHAMBER3 = 2000;
     Color[] chambers;
+    public static int speed = 50;
+    public static double power = .43;
 
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new Color[3];
@@ -40,11 +46,11 @@ public class Launcher extends SubsystemBase {
         spinner.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spinner.setTargetPosition(0);
         spinner.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flyWheel1 = hardwareMap.get(DcMotor.class,"flywheel1");
-        flyWheel2 = hardwareMap.get(DcMotor.class,"flywheel2");
+        flyWheel1 = hardwareMap.get(DcMotorEx.class,"flywheel1");
+        flyWheel2 = hardwareMap.get(DcMotorEx.class,"flywheel2");
         pusher = hardwareMap.get(Servo.class,"pusher");
-      //  cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
-       // cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
+        // cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
+        // cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers[0] = Color.Nothing;
         chambers[1] = Color.Nothing;
         chambers[2] = Color.Nothing;
@@ -60,14 +66,18 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelOn(){
         return new InstantCommand(()->{
-            flyWheel1.setPower(1);
-            flyWheel2.setPower(-1);
+            flyWheel1.setVelocity(-speed, AngleUnit.DEGREES);
+            flyWheel2.setVelocity(speed,AngleUnit.DEGREES);
+//            flyWheel1.setPower(-power);
+//            flyWheel2.setPower(power);
         });
     }
     public Command flywheelOff(){
         return new InstantCommand(()->{
-            flyWheel1.setPower(0);
-            flyWheel2.setPower(0);
+            flyWheel1.setVelocity(0);
+            flyWheel2.setVelocity(0);
+//            flyWheel1.setPower(0);
+//            flyWheel2.setPower(0);
         });
     }
     public Command shoot() {
@@ -76,13 +86,13 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                pusher.setPosition(1);
+                pusher.setPosition(.5);
                 time = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return time + 100 > System.currentTimeMillis();
+                return time + 1000 < System.currentTimeMillis();
             }
 
             @Override

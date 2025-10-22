@@ -75,7 +75,7 @@ public class Bot extends Robot {
 
         @Override
         public void end(boolean interrupted) {
-            bot.getLauncher().fire().schedule();
+            bot.getLauncher().shoot().schedule();
         }
     }
 }

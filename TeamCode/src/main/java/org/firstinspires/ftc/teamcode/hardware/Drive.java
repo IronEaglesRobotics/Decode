@@ -23,6 +23,7 @@ public class Drive extends SubsystemBase {
     public Drive(HardwareMap hardwareMap, Pose start){
         follower = Constants.createFollower(hardwareMap);
         follower.setPose(start);
+        follower.update();
     }
     public Drive(HardwareMap hardwareMap, Pose start, GamepadEx gamepadEx){
         follower = Constants.createFollower(hardwareMap);
