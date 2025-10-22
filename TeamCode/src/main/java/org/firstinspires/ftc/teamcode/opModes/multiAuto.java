@@ -62,7 +62,7 @@ class hyperAuto extends CommandOpMode{
             robot.getDrive().moveTo(-21,34,90),
             new SequentialCommandGroup(
                     robot.getIntake().start(),
-                    robot.getDrive().moveToWithSpeed(-21,43,90, .1)
+                    robot.getDrive().moveToWithSpeed(-21,43,90, .3)
             ),
             new WaitCommand(200),
             robot.getIntake().stop()
@@ -72,7 +72,7 @@ class hyperAuto extends CommandOpMode{
             robot.getDrive().moveTo(-33,43,90),
             new SequentialCommandGroup(
                     robot.getIntake().start(),
-                    robot.getDrive().moveToWithSpeed(-33,50,90,.1)
+                    robot.getDrive().moveToWithSpeed(-33,50,90,.3)
             ),
             new WaitCommand(200),
             robot.getIntake().stop()
@@ -103,8 +103,15 @@ class hyperAuto extends CommandOpMode{
     Command farBlueline3 = new SequentialCommandGroup(
       farshoot,
       robot.aim(),
-      pick2
-      
+      pick2,
+      togate,
+      farshoot,
+      robot.aim(),
+      humanplayzone,
+      farshoot,
+      robot.aim(),
+      pick1,
+      robot.aim()
     );
 
 

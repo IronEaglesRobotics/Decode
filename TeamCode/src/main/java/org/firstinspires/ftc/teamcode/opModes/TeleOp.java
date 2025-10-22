@@ -8,11 +8,13 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
+import com.seattlesolvers.solverslib.hardware.motors.Motor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.teamcode.hardware.Drive;
 
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp")
 public class TeleOp extends OpMode {
     Bot robot;
 
@@ -21,24 +23,31 @@ public class TeleOp extends OpMode {
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap, new Pose(), "red",controller1);
+        robot = new Bot().init(hardwareMap, new Pose(), "red", new GamepadEx(this.gamepad1));
     }
 
     @Override
     public void loop() {
         robot.getDrive().setVector();
+
         controller1.readButtons();
 
         controller1.getGamepadButton(GamepadKeys.Button.B)
-                .whenPressed(robot.aim());
+                .whenPressed(robot.getLauncher().start());
+
         controller1.getGamepadButton(GamepadKeys.Button.A)
-                .whenPressed(robot.getDrive().moveTo(2,5,67));
-        controller1.getGamepadButton(GamepadKeys.Button.X)
-                .whenPressed(robot.getDrive().moveTo(67,67,67));
+                        .whenPressed(robot.getLauncher().stop());
+
+
         controller1.getGamepadButton(GamepadKeys.Button.Y)
                 .whenHeld(robot.getIntake().start())
                 .whenReleased(robot.getIntake().stop());
+
+
+
+
         
+
 
 
 
@@ -50,6 +59,17 @@ public class TeleOp extends OpMode {
 //        controller1.getGamepadButton(GamepadKeys.Button.A)
 //                .whenPressed(robot.getDrive().getFollower().turnToDegrees(40),);
 
+    }
+
+    private void getClass(Drive drive) {
+    }
+
+    public void setController1(GamepadEx controller1) {
+        this.controller1 = controller1;
+    }
+
+    public Bot getRobot() {
+        return robot;
     }
 
     @Override
