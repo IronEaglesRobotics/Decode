@@ -73,6 +73,10 @@ public class Launcher extends SubsystemBase {
 //            flyWheel2.setPower(power);
         });
     }
+
+    public void setSpeed(int s){
+        speed = s;
+    }
     public Command flywheelOff(){
         return new InstantCommand(()->{
             flyWheel1.setVelocity(0);
