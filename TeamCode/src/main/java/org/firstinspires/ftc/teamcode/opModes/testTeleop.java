@@ -15,10 +15,13 @@ import org.firstinspires.ftc.teamcode.hardware.Bot;
 public class testTeleop extends OpMode {
     Bot robot;
     GamepadEx controller1;
+    GamepadEx controller2;
+
     @Override
     public void init() {
-        controller1 = new GamepadEx(gamepad1);
         robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red",controller1);
+        controller1 = new GamepadEx(gamepad1);
+        controller2 = new GamepadEx(gamepad2);
     }
     @Override
     public void loop(){
@@ -32,13 +35,13 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.getLauncher().flywheelOn());
         controller1.getGamepadButton(GamepadKeys.Button.Y)
                 .whenPressed(robot.getLauncher().flywheelOff());
-        controller1.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
-                .whenPressed(robot.getLauncher().shoot());
-//        controller1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-//                .whenPressed(robot.aim());
-        robot.getLauncher().spinner.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        robot.getLauncher().spinner.setPower(-.5);
         CommandScheduler.getInstance().run();
 
+
+
     }
+
+
+
 }
+

@@ -46,6 +46,7 @@ public class Launcher extends SubsystemBase {
         spinner.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spinner.setTargetPosition(0);
         spinner.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        spinner.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flyWheel1 = hardwareMap.get(DcMotorEx.class,"flywheel1");
         flyWheel2 = hardwareMap.get(DcMotorEx.class,"flywheel2");
         pusher = hardwareMap.get(Servo.class,"pusher");
@@ -113,6 +114,22 @@ public class Launcher extends SubsystemBase {
             shoot(),
             new InstantCommand(()->spinner.setTargetPosition(spinner.getCurrentPosition()+1000)),
             shoot());
+    }
+
+    public void fan(){
+        if(spinner.getCurrentPosition() == CHAMBER1) {
+            spinner.setTargetPosition(CHAMBER2);
+            spinner.setPower(0.2);
+        }
+
+        else if(spinner.getCurrentPosition() == CHAMBER2){
+            spinner.setTargetPosition(CHAMBER3);
+            spinner.setPower(0.2);
+        }
+        else if(spinner.getCurrentPosition() == CHAMBER3){
+            spinner.setTargetPosition(CHAMBER1);
+            spinner.setPower(0.2);
+        }
     }
 
     public Command start(){

@@ -18,7 +18,7 @@ public class PPcommands extends CommandBase {
     private Path launchpreload;
 
     public void buildPaths(){
-        final Pose startpose = new Pose(-60,-12);
+        final Pose startpose = new Pose(-60,-12, Math.toRadians(90));
 
         final Command farshoot = robot.getDrive().moveTo(-50,12,20);
         final Command prepick1 = robot.getDrive().moveTo(-21,34,90);
