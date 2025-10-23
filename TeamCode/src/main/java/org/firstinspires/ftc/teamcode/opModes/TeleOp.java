@@ -19,6 +19,8 @@ public class TeleOp extends OpMode {
     Bot robot;
 
     GamepadEx controller1;
+    GamepadEx controller2;
+
 
 
     @Override
@@ -28,20 +30,28 @@ public class TeleOp extends OpMode {
 
     @Override
     public void loop() {
+        robot.getDrive().getFollower().update();
         robot.getDrive().setVector();
 
         controller1.readButtons();
+        controller2.readButtons();
 
-        controller1.getGamepadButton(GamepadKeys.Button.B)
-                .whenPressed(robot.getLauncher().start());
+        if (controller2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0){
+            robot.getLauncher().flywheelOn();
+        }
+        else if (controller2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) == 0){
+            robot.getLauncher().flywheelOff();
+        }
+        if (controller2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0 ) {
+            robot.getIntake().start();
+        }
+        else if (controller2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) == 0) {
+            robot.getIntake().stop();
+        }
 
-        controller1.getGamepadButton(GamepadKeys.Button.A)
-                        .whenPressed(robot.getLauncher().stop());
-
-
-        controller1.getGamepadButton(GamepadKeys.Button.Y)
-                .whenHeld(robot.getIntake().start())
-                .whenReleased(robot.getIntake().stop());
+        if (gamepad1.x) {
+            robot.getLauncher().fan();
+        }
 
 
 
