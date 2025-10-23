@@ -55,13 +55,9 @@ public class Bot extends Robot {
         }
 
         @Override
-        public void initialize() {
-            drive.moveTo(-50,12,15).schedule();
-        }
-        @Override
         public void execute() {
-            if(!drive.follower.isBusy()){
-                if (camera.getFiducialAngle() < sensitivity && camera.getFiducialAngle() > -sensitivity){
+            if(!drive.follower.isTurning()){
+                if (camera.getFiducialAngle() > sensitivity || camera.getFiducialAngle() < -sensitivity){
                     drive.follower.turn(Math.toRadians(camera.getFiducialAngle()*(10-camera.getFiducialAngle())),false);
                 }
             }

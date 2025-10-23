@@ -33,10 +33,10 @@ public class TeleOp extends OpMode {
         controller1.readButtons();
 
         controller1.getGamepadButton(GamepadKeys.Button.B)
-                .whenPressed(robot.getLauncher().start());
+                .whenPressed(robot.getLauncher().flywheelOn());
 
         controller1.getGamepadButton(GamepadKeys.Button.A)
-                        .whenPressed(robot.getLauncher().stop());
+                        .whenPressed(robot.getLauncher().flywheelOff());
 
 
         controller1.getGamepadButton(GamepadKeys.Button.Y)

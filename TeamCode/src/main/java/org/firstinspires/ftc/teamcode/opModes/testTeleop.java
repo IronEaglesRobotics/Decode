@@ -34,10 +34,9 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.getLauncher().flywheelOff());
         controller1.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
                 .whenPressed(robot.getLauncher().shoot());
-//        controller1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-//                .whenPressed(robot.aim());
-        robot.getLauncher().spinner.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        robot.getLauncher().spinner.setPower(-.5);
+        controller1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+                .whenPressed(robot.aim());
+        robot.getLauncher().spinner.setPower(controller1.getRightY());
         CommandScheduler.getInstance().run();
 
     }
