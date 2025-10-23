@@ -51,8 +51,8 @@ public class Launcher extends SubsystemBase {
         flyWheel1 = hardwareMap.get(DcMotorEx.class,"flywheel1");
         flyWheel2 = hardwareMap.get(DcMotorEx.class,"flywheel2");
         pusher = hardwareMap.get(Servo.class,"pusher");
-         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
-         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
+        // cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
+        // cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers[0] = Color.Nothing;
         chambers[1] = Color.Nothing;
         chambers[2] = Color.Nothing;
@@ -94,7 +94,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return time + 500 < System.currentTimeMillis();
+                return time + 1000 < System.currentTimeMillis();
             }
 
             @Override
@@ -117,6 +117,38 @@ public class Launcher extends SubsystemBase {
             shoot());
     }
 
+    public void fan(){
+        if(spinner.getCurrentPosition() == CHAMBER1) {
+            spinner.setTargetPosition(CHAMBER2);
+            spinner.setPower(0.2);
+        }
+
+        else if(spinner.getCurrentPosition() == CHAMBER2){
+            spinner.setTargetPosition(CHAMBER3);
+            spinner.setPower(0.2);
+        }
+        else if(spinner.getCurrentPosition() == CHAMBER3){
+            spinner.setTargetPosition(CHAMBER1);
+            spinner.setPower(0.2);
+        }
+    }
+
+    public Command start(){
+
+        return new ParallelCommandGroup(
+                new InstantCommand(() -> flyWheel1.setPower(1)),
+                new InstantCommand(() -> flyWheel2.setPower(1))
+        );
+
+    }
+    public Command stop(){
+
+        return new ParallelCommandGroup(
+                new InstantCommand(() -> flyWheel1.setPower(0)),
+                new InstantCommand(() -> flyWheel2.setPower(0))
+        );
+
+    }
 
     public static class Loading extends CommandBase{
         Launcher launcher;
