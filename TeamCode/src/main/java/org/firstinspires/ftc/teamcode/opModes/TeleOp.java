@@ -26,6 +26,8 @@ public class TeleOp extends OpMode {
     @Override
     public void init() {
         robot = new Bot().init(hardwareMap, new Pose(), "red", new GamepadEx(this.gamepad1));
+        controller1 = new GamepadEx(gamepad1);
+        controller2 = new GamepadEx(gamepad1);
     }
 
     @Override
@@ -36,13 +38,19 @@ public class TeleOp extends OpMode {
         controller1.readButtons();
         controller2.readButtons();
 
-        if (controller2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0){
-            robot.getLauncher().flywheelOn();
-        }
-        else if (controller2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) == 0){
-            robot.getLauncher().flywheelOff();
-        }
-        if (controller2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0 ) {
+//        if (controller2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0){
+//            robot.getLauncher().flywheelOn();
+//        } sorry this doesn't work
+        controller2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER) //use it like this
+                .whenPressed(robot.getLauncher().flywheelOn(true))
+                .whenReleased(robot.getLauncher().flywheelOff());
+//        if (controller2.getButton(GamepadKeys.Button.LEFT_BUMPER)){this works but is kinda janky
+//            robot.getLauncher().flywheelOn().schedule();
+//        }
+//        if (controller2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) == 0){
+//            robot.getLauncher().flywheelOff();
+//        }
+        if (controller2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0 ) { // plz try it here
             robot.getIntake().start();
         }
         else if (controller2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) == 0) {
@@ -52,19 +60,16 @@ public class TeleOp extends OpMode {
         if (gamepad1.x) {
             robot.getLauncher().fan();
         }
+        if (gamepad1.y) {
+            robot.getLauncher().toShoot();
+        }
+        if (gamepad1.b) {
+            robot.getLauncher().toZero();
+        }
 
-
-
-
-        
-
-
-
-
-
-
-
-
+        telemetry.addData("current: ",robot.getLauncher().spinner.getCurrentPosition());
+        telemetry.addData("target", robot.getLauncher().spinner.getTargetPosition());
+        telemetry.update();
         //  .andThen(new WaitCommand()));
 //        controller1.getGamepadButton(GamepadKeys.Button.A)
 //                .whenPressed(robot.getDrive().getFollower().turnToDegrees(40),);
