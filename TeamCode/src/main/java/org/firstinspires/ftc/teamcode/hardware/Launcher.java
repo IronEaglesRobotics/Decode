@@ -29,14 +29,17 @@ public class Launcher extends SubsystemBase {
     public DcMotor spinner;
     DcMotorEx flyWheel1;
     DcMotorEx flyWheel2;
-   // RevColorSensorV3 cs1;
-   // RevColorSensorV3 cs2;
+    RevColorSensorV3 cs1;
+    RevColorSensorV3 cs2;
     Servo pusher;
+    int halfDelta = -170;
+    int fullDelta = -450;
     private static final int CHAMBER1 = 0;
     private static final int CHAMBER2 = 1000;
     private static final int CHAMBER3 = 2000;
     Color[] chambers;
-    public static int speed = 50;
+    public static int closeSpeed = 105;
+    public static int farSpeed = 125;
     public static double power = .43;
 
     public Launcher(HardwareMap hardwareMap){
@@ -45,8 +48,8 @@ public class Launcher extends SubsystemBase {
         spinner.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         spinner.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spinner.setTargetPosition(0);
+        spinner.setPower(.3);
         spinner.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spinner.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         flyWheel1 = hardwareMap.get(DcMotorEx.class,"flywheel1");
         flyWheel2 = hardwareMap.get(DcMotorEx.class,"flywheel2");
         pusher = hardwareMap.get(Servo.class,"pusher");
@@ -65,10 +68,10 @@ public class Launcher extends SubsystemBase {
         }
         return Color.Nothing;
     }
-    public Command flywheelOn(){
+    public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setVelocity(-speed, AngleUnit.DEGREES);
-            flyWheel2.setVelocity(speed,AngleUnit.DEGREES);
+            flyWheel1.setVelocity(-(isClose? closeSpeed:farSpeed), AngleUnit.DEGREES);
+            flyWheel2.setVelocity((isClose? closeSpeed:farSpeed),AngleUnit.DEGREES);
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
         });
@@ -114,26 +117,20 @@ public class Launcher extends SubsystemBase {
     public Command fire(){
         return new SequentialCommandGroup(
             shoot(),
-            new InstantCommand(()->spinner.setTargetPosition(spinner.getCurrentPosition()+1000)),
+            new InstantCommand(this::fan),
             shoot(),
-            new InstantCommand(()->spinner.setTargetPosition(spinner.getCurrentPosition()+1000)),
+            new InstantCommand(this::fan),
             shoot());
     }
 
     public void fan(){
-        if(spinner.getCurrentPosition() == CHAMBER1) {
-            spinner.setTargetPosition(CHAMBER2);
-            spinner.setPower(0.2);
-        }
-
-        else if(spinner.getCurrentPosition() == CHAMBER2){
-            spinner.setTargetPosition(CHAMBER3);
-            spinner.setPower(0.2);
-        }
-        else if(spinner.getCurrentPosition() == CHAMBER3){
-            spinner.setTargetPosition(CHAMBER1);
-            spinner.setPower(0.2);
-        }
+        spinner.setTargetPosition(spinner.getCurrentPosition()+fullDelta);
+    }
+    public void toShoot(){
+        spinner.setTargetPosition(spinner.getCurrentPosition()+halfDelta);
+    }
+    public void toZero(){
+        spinner.setTargetPosition(0);
     }
 
     public Command start(){
@@ -165,24 +162,24 @@ public class Launcher extends SubsystemBase {
         @Override
         public void initialize() {
             launcher.spinner.setTargetPosition(CHAMBER1);
-            launcher.spinner.setPower(1);
+            launcher.spinner.setPower(.3);
             currentChamber = 0;
         }
 
-//        @Override
-//        public void execute() {
-//            if (!launcher.spinner.isBusy()){
-//                if (launcher.getColor(launcher.cs1) != Color.Nothing) {
-//                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
-//                    currentChamber += 1;
-//                    launcher.spinner.setTargetPosition(currentChamber*1000);//will be wrong
-//                } else if (launcher.getColor(launcher.cs2) != Color.Nothing) {
-//                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
-//                    currentChamber += 1;
-//                    launcher.spinner.setTargetPosition(currentChamber*1000);//will be wrong
-//                }
-//            }
-//        }
+        @Override
+        public void execute() {
+            if (!launcher.spinner.isBusy()){
+                if (launcher.getColor(launcher.cs1) != Color.Nothing) {
+                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
+                    currentChamber += 1;
+                    launcher.spinner.setTargetPosition(currentChamber* launcher.fullDelta);//will be wrong
+                } else if (launcher.getColor(launcher.cs2) != Color.Nothing) {
+                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
+                    currentChamber += 1;
+                    launcher.spinner.setTargetPosition(currentChamber* launcher.fullDelta);//will be wrong
+                }
+            }
+        }
 
         @Override
         public boolean isFinished() {

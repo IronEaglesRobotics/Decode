@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.pedropathing.telemetry.SelectScope;
 import com.pedropathing.telemetry.SelectableOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -53,80 +54,123 @@ public class multiAuto extends SelectableOpMode {
 }
 class hyperAuto extends CommandOpMode{
 
+    private final String color;
+    private final boolean isFar;
+    private final int lines;
     Bot robot;
     Follower follower;
-    final Command farshoot = robot.getDrive().moveTo(-50,12,20);
-    final Command togate = robot.getDrive().moveTo(-21,43,90);
-    final Command loadzonepick = robot.getDrive().moveTo(-55,55,90);
-    final Command pick2 = new SequentialCommandGroup(
-            robot.getDrive().moveTo(-21,34,90),
-            new SequentialCommandGroup(
-                    robot.getIntake().start(),
-                    robot.getDrive().moveToWithSpeed(-21,43,90, .3)
-            ),
-            new WaitCommand(200),
-            robot.getIntake().stop()
 
-    );
-    final Command pick1 = new SequentialCommandGroup(
-            robot.getDrive().moveTo(-33,43,90),
-            new SequentialCommandGroup(
-                    robot.getIntake().start(),
-                    robot.getDrive().moveToWithSpeed(-33,50,90,.3)
-            ),
-            new WaitCommand(200),
-            robot.getIntake().stop()
-    );
-    final Command humanplayzone = robot.getDrive().moveToWithSpeed(-55,55,100,.7);
+    private Command makeAuto(int amount,int side, boolean far){
+        final Command farshoot = robot.getDrive().moveTo(-50*side, 12, 20*side);
+        final Command closeshoot = robot.getDrive().moveTo(0,0,20*side);
+        final Command togate = robot.getDrive().moveTo(-21*side, 43, 90*side);
+        final Command loadzonepick = robot.getDrive().moveTo(-55*side, 55, 90*side);
+        final Command pick2 = new SequentialCommandGroup(
+                robot.getDrive().moveTo(-21*side, 34, 90*side),
+                new SequentialCommandGroup(
+                        robot.getIntake().start(),
+                        robot.getDrive().moveToWithSpeed(-21*side, 43, 90*side, .3)
+                ),
+                new WaitCommand(200),
+                robot.getIntake().stop()
 
-    Command farBlueline1 = new SequentialCommandGroup(
-            farshoot,
-            robot.aim(),
-            pick1,
-            farshoot,
-            robot.aim()
+        );
+        final Command pick1 = new SequentialCommandGroup(
+                robot.getDrive().moveTo(-33*side, 43, 90*side),
+                new SequentialCommandGroup(
+                        robot.getIntake().start(),
+                        robot.getDrive().moveToWithSpeed(-33*side, 50, 90*side, .3)
+                ),
+                new WaitCommand(200),
+                robot.getIntake().stop()
+        );
+        final Command humanplayzone = robot.getDrive().moveToWithSpeed(-55*side, 55, 100*side, .7);
 
-    );
+        Command farBlueline1 = new SequentialCommandGroup(
+                farshoot,
+                robot.aim(),
+                pick1,
+                farshoot,
+                robot.aim()
 
-    Command farBlueline2 = new SequentialCommandGroup(
-        farshoot,
-        robot.aim(),
-        pick1,
-        farshoot,
-        robot.aim(),
-        pick2,
-        farshoot,
-        robot.aim()
+        );
 
-    );
+        Command farBlueline2 = new SequentialCommandGroup(
+                farshoot,
+                robot.aim(),
+                pick1,
+                farshoot,
+                robot.aim(),
+                pick2,
+                farshoot,
+                robot.aim()
 
-    Command farBlueline3 = new SequentialCommandGroup(
-      farshoot,
-      robot.aim(),
-      pick2,
-      togate,
-      farshoot,
-      robot.aim(),
-      humanplayzone,
-      farshoot,
-      robot.aim(),
-      pick1,
-      robot.aim()
-    );
+        );
+
+        Command farBlueline3 = new SequentialCommandGroup(
+                farshoot,
+                robot.aim(),
+                pick2,
+                togate,
+                farshoot,
+                robot.aim(),
+                humanplayzone,
+                farshoot,
+                robot.aim(),
+                pick1,
+                robot.aim()
+        );
+        Command closeBlueline1 = new SequentialCommandGroup(
+                closeshoot,
+                robot.aim(),
+                pick1,
+                closeshoot,
+                robot.aim()
+
+        );
+
+        Command closeBlueline2 = new SequentialCommandGroup(
+                closeshoot,
+                robot.aim(),
+                pick1,
+                closeshoot,
+                robot.aim(),
+                pick2,
+                closeshoot,
+                robot.aim()
+
+        );
+
+        Command closeBlueline3 = new SequentialCommandGroup(
+                closeshoot,
+                robot.aim(),
+                pick2,
+                togate,
+                closeshoot,
+                robot.aim(),
+                humanplayzone,
+                closeshoot,
+                robot.aim(),
+                pick1,
+                robot.aim()
+        );
+        return null;
+    }
+
 
 
     public hyperAuto(String color, boolean isFar, int lines){
-        telemetry.addData("color: ",color);
-        telemetry.addData("starting far: ",isFar);
-        telemetry.addData("lines: ", lines);
-        telemetry.update();
+        this.color = color;
+        this.isFar = isFar;
+        this.lines = lines;
     }
 
 
 
     @Override
     public void initialize() {
-
+        robot = new Bot().init(hardwareMap,isFar ? new Pose(-60,12) : new Pose(12,12),color,null);
+        makeAuto(lines,color.equalsIgnoreCase("blue")?1:-1,isFar);
     }
 
 }
