@@ -77,15 +77,10 @@ public class Launcher extends SubsystemBase {
         });
     }
 
-    public void setSpeed(int s){
-        speed = s;
-    }
     public Command flywheelOff(){
         return new InstantCommand(()->{
             flyWheel1.setVelocity(0);
             flyWheel2.setVelocity(0);
-//            flyWheel1.setPower(0);
-//            flyWheel2.setPower(0);
         });
     }
     public Command shoot() {
