@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.hardware;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
@@ -43,7 +44,9 @@ public class Bot extends Robot {
     public Aim aim(){
         return new Aim(this);
     }
-
+    public Command loading(){
+        return new Launcher.Loading(launcher,camera.order);
+    }
 
 
     public class Aim extends CommandBase{
