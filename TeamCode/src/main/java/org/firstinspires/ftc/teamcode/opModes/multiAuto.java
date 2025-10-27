@@ -179,7 +179,7 @@ class multiAuto extends OpMode{
         );
         Command[] list = {farBlueline0,farBlueline1,farBlueline2,farBlueline3,
                 closeBlueline0,closeBlueline1,closeBlueline2,closeBlueline3};
-        return list[(isFar?0:1)+lines-1];
+        return list[(far?0:1)+amount-1];
     }
 
 
