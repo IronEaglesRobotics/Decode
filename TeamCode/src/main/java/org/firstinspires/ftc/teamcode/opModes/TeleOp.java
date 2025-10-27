@@ -3,12 +3,8 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.Subsystem;
-import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.hardware.Bot;
@@ -61,14 +57,14 @@ public class TeleOp extends OpMode {
             robot.getLauncher().fan();
         }
         if (gamepad1.y) {
-            robot.getLauncher().toShoot();
+            robot.getLauncher().Shoot();
         }
         if (gamepad1.b) {
-            robot.getLauncher().toZero();
+            robot.getLauncher().Zero();
         }
 
         telemetry.addData("current: ",robot.getLauncher().spinner.getCurrentPosition());
-        telemetry.addData("target", robot.getLauncher().spinner.getTargetPosition());
+        telemetry.addData("target", robot.getLauncher().current);
         telemetry.update();
         //  .andThen(new WaitCommand()));
 //        controller1.getGamepadButton(GamepadKeys.Button.A)

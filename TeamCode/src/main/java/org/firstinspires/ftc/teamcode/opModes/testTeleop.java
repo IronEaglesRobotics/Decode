@@ -22,8 +22,9 @@ public class testTeleop extends OpMode {
         robot = new Bot().init(hardwareMap,new Pose(0,0,0),"red",controller1);
         controller2 = new GamepadEx(gamepad2);
         robot.getDrive().getFollower().update();
-        CommandScheduler.getInstance().enable();
         CommandScheduler.getInstance().reset();
+        CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
+        CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
     }
     @Override
     public void loop(){
@@ -35,22 +36,21 @@ public class testTeleop extends OpMode {
         controller1.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(robot.getLauncher().flywheelOn(false));
         controller1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-                .whenPressed(robot.getLauncher().flywheelOn(false));
+                .whenPressed(robot.getLauncher().start());
         controller1.getGamepadButton(GamepadKeys.Button.Y)
-                .whenPressed(robot.getLauncher().flywheelOff());
+                .whenPressed(robot.getLauncher().stop());
         controller1.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
                 .whenPressed(robot.getLauncher().shoot());
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_UP)
                 .whenPressed(robot.loading());
         controller1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .whenPressed(robot.aim());
-        controller1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-                .whenPressed(new InstantCommand(()->robot.getLauncher().fan()));
+//        controller1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
+//                .whenReleased(new InstantCommand(()->robot.getLauncher().fan()));
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
-                .whenPressed(new InstantCommand(()->robot.getLauncher().toShoot()));
+                .whenPressed(new InstantCommand(()->robot.getLauncher().Shoot()));
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
-                .whenPressed(new InstantCommand(()->robot.getLauncher().toZero()));
-        robot.getLauncher().periodic();
+                .whenPressed(new InstantCommand(()->robot.getLauncher().Zero()));
         CommandScheduler.getInstance().run();
         telemetry.addData("color1: ",robot.getLauncher().getColor(robot.getLauncher().cs1));
         telemetry.addData("color2: ",robot.getLauncher().getColor(robot.getLauncher().cs2));

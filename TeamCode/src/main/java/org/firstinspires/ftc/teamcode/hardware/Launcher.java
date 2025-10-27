@@ -2,14 +2,11 @@ package org.firstinspires.ftc.teamcode.hardware;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
-import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
@@ -17,19 +14,20 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
+import com.seattlesolvers.solverslib.hardware.motors.Motor;
+import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.Timer;
 
 @Configurable
 public class Launcher extends SubsystemBase {
-    public DcMotorEx spinner;
-    DcMotorEx flyWheel1;
-    DcMotorEx flyWheel2;
+    public MotorEx spinner;
+    MotorEx flyWheel1;
+    MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
     public static double kp = 1;
@@ -50,16 +48,19 @@ public class Launcher extends SubsystemBase {
 
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new Color[3];
-        spinner = hardwareMap.get(DcMotorEx.class,"spinner");
-        flyWheel1 = hardwareMap.get(DcMotorEx.class,"flywheel1");
-        flyWheel2 = hardwareMap.get(DcMotorEx.class,"flywheel2");
+        spinner = new MotorEx(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
+        spinner.setRunMode(Motor.RunMode.VelocityControl);
+        flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
+        flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
+        flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+        flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
         pusher = hardwareMap.get(Servo.class,"pusher");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers[0] = Color.Nothing;
         chambers[1] = Color.Nothing;
         chambers[2] = Color.Nothing;
-        controller.setTolerance(50);
+        controller.setTolerance(20);
     }
     public Color getColor(RevColorSensorV3 cs){
         if (cs.green() > (cs.red() + cs.blue()) * .9) {
@@ -72,7 +73,9 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setVelocity(-(isClose? closeSpeed:farSpeed), AngleUnit.DEGREES);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setVelocity(-(isClose? closeSpeed:farSpeed),AngleUnit.DEGREES);
             flyWheel2.setVelocity((isClose? closeSpeed:farSpeed),AngleUnit.DEGREES);
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
@@ -80,8 +83,8 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelOff(){
         return new InstantCommand(()->{
-            flyWheel1.setVelocity(0);
-            flyWheel2.setVelocity(0);
+            flyWheel1.stopMotor();
+            flyWheel2.stopMotor();
 //            flyWheel1.setPower(0);
 //            flyWheel2.setPower(0);
         });
@@ -123,27 +126,50 @@ public class Launcher extends SubsystemBase {
 
     public void fan(){
         current+=fullDelta;
+        current = Math.max(Math.min(current,2000),-5000);
     }
-    public void toShoot(){
+    public void Shoot(){
         current+=halfDelta;
+        current = Math.max(Math.min(current,2000),-5000);
     }
-    public void toZero(){
+    public void Zero(){
         current = 0;
+    }
+    public Command toNext(){
+        return new InstantCommand(()->{
+            current += fullDelta;
+            current = Math.max(Math.min(current, 2000), -5000);
+        })
+        .andThen(new WaitCommand(200));
+    }
+    public Command toShoot(){
+        return new InstantCommand(()->{
+            current += halfDelta;
+            current = Math.max(Math.min(current, 2000), -5000);
+        })
+        .andThen(new WaitCommand(200));
+    }
+    public Command toZero(){
+        return new InstantCommand(()->current = 0)
+                .andThen(new WaitCommand(200));
     }
 
     public Command start(){
 
-        return new ParallelCommandGroup(
-                new InstantCommand(() -> flyWheel1.setPower(1)),
-                new InstantCommand(() -> flyWheel2.setPower(1))
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> {
+                    flyWheel1.setRunMode(Motor.RunMode.RawPower);
+                    flyWheel1.setRunMode(Motor.RunMode.RawPower);}),
+                new InstantCommand(() -> flyWheel1.set(-0.43)),
+                new InstantCommand(() -> flyWheel2.set(0.43))
         );
 
     }
     public Command stop(){
 
         return new ParallelCommandGroup(
-                new InstantCommand(() -> flyWheel1.setPower(0)),
-                new InstantCommand(() -> flyWheel2.setPower(0))
+                new InstantCommand(() -> flyWheel1.stopMotor()),
+                new InstantCommand(() -> flyWheel2.stopMotor())
         );
 
     }
