@@ -10,10 +10,15 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Cam extends SubsystemBase {
     Limelight3A limelight;
     int order;
     String teamColor;
+    Pose lastPose;
+    List<Ball> foundBalls = new ArrayList<>();
     public Cam(HardwareMap hardwareMap, String team){
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         limelight.setPollRateHz(100);
@@ -43,6 +48,15 @@ public class Cam extends SubsystemBase {
     public Pose getBotPose(){
         Pose3D pose = limelight.getLatestResult().getBotpose();
         return new Pose(pose.getPosition().x,pose.getPosition().y,pose.getPosition().z);
+    }
+    public void scanFor(int millies,Pose currentPose){
+        long start = System.currentTimeMillis();
+        limelight.pipelineSwitch(4);
+        while (start + millies > System.currentTimeMillis()){
+            for (LLResultTypes.ColorResult ball : limelight.getLatestResult().getColorResults()) {
+                foundBalls.add(new Ball("green",ball.getCameraPoseTargetSpace()));
+            }
+        }
     }
     public getMotif getMotif(){
         return new getMotif(this);
@@ -80,9 +94,11 @@ public class Cam extends SubsystemBase {
             camera.limelight.pipelineSwitch(camera.getTeam());
         }
     }
-    public enum Order{
-        GPP,
-        PGP,
-        PPG
+    class Ball{
+        String color;
+        Pose pose;
+        public Ball(String color, Pose3D pose3D){
+
+        }
     }
 }

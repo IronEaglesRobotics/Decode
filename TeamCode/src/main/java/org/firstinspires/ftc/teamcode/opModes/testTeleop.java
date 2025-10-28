@@ -25,10 +25,6 @@ public class testTeleop extends OpMode {
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
-    }
-    @Override
-    public void loop(){
-        robot.getDrive().setVector();
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .whenPressed(robot.getIntake().start());
         controller1.getGamepadButton(GamepadKeys.Button.B)
@@ -36,7 +32,7 @@ public class testTeleop extends OpMode {
         controller1.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(robot.getLauncher().flywheelOn(false));
         controller1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-                .whenPressed(robot.getLauncher().start());
+                .whenPressed(robot.getLauncher().flywheelOn(true));
         controller1.getGamepadButton(GamepadKeys.Button.Y)
                 .whenPressed(robot.getLauncher().stop());
         controller1.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
@@ -45,18 +41,23 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.loading());
         controller1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .whenPressed(robot.aim());
-//        controller1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-//                .whenReleased(new InstantCommand(()->robot.getLauncher().fan()));
+        controller1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
+                .whenPressed(robot.getLauncher().toNext());
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
-                .whenPressed(new InstantCommand(()->robot.getLauncher().Shoot()));
+                .whenPressed(robot.getLauncher().toShoot());
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
-                .whenPressed(new InstantCommand(()->robot.getLauncher().Zero()));
+                .whenPressed(robot.getLauncher().toZero());
+    }
+    @Override
+    public void loop(){
+        controller1.readButtons();
+        controller2.readButtons();
+        robot.getDrive().getFollower().setTeleOpDrive(-controller1.getLeftY(),controller1.getLeftX(),controller1.getRightX(),true);
         CommandScheduler.getInstance().run();
         telemetry.addData("color1: ",robot.getLauncher().getColor(robot.getLauncher().cs1));
         telemetry.addData("color2: ",robot.getLauncher().getColor(robot.getLauncher().cs2));
         telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
         telemetry.addData("target", robot.getLauncher().current);
-        telemetry.addData("time", System.currentTimeMillis());
         telemetry.update();
     }
 

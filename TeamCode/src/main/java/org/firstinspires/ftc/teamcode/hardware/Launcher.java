@@ -30,21 +30,23 @@ public class Launcher extends SubsystemBase {
     MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
-    public static double kp = 1;
-    public static double ki = 0;
+    public static double kp = 10;
+    public static double ki = 10;
     public static double kd = 0;
     PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
-    int halfDelta = -170;
-    int fullDelta = -450;
+    public static int halfDelta = -170;
+    public static int fullDelta = -450;
     public int current = 0;
     private static final int CHAMBER1 = 0;
     private static final int CHAMBER2 = 1000;
     private static final int CHAMBER3 = 2000;
     Color[] chambers;
-    public static int closeSpeed = 105;
-    public static int farSpeed = 125;
+    public static int closeSpeed = 1000;
+    public static int farSpeed = 1150;
     public static double power = .43;
+    double speed1 = 0;
+    double speed2 = 0;
 
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new Color[3];
@@ -75,16 +77,16 @@ public class Launcher extends SubsystemBase {
         return new InstantCommand(()->{
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            flyWheel1.setVelocity(-(isClose? closeSpeed:farSpeed),AngleUnit.DEGREES);
-            flyWheel2.setVelocity((isClose? closeSpeed:farSpeed),AngleUnit.DEGREES);
+            speed1 = -(isClose? closeSpeed:farSpeed);
+            speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
         });
     }
     public Command flywheelOff(){
         return new InstantCommand(()->{
-            flyWheel1.stopMotor();
-            flyWheel2.stopMotor();
+            speed1 = 0;
+            speed2 = 0;
 //            flyWheel1.setPower(0);
 //            flyWheel2.setPower(0);
         });
@@ -125,11 +127,11 @@ public class Launcher extends SubsystemBase {
     }
 
     public void fan(){
-        current+=fullDelta;
+        current= current+fullDelta;
         current = Math.max(Math.min(current,2000),-5000);
     }
     public void Shoot(){
-        current+=halfDelta;
+        current= current+halfDelta;
         current = Math.max(Math.min(current,2000),-5000);
     }
     public void Zero(){
@@ -137,21 +139,20 @@ public class Launcher extends SubsystemBase {
     }
     public Command toNext(){
         return new InstantCommand(()->{
-            current += fullDelta;
-            current = Math.max(Math.min(current, 2000), -5000);
+            current = current+ fullDelta;
+//            current = Math.max(Math.min(current, 2000), -5000);
         })
-        .andThen(new WaitCommand(200));
+        .andThen(new WaitCommand(2000));
     }
     public Command toShoot(){
         return new InstantCommand(()->{
-            current += halfDelta;
-            current = Math.max(Math.min(current, 2000), -5000);
+            current = current + halfDelta;
+//            current = Math.max(Math.min(current, 2000), -5000);
         })
-        .andThen(new WaitCommand(200));
+        .andThen(new WaitCommand(2000));
     }
     public Command toZero(){
-        return new InstantCommand(()->current = 0)
-                .andThen(new WaitCommand(200));
+        return new InstantCommand(()->current = 0);
     }
 
     public Command start(){
@@ -177,7 +178,10 @@ public class Launcher extends SubsystemBase {
     @Override
     public void periodic(){
         controller.setPID(kp,ki,kd);
+        controller.setSetPoint(current);
         spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(),current));
+        flyWheel1.setVelocity(speed1);
+        flyWheel2.setVelocity(speed2);
     }
 
     public static class Loading extends CommandBase{

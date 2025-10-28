@@ -12,6 +12,7 @@ import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
@@ -35,9 +36,10 @@ public class limeLightTests extends CommandOpMode {
         //robot.aim().schedule();
     }
     public void run(){
-        if (robot.getCamera().getFiducialAngle() > .2 && robot.getCamera().getFiducialAngle() < -.2){
-            robot.getDrive().getFollower().turn(robot.getCamera().getFiducialAngle(),false);
-        }
+//        if (robot.getCamera().getFiducialAngle() > .2 && robot.getCamera().getFiducialAngle() < -.2){
+//            robot.getDrive().getFollower().turn(robot.getCamera().getFiducialAngle(),false);
+//        }
+        telemetry.addData("item location",robot.getCamera().getLimelight().getLatestResult().getColorResults().get(0).getTargetPoseRobotSpace());
         telemetry.addData("pos: ",robot.getCamera().getBotPose());
         telemetry.addData("angle: ",robot.getCamera().getFiducialAngle());
         telemetry.update();
