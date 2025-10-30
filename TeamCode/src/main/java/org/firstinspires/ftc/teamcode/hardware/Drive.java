@@ -73,7 +73,7 @@ public class Drive extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return follower.isTurning();
+                return !follower.isTurning();
             }
         };
     }
@@ -103,9 +103,6 @@ public class Drive extends SubsystemBase {
     @Override
     public void periodic() {
         follower.update();
-        if (controller != null){
-            setVector();
-        }
     }
 
 }

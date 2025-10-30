@@ -24,13 +24,13 @@ public class spinnerTest extends OpMode {
         int[] locations = new int[6];
         final int[] index = {0};
         if(gamepad1.dpad_up) {
-            robot.getLauncher().spinner.setPower(-.2);
+            robot.getLauncher().spinner.set(-.2);
         }
         else if(gamepad1.dpad_down){
-            robot.getLauncher().spinner.setPower(.2);
+            robot.getLauncher().spinner.set(.2);
         }
         else {
-            robot.getLauncher().spinner.setPower(0);
+            robot.getLauncher().spinner.set(0);
         }
         telemetry.addData("spinner",robot.getLauncher().spinner.getCurrentPosition());
         controller1.getGamepadButton(GamepadKeys.Button.A)
