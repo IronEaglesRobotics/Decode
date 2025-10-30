@@ -63,7 +63,7 @@ public class Cam extends SubsystemBase {
     }
     public static class getMotif extends CommandBase{
         Cam camera;
-        int order = -1;
+        int order = 0;
         public getMotif(Cam temp){
             camera = temp;
             addRequirements(camera);
@@ -76,18 +76,18 @@ public class Cam extends SubsystemBase {
             for (LLResultTypes.FiducialResult fiducial : result.getFiducialResults())
             {
                 if (fiducial.getFiducialId() == 21){
-                    order = 0;
-                }
-                if (fiducial.getFiducialId() == 22){
                     order = 1;
                 }
-                if (fiducial.getFiducialId() == 23){
+                if (fiducial.getFiducialId() == 22){
                     order = 2;
+                }
+                if (fiducial.getFiducialId() == 23){
+                    order = 3;
                 }
             }
         }
         public boolean isFinished(){
-            return camera.limelight.getLatestResult() != null && order != -1;
+            return camera.limelight.getLatestResult() != null && order != 0;
         }
         public void end(boolean i){
             camera.setOrder(order);

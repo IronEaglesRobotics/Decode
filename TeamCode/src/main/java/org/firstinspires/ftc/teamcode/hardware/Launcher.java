@@ -35,12 +35,12 @@ public class Launcher extends SubsystemBase {
     public static double kd = 0;
     PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
-    public static int halfDelta = -170;
-    public static int fullDelta = -450;
+    public static int halfDelta = -260;
+    public static int fullDelta = -475;
     public int current = 0;
-    private static final int CHAMBER1 = 0;
-    private static final int CHAMBER2 = 1000;
-    private static final int CHAMBER3 = 2000;
+    private static final int CHAMBER1 = halfDelta+fullDelta;
+    private static final int CHAMBER2 = halfDelta+(fullDelta*2);
+    private static final int CHAMBER3 = halfDelta;
     Color[] chambers;
     public static int closeSpeed = 1000;
     public static int farSpeed = 1150;
@@ -51,6 +51,7 @@ public class Launcher extends SubsystemBase {
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new Color[3];
         spinner = new MotorEx(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
+        spinner.resetEncoder();
         spinner.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
@@ -141,15 +142,13 @@ public class Launcher extends SubsystemBase {
         return new InstantCommand(()->{
             current = current+ fullDelta;
 //            current = Math.max(Math.min(current, 2000), -5000);
-        })
-        .andThen(new WaitCommand(2000));
+        });
     }
     public Command toShoot(){
         return new InstantCommand(()->{
             current = current + halfDelta;
 //            current = Math.max(Math.min(current, 2000), -5000);
-        })
-        .andThen(new WaitCommand(2000));
+        });
     }
     public Command toZero(){
         return new InstantCommand(()->current = 0);
@@ -173,6 +172,9 @@ public class Launcher extends SubsystemBase {
                 new InstantCommand(() -> flyWheel2.stopMotor())
         );
 
+    }
+    public String getTelemetry(){
+        return "slot 0: " + chambers[0] + " slot 1: " + chambers[1] +" slot 2: " + chambers[2];
     }
 
     @Override
@@ -206,7 +208,7 @@ public class Launcher extends SubsystemBase {
                     currentChamber += 1;
                     launcher.fan();
                 } else if (launcher.getColor(launcher.cs2) != Color.Nothing) {
-                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
+                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs2);
                     currentChamber += 1;
                     launcher.fan();
                 }
@@ -221,14 +223,32 @@ public class Launcher extends SubsystemBase {
         @Override
         public void end(boolean interrupted) {
             if(!interrupted){
-                int greenLoc = 2;
+                int greenLoc = 0;
                 if (launcher.chambers[0] == Color.Green){
                     greenLoc = 0;
+                    launcher.current = CHAMBER1;
                 }
-                else if (launcher.chambers[1] == Color.Green){
+                else if (launcher.chambers[1] == Color.Green) {
                     greenLoc = 1;
+                    launcher.current = CHAMBER2;
                 }
-//                launcher.spinner.setTargetPosition(launcher.spinner.getCurrentPosition()+((order-greenLoc)*1000)-500);
+                else if(launcher.chambers[2] == Color.Green){
+                    greenLoc = 2;
+                    launcher.current = CHAMBER3;
+                }
+                int exception = 0;
+                for (Color color : launcher.chambers){
+                    if (color == Color.Purple){
+                        exception++;
+                    }
+                }
+                if (exception == 3){
+                    launcher.current = halfDelta;
+                }
+                else{
+                    launcher.current -= fullDelta * (order - 1);
+                }
+
             }
             else {
                 launcher.current = 2500;
