@@ -33,40 +33,40 @@ public class Auto extends OpMode{
     Command pick1;
     Command humanplayzone;
     private void makeAuto(int side) {
-        farshoot = robot.getDrive().moveTo(-50 * side, 12, 20 * side);
-        closeshoot = robot.getDrive().moveTo(0, 0, 20 * side);
-        togate = robot.getDrive().moveTo(-21 * side, 43, 90 * side);
-        loadzonepick = robot.getDrive().moveTo(-55 * side, 55, 90 * side);
+        farshoot = robot.getDrive().moveTo(53 * side, -13, 160 * side);
+        closeshoot = robot.getDrive().moveTo(0, 0, 160 * side);
+        togate = robot.getDrive().moveTo(21 * side, -43, 90 * side);
+        loadzonepick = robot.getDrive().moveTo(55 * side, -55, -90 * side);
         pick3 = new SequentialCommandGroup(
-                robot.getDrive().moveTo(-21 * side, 34, 90 * side),
+                robot.getDrive().moveTo(-15 * side, -25, 90 * side),
                 new SequentialCommandGroup(
                         robot.getIntake().start(),
-                        robot.getDrive().moveToWithSpeed(-11 * side, 43, 90 * side, .3)
+                        robot.getDrive().moveToWithSpeed(-15 * side, -44, 90 * side, .3)
                 ),
                 new WaitCommand(200),
                 robot.getIntake().stop()
 
         );
         pick2 = new SequentialCommandGroup(
-                robot.getDrive().moveTo(-21 * side, 34, 90 * side),
+                robot.getDrive().moveTo(9 * side, -25, 90 * side),
                 new SequentialCommandGroup(
                         robot.getIntake().start(),
-                        robot.getDrive().moveToWithSpeed(-21 * side, 43, 90 * side, .3)
+                        robot.getDrive().moveToWithSpeed(9 * side, -44, 90 * side, .3)
                 ),
                 new WaitCommand(200),
                 robot.getIntake().stop()
 
         );
         pick1 = new SequentialCommandGroup(
-                robot.getDrive().moveTo(-33 * side, 43, 90 * side),
+                robot.getDrive().moveTo(31 * side, -26, 90 * side),
                 new SequentialCommandGroup(
                         robot.getIntake().start(),
-                        robot.getDrive().moveToWithSpeed(-33 * side, 50, 90 * side, .3)
+                        robot.getDrive().moveToWithSpeed(31 * side, -47, 90 * side, .3)
                 ),
                 new WaitCommand(200),
                 robot.getIntake().stop()
         );
-        humanplayzone = robot.getDrive().moveToWithSpeed(-55 * side, 55, 100 * side, .7);
+        humanplayzone = robot.getDrive().moveToWithSpeed(55 * side, -55, -100 * side, .7);
     }
     public void run(){
         switch (state){
@@ -112,7 +112,7 @@ public class Auto extends OpMode{
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap,isFar ? new Pose(-60,12) : new Pose(12,12),color,null);
+        robot = new Bot().init(hardwareMap,isFar ? new Pose(60,-20, 180) : new Pose(12,12, 180),color,null);
         controller = new GamepadEx(gamepad1);
     }
     @Override

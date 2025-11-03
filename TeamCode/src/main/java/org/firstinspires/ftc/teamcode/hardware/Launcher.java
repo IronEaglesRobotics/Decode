@@ -33,14 +33,17 @@ public class Launcher extends SubsystemBase {
     public static double kp = 10;
     public static double ki = 10;
     public static double kd = 0;
-    PIDController controller = new PIDController(kp,ki,kd);
-    Servo pusher;
-    public static int halfDelta = -260;
-    public static int fullDelta = -475;
+    PIDController controller = new PIDController(kp, ki, kd);
+    public Servo pusher;
+    public static int halfDelta = -238;
+    public static int fullDelta = -470;
     public int current = 0;
-    private static final int CHAMBER1 = halfDelta+fullDelta;
-    private static final int CHAMBER2 = halfDelta+(fullDelta*2);
+
+    private static final int CHAMBER1 = halfDelta + fullDelta;
+    private static final int CHAMBER2 = halfDelta + (fullDelta * 2);
     private static final int CHAMBER3 = halfDelta;
+    public static double starting = 0.25;
+    public static double push = 0.4;
     Color[] chambers;
     public static int closeSpeed = 1000;
     public static int farSpeed = 1150;
@@ -48,124 +51,118 @@ public class Launcher extends SubsystemBase {
     double speed1 = 0;
     double speed2 = 0;
 
-    public Launcher(HardwareMap hardwareMap){
+    public Launcher(HardwareMap hardwareMap) {
         this.chambers = new Color[3];
-        spinner = new MotorEx(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
+        spinner = new MotorEx(hardwareMap, "spinner", Motor.GoBILDA.RPM_223);
         spinner.resetEncoder();
         spinner.setRunMode(Motor.RunMode.VelocityControl);
-        flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
-        flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
+        flyWheel1 = new MotorEx(hardwareMap, "flywheel1", 28, 6000);
+        flyWheel2 = new MotorEx(hardwareMap, "flywheel2", 28, 6000);
         flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
-        pusher = hardwareMap.get(Servo.class,"pusher");
-        cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
-        cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
+        pusher = hardwareMap.servo.get("pusher");
+        pusher.setDirection(Servo.Direction.REVERSE);
+        cs1 = hardwareMap.get(RevColorSensorV3.class, "cs1");
+        cs2 = hardwareMap.get(RevColorSensorV3.class, "cs2");
         chambers[0] = Color.Nothing;
         chambers[1] = Color.Nothing;
         chambers[2] = Color.Nothing;
         controller.setTolerance(20);
     }
-    public Color getColor(RevColorSensorV3 cs){
+
+    public Color getColor(RevColorSensorV3 cs) {
         if (cs.green() > (cs.red() + cs.blue()) * .9) {
             return Color.Green;
-        }
-        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < .8) {
+        } else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < .8) {
             return Color.Purple;
         }
         return Color.Nothing;
     }
-    public Command flywheelOn(boolean isClose){
-        return new InstantCommand(()->{
+
+    public Command flywheelOn(boolean isClose) {
+        return new InstantCommand(() -> {
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            speed1 = -(isClose? closeSpeed:farSpeed);
-            speed2 = isClose? closeSpeed:farSpeed;
+            speed1 = -(isClose ? closeSpeed : farSpeed);
+            speed2 = isClose ? closeSpeed : farSpeed;
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
         });
     }
-    public Command flywheelOff(){
-        return new InstantCommand(()->{
+
+    public Command flywheelOff() {
+        return new InstantCommand(() -> {
             speed1 = 0;
             speed2 = 0;
 //            flyWheel1.setPower(0);
 //            flyWheel2.setPower(0);
         });
     }
-    public Command shoot() {
-        return new Command() {
-            double time;
 
-            @Override
-            public void initialize() {
-                pusher.setPosition(.5);
-                time = System.currentTimeMillis();
-            }
-
-            @Override
-            public boolean isFinished() {
-                return time + 1000 < System.currentTimeMillis();
-            }
-
-            @Override
-            public Set<Subsystem> getRequirements() {
-                return Collections.emptySet();
-            }
-
-            @Override
-            public void end(boolean interrupted) {
-                pusher.setPosition(0);
-            }
-        };
-    };
-    public Command fire(){
-        return new SequentialCommandGroup(
-            shoot(),
-            new InstantCommand(this::fan),
-            shoot(),
-            new InstantCommand(this::fan),
-            shoot());
+    public void shoot() {
+        pusher.setPosition(push);
     }
 
-    public void fan(){
-        current= current+fullDelta;
-        current = Math.max(Math.min(current,2000),-5000);
+    ;
+
+    public void retract() {
+        pusher.setPosition(starting);
     }
-    public void Shoot(){
-        current= current+halfDelta;
-        current = Math.max(Math.min(current,2000),-5000);
+
+//    public Command fire(){
+//        return new SequentialCommandGroup(
+//            shoot(),
+//            new InstantCommand(this::fan),
+//            shoot(),
+//            new InstantCommand(this::fan),
+//            shoot());
+//    }
+
+    public void fan() {
+        current = current + fullDelta;
+        current = Math.max(Math.min(current, 2000), -5000);
     }
-    public void Zero(){
+
+    //    public void Shoot(){
+//        current= current+halfDelta;
+//        current = Math.max(Math.min(current,2000),-5000);
+//    }
+    public void Zero() {
         current = 0;
     }
-    public Command toNext(){
-        return new InstantCommand(()->{
-            current = current+ fullDelta;
+
+    public Command toNext() {
+        return new InstantCommand(() -> {
+            current = current + fullDelta;
 //            current = Math.max(Math.min(current, 2000), -5000);
         });
     }
-    public Command toShoot(){
-        return new InstantCommand(()->{
+
+    public Command toShoot() {
+        return new InstantCommand(() -> {
             current = current + halfDelta;
 //            current = Math.max(Math.min(current, 2000), -5000);
         });
     }
-    public Command toZero(){
-        return new InstantCommand(()->current = 0);
+
+    public Command toZero() {
+        return new InstantCommand(() -> current = 0);
     }
 
-    public Command start(){
+    public Command start() {
 
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                     flyWheel1.setRunMode(Motor.RunMode.RawPower);
-                    flyWheel1.setRunMode(Motor.RunMode.RawPower);}),
+                    flyWheel1.setRunMode(Motor.RunMode.RawPower);
+                }),
                 new InstantCommand(() -> flyWheel1.set(-0.43)),
                 new InstantCommand(() -> flyWheel2.set(0.43))
         );
 
     }
-    public Command stop(){
+
+    public Command stop() {
 
         return new ParallelCommandGroup(
                 new InstantCommand(() -> flyWheel1.stopMotor()),
@@ -173,24 +170,26 @@ public class Launcher extends SubsystemBase {
         );
 
     }
-    public String getTelemetry(){
-        return "slot 0: " + chambers[0] + " slot 1: " + chambers[1] +" slot 2: " + chambers[2];
+
+    public String getTelemetry() {
+        return "slot 0: " + chambers[0] + " slot 1: " + chambers[1] + " slot 2: " + chambers[2];
     }
 
     @Override
-    public void periodic(){
-        controller.setPID(kp,ki,kd);
+    public void periodic() {
+        controller.setPID(kp, ki, kd);
         controller.setSetPoint(current);
-        spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(),current));
+        spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(), current));
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(speed2);
     }
 
-    public static class Loading extends CommandBase{
+    public static class Loading extends CommandBase {
         Launcher launcher;
         int order;
         int currentChamber = 0;
-        public Loading(Launcher temp,int Torder){
+
+        public Loading(Launcher temp, int Torder) {
             launcher = temp;
             order = Torder;
         }
@@ -202,7 +201,7 @@ public class Launcher extends SubsystemBase {
 
         @Override
         public void execute() {
-            if (launcher.controller.atSetPoint()){
+            if (launcher.controller.atSetPoint()) {
                 if (launcher.getColor(launcher.cs1) != Color.Nothing) {
                     launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
                     currentChamber += 1;
@@ -222,41 +221,37 @@ public class Launcher extends SubsystemBase {
 
         @Override
         public void end(boolean interrupted) {
-            if(!interrupted){
+            if (!interrupted) {
                 int greenLoc = 0;
-                if (launcher.chambers[0] == Color.Green){
+                if (launcher.chambers[0] == Color.Green) {
                     greenLoc = 0;
                     launcher.current = CHAMBER1;
-                }
-                else if (launcher.chambers[1] == Color.Green) {
+                } else if (launcher.chambers[1] == Color.Green) {
                     greenLoc = 1;
                     launcher.current = CHAMBER2;
-                }
-                else if(launcher.chambers[2] == Color.Green){
+                } else if (launcher.chambers[2] == Color.Green) {
                     greenLoc = 2;
                     launcher.current = CHAMBER3;
                 }
                 int exception = 0;
-                for (Color color : launcher.chambers){
-                    if (color == Color.Purple){
+                for (Color color : launcher.chambers) {
+                    if (color == Color.Purple) {
                         exception++;
                     }
                 }
-                if (exception == 3){
+                if (exception == 3) {
                     launcher.current = halfDelta;
-                }
-                else{
+                } else {
                     launcher.current -= fullDelta * (order - 1);
                 }
 
-            }
-            else {
+            } else {
                 launcher.current = 2500;
             }
         }
     }
 
-    public enum Color{
+    public enum Color {
         Purple,
         Green,
         Nothing

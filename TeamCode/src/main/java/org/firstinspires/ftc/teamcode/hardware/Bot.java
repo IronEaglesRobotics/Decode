@@ -51,7 +51,10 @@ public class Bot extends Robot {
 
     public class Aim extends CommandBase{
         Bot bot;
-        double sensitivity = 1.5;
+        double sensitivity = 2;
+        double correctionFactor = 0.5;
+
+        private boolean turning = false;
         public Aim(Bot robot){
             bot = robot;
             addRequirements(bot.camera, bot.drive);
@@ -59,22 +62,24 @@ public class Bot extends Robot {
 
         @Override
         public void execute() {
-            if(!drive.follower.isTurning()){
-                if (camera.getFiducialAngle() > sensitivity || camera.getFiducialAngle() < -sensitivity){
-                    drive.follower.turn(Math.toRadians(camera.getFiducialAngle()*(10-camera.getFiducialAngle())),false);
-                }
+            double angleError = camera.getFiducialAngle();
+
+            if (Math.abs(angleError) > sensitivity) {
+                double correctionRadius = Math.toRadians(angleError*correctionFactor);
+
+                drive.follower.turn(correctionRadius, false);
             }
         }
 
         @Override
         public boolean isFinished() {
-            return camera.getFiducialAngle() < sensitivity && camera.getFiducialAngle() > -sensitivity
-                    && !drive.follower.isBusy();
+            double angleError = bot.camera.getFiducialAngle();
+            return Math.abs(angleError) <= sensitivity && !bot.drive.follower.isTurning();
         }
 
         @Override
         public void end(boolean interrupted) {
-            bot.getLauncher().shoot().schedule();
+//            bot.getLauncher().shoot().schedule();
         }
     }
 }

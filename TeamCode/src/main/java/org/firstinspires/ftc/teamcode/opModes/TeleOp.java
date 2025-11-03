@@ -56,9 +56,9 @@ public class TeleOp extends OpMode {
         if (gamepad1.x) {
             robot.getLauncher().fan();
         }
-        if (gamepad1.y) {
-            robot.getLauncher().Shoot();
-        }
+//        if (gamepad1.y) {
+//            robot.getLauncher().Shoot();
+//        }
         if (gamepad1.b) {
             robot.getLauncher().Zero();
         }
