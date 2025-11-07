@@ -53,6 +53,7 @@ public class Bot extends Robot {
         Bot bot;
         double sensitivity = 2;
         double correctionFactor = 0.5;
+        Pose holdPoint;
 
         private boolean turning = false;
         public Aim(Bot robot){
@@ -61,14 +62,17 @@ public class Bot extends Robot {
         }
 
         @Override
+        public void initialize() {
+            bot.getDrive().getFollower().holdPoint(
+                    new Pose(holdPoint.getX(),holdPoint.getY(),bot.camera.getFiducialAngle())
+            );
+        }
+
+        @Override
         public void execute() {
-            double angleError = camera.getFiducialAngle();
-
-            if (Math.abs(angleError) > sensitivity) {
-                double correctionRadius = Math.toRadians(angleError*correctionFactor);
-
-                drive.follower.turn(correctionRadius, false);
-            }
+            bot.drive.follower.setPose(
+                    new Pose(bot.drive.getX(),bot.drive.getY(),bot.camera.getBotPose().getHeading())
+            );
         }
 
         @Override

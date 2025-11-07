@@ -29,7 +29,7 @@ public class PPcommands extends CommandBase {
         final Command loadzonepick = robot.getDrive().moveTo(-55,55,90);
 
     }
-    class Paths {
+    public static class Paths {
 
         public PathChain Path1;
         public PathChain Path2;
@@ -40,82 +40,109 @@ public class PPcommands extends CommandBase {
         public PathChain Path7;
         public PathChain Path8;
         public PathChain Path9;
+        public PathChain Path10;
+        public PathChain Path11;
+        public PathChain[] shootPaths;
 
-        public Paths(Follower follower,boolean isBlue, boolean isFar) {
+        public Paths(Follower follower,boolean isBlue) {
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(56.000, 8.000), new Pose(41.000, 59.500))
+                            new BezierLine(new Pose(flip(56,isBlue), 8.000), new Pose(flip(40.000,isBlue), 95.500))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
+                    .setLinearHeadingInterpolation(Math.toRadians(90),flipAng(135,isBlue))
                     .build();
 
             Path2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(41.000, 59.500), new Pose(19.000, 60.000))
+                            new BezierLine(new Pose(flip(48.000,isBlue), 95.500), new Pose(flip(28.000,isBlue), 69.500))
                     )
-                    .setConstantHeadingInterpolation(Math.toRadians(180))
+                    .setLinearHeadingInterpolation(flipAng(135,isBlue), flipAng(180,isBlue))
                     .build();
 
             Path3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(19.000, 60.000), new Pose(15.000, 71.000))
+                            new BezierLine(new Pose(flip(25.000,isBlue), 69.500), new Pose(flip(1.000,isBlue), 69.500))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(270))
+                    .setConstantHeadingInterpolation(flipAng(180,isBlue))
                     .build();
 
-            Path4 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierCurve(
-                                    new Pose(15.000, 71.000),
-                                    new Pose(67.000, 42.000),
-                                    new Pose(53.000, 12.000)
-                            )
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(270), Math.toRadians(110))
-                    .build();
+//            Path4 = follower
+//                    .pathBuilder()
+//                    .addPath(
+//                            new BezierLine(new Pose(flip(19.000,isBlue), 69.000), new Pose(flip(5.000,isBlue), 75.000))
+//                    )
+//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(270,isBlue))
+//                    .build();
 
             Path5 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(53.000, 12.000), new Pose(40.000, 36.000))
+                            new BezierCurve(
+                                    new Pose(flip(9.000,isBlue), 69.500),
+                                    new Pose(flip(43.000,isBlue), 52.500),
+                                    new Pose(flip(40.000,isBlue), 95.500)
+                            )
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(110), Math.toRadians(180))
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), Math.toRadians(135))
                     .build();
 
             Path6 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(40.000, 36.000), new Pose(19.000, 36.000))
+                            new BezierLine(new Pose(flip(40.000,isBlue), 95.500), new Pose(flip(28.000,isBlue), 88.000))
                     )
-                    .setConstantHeadingInterpolation(Math.toRadians(180))
+                    .setLinearHeadingInterpolation(flipAng(135,isBlue), flipAng(180,isBlue))
                     .build();
 
             Path7 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(19.000, 36.000), new Pose(53.000, 12.000))
+                            new BezierLine(new Pose(flip(40.000,isBlue), 104.000), new Pose(flip(19.000,isBlue), 104.000))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(110))
+                    .setConstantHeadingInterpolation(flipAng(180,isBlue))
                     .build();
+
             Path8 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(53.000, 12.000), new Pose(38.000, 84.000))
+                            new BezierLine(new Pose(flip(19.000,isBlue), 104.000), new Pose(flip(48.000,isBlue), 95.000))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(110), Math.toRadians(180))
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
                     .build();
 
             Path9 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(38.000, 84.000), new Pose(19.000, 84.000))
+                            new BezierLine(new Pose(flip(48.000,isBlue), 95.000), new Pose(flip(40.000,isBlue), 35.500))
                     )
-                    .setConstantHeadingInterpolation(Math.toRadians(180))
+                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(180,isBlue))
                     .build();
+
+            Path10 = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(flip(40.000,isBlue), 35.500), new Pose(flip(19.000,isBlue), 35.500))
+                    )
+                    .setConstantHeadingInterpolation(flipAng(180,isBlue))
+                    .build();
+
+            Path11 = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(flip(19.000,isBlue), 35.500), new Pose(flip(48.000,isBlue), 95.000))
+                    )
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
+                    .build();
+            shootPaths = new PathChain[]{Path1,Path5,Path8,Path11};
+        }
+        public double flip(double standard, boolean ifFlip){
+            return Math.abs(standard - (!ifFlip ? 72:1))+(ifFlip ? 72:1);
+        }
+        public double flipAng(double degrees, boolean ifFlip){
+            return Math.toRadians(90 +((degrees - 90) * (ifFlip ? 1:-1)));
         }
     }
 

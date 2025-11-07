@@ -20,7 +20,7 @@ public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants();
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
     public static FilteredPIDFCoefficients driveCoefficients = new FilteredPIDFCoefficients(0.012,0,0.00001,0,0);
-    public static PIDFCoefficients headingCoefficients = new PIDFCoefficients(1.1,0.6,0.0001,0);
+    public static PIDFCoefficients headingCoefficients = new PIDFCoefficients(4,0.8,0.0001,0);
     public static PIDFCoefficients translationalCoefficients = new PIDFCoefficients(0.08,0,0.007,0);
     public static double centripetalScaling = 0;
 

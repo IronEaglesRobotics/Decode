@@ -91,7 +91,7 @@ public class Cam extends SubsystemBase {
         }
         public void end(boolean i){
             camera.setOrder(order);
-            camera.limelight.pipelineSwitch(camera.getTeam());
+            camera.limelight.pipelineSwitch(1);
         }
     }
     class Ball{
