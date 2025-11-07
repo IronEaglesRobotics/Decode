@@ -45,10 +45,15 @@ public class PPcommands extends CommandBase {
         public PathChain[] shootPaths;
 
         public Paths(Follower follower,boolean isBlue) {
+            double startX = isBlue ? 56:88;
+            double shootX = isBlue ? 40:104;
+            double prePickX = isBlue ? 28:116;
+            double postPickX1 = isBlue ? 1:143;
+            double postPickX2 = isBlue ? 5:139;
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(56,isBlue), 8.000), new Pose(flip(40.000,isBlue), 95.500))
+                            new BezierLine(new Pose(startX, 8.000), new Pose(shootX, 95.500))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(90),flipAng(135,isBlue))
                     .build();
@@ -56,7 +61,7 @@ public class PPcommands extends CommandBase {
             Path2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(48.000,isBlue), 95.500), new Pose(flip(28.000,isBlue), 69.500))
+                            new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 69.500))
                     )
                     .setLinearHeadingInterpolation(flipAng(135,isBlue), flipAng(180,isBlue))
                     .build();
@@ -64,7 +69,7 @@ public class PPcommands extends CommandBase {
             Path3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(25.000,isBlue), 69.500), new Pose(flip(1.000,isBlue), 69.500))
+                            new BezierLine(new Pose(prePickX, 69.500), new Pose(postPickX1, 69.500))
                     )
                     .setConstantHeadingInterpolation(flipAng(180,isBlue))
                     .build();
@@ -81,9 +86,9 @@ public class PPcommands extends CommandBase {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(flip(9.000,isBlue), 69.500),
-                                    new Pose(flip(43.000,isBlue), 52.500),
-                                    new Pose(flip(40.000,isBlue), 95.500)
+                                    new Pose(postPickX1, 69.500),
+                                    new Pose(isBlue ? 43 : 101, 52.500),
+                                    new Pose(shootX, 95.500)
                             )
                     )
                     .setLinearHeadingInterpolation(flipAng(180,isBlue), Math.toRadians(135))
@@ -92,7 +97,7 @@ public class PPcommands extends CommandBase {
             Path6 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(40.000,isBlue), 95.500), new Pose(flip(28.000,isBlue), 88.000))
+                            new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 96.000))
                     )
                     .setLinearHeadingInterpolation(flipAng(135,isBlue), flipAng(180,isBlue))
                     .build();
@@ -100,7 +105,7 @@ public class PPcommands extends CommandBase {
             Path7 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(40.000,isBlue), 104.000), new Pose(flip(19.000,isBlue), 104.000))
+                            new BezierLine(new Pose(prePickX, 96.000), new Pose(postPickX2, 96.000))
                     )
                     .setConstantHeadingInterpolation(flipAng(180,isBlue))
                     .build();
@@ -108,7 +113,7 @@ public class PPcommands extends CommandBase {
             Path8 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(19.000,isBlue), 104.000), new Pose(flip(48.000,isBlue), 95.000))
+                            new BezierLine(new Pose(postPickX2, 104.000), new Pose(shootX, 95.500))
                     )
                     .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
                     .build();
@@ -116,7 +121,7 @@ public class PPcommands extends CommandBase {
             Path9 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(48.000,isBlue), 95.000), new Pose(flip(40.000,isBlue), 35.500))
+                            new BezierLine(new Pose(shootX, 95.000), new Pose(prePickX, 35.500))
                     )
                     .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(180,isBlue))
                     .build();
@@ -124,7 +129,7 @@ public class PPcommands extends CommandBase {
             Path10 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(40.000,isBlue), 35.500), new Pose(flip(19.000,isBlue), 35.500))
+                            new BezierLine(new Pose(prePickX, 35.500), new Pose(postPickX2, 35.500))
                     )
                     .setConstantHeadingInterpolation(flipAng(180,isBlue))
                     .build();
@@ -132,7 +137,7 @@ public class PPcommands extends CommandBase {
             Path11 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(flip(19.000,isBlue), 35.500), new Pose(flip(48.000,isBlue), 95.000))
+                            new BezierLine(new Pose(postPickX2, 35.500), new Pose(shootX, 95.000))
                     )
                     .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
                     .build();
