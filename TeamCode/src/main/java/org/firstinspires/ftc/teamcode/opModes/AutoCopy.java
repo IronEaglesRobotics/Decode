@@ -38,21 +38,23 @@ public class AutoCopy extends OpMode{
     Command pick1;
     Command humanplayzone;
     int shot = -1;
-    private void makeAuto(int side, PPcommands.Paths paths) {
+    private void makeAuto(PPcommands.Paths paths) {
         //farshoot = robot.getDrive().pathCommand(paths.Path1);
         togate = robot.getDrive().pathCommand(paths.Path4);
         //loadzonepick = robot.getDrive().moveTo(-55 * side, 55, 90 * side);
         pick3 = new SequentialCommandGroup(
                 robot.getDrive().pathCommand(paths.Path6),
                 new SequentialCommandGroup(
-                        robot.getIntake().start(),
+                        robot.getIntake().start()
+                                .alongWith(robot.getLauncher().toZero()),
                         new ParallelCommandGroup(
-                            robot.loading(),
-                            robot.getDrive().pathCommand(paths.Path7)
+                                robot.loading(),
+                                robot.getDrive().pathCommand(paths.Path7,.05)
                         )
                 ),
                 new WaitCommand(200),
                 robot.getIntake().stop()
+
 
         );
         pick2 = new SequentialCommandGroup(
@@ -193,9 +195,9 @@ public class AutoCopy extends OpMode{
     }
     @Override
     public void start(){
-        robot.getDrive().getFollower().setStartingPose(new Pose(flip(56,color.equalsIgnoreCase("blue")), 8,Math.toRadians(90)));
+        robot.getDrive().getFollower().setStartingPose(new Pose(color.equalsIgnoreCase("blue")? 56:88 , 8,Math.toRadians(90)));
         paths = new PPcommands.Paths(robot.getDrive().getFollower(),color.equalsIgnoreCase("blue"));
-        makeAuto(color.equalsIgnoreCase("blue")?1:-1,paths);
+        makeAuto(paths);
         robot.getCamera().setOrder(2);
         robot.loading().schedule();
     }

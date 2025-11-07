@@ -48,7 +48,7 @@ public class PPcommands extends CommandBase {
             double startX = isBlue ? 56:88;
             double shootX = isBlue ? 40:104;
             double prePickX = isBlue ? 28:116;
-            double postPickX1 = isBlue ? 1:143;
+            double postPickX1 = isBlue ? 0:143;
             double postPickX2 = isBlue ? 5:139;
             Path1 = follower
                     .pathBuilder()
