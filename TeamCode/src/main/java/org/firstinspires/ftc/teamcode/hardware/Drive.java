@@ -23,14 +23,12 @@ import java.util.Set;
 public class Drive extends SubsystemBase {
     Follower follower;
     GamepadEx controller;
-    public Drive(HardwareMap hardwareMap, Pose start){
+    public Drive(HardwareMap hardwareMap){
         follower = Constants.createFollower(hardwareMap);
-        follower.setPose(start);
         follower.update();
     }
-    public Drive(HardwareMap hardwareMap, Pose start, GamepadEx gamepadEx){
+    public Drive(HardwareMap hardwareMap, GamepadEx gamepadEx){
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(start);
         follower.update();
         controller = gamepadEx;
         follower.startTeleopDrive(true);

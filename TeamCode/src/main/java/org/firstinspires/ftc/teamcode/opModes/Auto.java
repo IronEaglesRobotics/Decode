@@ -112,7 +112,7 @@ public class Auto extends OpMode{
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap,isFar ? new Pose(60,-20, 180) : new Pose(12,12, 180),color,null);
+        robot = new Bot().init(hardwareMap,null);
         controller = new GamepadEx(gamepad1);
     }
     @Override

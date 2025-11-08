@@ -26,7 +26,7 @@ public class testTeleop extends OpMode {
     @Override
     public void init() {
         controller1 = new GamepadEx(gamepad1);
-        robot = new Bot().init(hardwareMap,new Pose(40.000, 95.500,Math.toRadians(135)),"red",controller1);
+        robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
         robot.getDrive().getFollower().update();
         CommandScheduler.getInstance().reset();
@@ -41,6 +41,7 @@ public class testTeleop extends OpMode {
                 .toggleWhenPressed(
                         robot.getIntake().start()
                                 .alongWith(robot.loading())
+                                .andThen(robot.getIntake().stop())
                         ,robot.getIntake().stop()
                 );
 //        controller1.getGamepadButton(GamepadKeys.Button.B)

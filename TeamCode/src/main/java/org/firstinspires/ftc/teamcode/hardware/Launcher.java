@@ -50,8 +50,8 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta;
     Color[] chambers;
-    public static int closeSpeed = 710;
-    public static int farSpeed = 1150;
+    public static int closeSpeed = 800;
+    public static int farSpeed = 950;
     public static double power = .43;
     double speed1 = 0;
     double speed2 = 0;
@@ -123,7 +123,7 @@ public class Launcher extends SubsystemBase {
             @Override
             public void end(boolean interrupted) {
                 pusher.setPosition(.2);
-                new WaitCommand(1500).schedule();
+                new WaitCommand(1800).schedule();
             }
         };
     };
@@ -131,8 +131,10 @@ public class Launcher extends SubsystemBase {
         return new SequentialCommandGroup(
             shoot(),
             toNext(),
+            new WaitCommand(300),
             shoot(),
             toNext(),
+            new WaitCommand(300),
             shoot());
     }
 
@@ -172,7 +174,22 @@ public class Launcher extends SubsystemBase {
         });
     }
     public Command toZero(){
-        return new InstantCommand(()->current = 0);
+        return new Command() {
+            @Override
+            public Set<Subsystem> getRequirements() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public void initialize() {
+                current = 0;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return controller.atSetPoint();
+            }
+        };
     }
 
     public String getTelemetry(){

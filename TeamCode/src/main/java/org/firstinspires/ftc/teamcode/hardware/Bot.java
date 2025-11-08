@@ -13,14 +13,14 @@ public class Bot extends Robot {
     Drive drive;
     Launcher launcher;
     Intake intake;
-    public Bot init(HardwareMap hardwareMap, Pose start, String color, GamepadEx gamepad){
-        camera = new Cam(hardwareMap,color);
+    public Bot init(HardwareMap hardwareMap, GamepadEx gamepad){
+        camera = new Cam(hardwareMap);
         intake = new Intake(hardwareMap);
         launcher = new Launcher(hardwareMap);
         if (gamepad == null){
-            drive = new Drive(hardwareMap, start);
+            drive = new Drive(hardwareMap);
         } else {
-            drive = new Drive(hardwareMap,start,gamepad);
+            drive = new Drive(hardwareMap,gamepad);
         }
         return this;
     }

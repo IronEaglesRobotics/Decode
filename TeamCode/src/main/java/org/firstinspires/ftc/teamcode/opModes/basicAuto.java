@@ -22,7 +22,7 @@ public class basicAuto extends CommandOpMode {
     private final Pose loadingzonepick = new Pose(-55,55,Math.toRadians(90));
     @Override
     public void initialize() {
-        robot = new Bot().init(hardwareMap,new Pose(-60,12),"blue",null);
+        robot = new Bot().init(hardwareMap,null);
         schedule(new main(robot));
     }
 

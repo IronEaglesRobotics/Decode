@@ -15,7 +15,7 @@ public class spinnerTest extends OpMode {
     GamepadEx controller1;
     @Override
     public void init() {
-       robot = new Bot().init(hardwareMap,new Pose(0,0),"blue",null);
+       robot = new Bot().init(hardwareMap,null);
        controller1 = new GamepadEx(gamepad1);
     }
 

@@ -19,12 +19,11 @@ public class Cam extends SubsystemBase {
     String teamColor;
     Pose lastPose;
     List<Ball> foundBalls = new ArrayList<>();
-    public Cam(HardwareMap hardwareMap, String team){
+    public Cam(HardwareMap hardwareMap){
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         limelight.setPollRateHz(100);
         limelight.pipelineSwitch(1);
         limelight.start();
-        teamColor = team;
     }
     public void setOrder(int order1){
         order = order1;

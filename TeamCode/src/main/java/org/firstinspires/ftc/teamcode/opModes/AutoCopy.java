@@ -47,41 +47,34 @@ public class AutoCopy extends OpMode{
                 new SequentialCommandGroup(
                         robot.getIntake().start()
                                 .alongWith(robot.getLauncher().toZero()),
-                        new ParallelCommandGroup(
-                                robot.loading(),
-                                robot.getDrive().pathCommand(paths.Path7,.05)
-                        )
-                ),
-                new WaitCommand(200),
-                robot.getIntake().stop()
-
-
+                        robot.getDrive().pathCommand(paths.Path7,.05),
+                        new WaitCommand(200)
+                )
         );
         pick2 = new SequentialCommandGroup(
                 robot.getDrive().pathCommand(paths.Path2),
                 new SequentialCommandGroup(
                         robot.getIntake().start()
                                 .alongWith(robot.getLauncher().toZero()),
-                        new ParallelCommandGroup(
-                            robot.loading(),
-                            robot.getDrive().pathCommand(paths.Path3,.05)
-                        )
-                ),
-                new WaitCommand(200),
-                robot.getIntake().stop()
+                    robot.getDrive().pathCommand(paths.Path3,.05),
+                        new WaitCommand(200)
+                )
 
         );
-        pick1 = new SequentialCommandGroup(
-                robot.getDrive().pathCommand(paths.Path9),
-                new SequentialCommandGroup(
-                        robot.getIntake().start(),
-                        new ParallelCommandGroup(
-                                robot.loading(),
-                                robot.getDrive().pathCommand(paths.Path10)
-                        )
-                ),
-                new WaitCommand(200),
-                robot.getIntake().stop()
+//        pick1 = new SequentialCommandGroup(
+//                robot.getDrive().pathCommand(paths.Path9),
+//                new SequentialCommandGroup(
+//                        robot.getIntake().start(),
+//                        new ParallelCommandGroup(
+//                                robot.loading(),
+//                                robot.getDrive().pathCommand(paths.Path10)
+//                        )
+//                ),
+//                new WaitCommand(200),
+//                robot.getIntake().stop()
+        pick1 = new ParallelCommandGroup(
+                robot.getDrive().moveTo(paths.Path1.endPose().getX(),120,135),
+                robot.getLauncher().toZero()
         );
         //humanplayzone = robot.getDrive().moveToWithSpeed(-55 * side, 55, 100 * side, .7);
     }
@@ -108,11 +101,11 @@ public class AutoCopy extends OpMode{
             case 0:
                 new SequentialCommandGroup(
                         closeshoot(),
-                        robot.getLauncher().flywheelOn(true),
-                        new WaitCommand(1200),
+                        robot.getLauncher().flywheelOn(!isFar),
+                        new WaitCommand(700),
                         robot.getLauncher().fire(),
-                        new InstantCommand(()->state=-2),
-                        robot.getLauncher().flywheelOff()
+                        new WaitCommand(500),
+                        new InstantCommand(()->state=-2)
                 )
                         .schedule();
                 state = -1;
@@ -127,17 +120,24 @@ public class AutoCopy extends OpMode{
                 state = -1;
                 break;
             case 3:
-                pick3
+                robot.loading()
+                        .andThen(robot.getIntake().stop())
+                        .schedule();
+                new SequentialCommandGroup(
+                        pick3
                         .whenFinished(()->state = 0)
+                )
                         .schedule();
                 state = -1;
                 break;
             case 4:
+                robot.loading()
+                        .andThen(robot.getIntake().stop())
+                        .schedule();
                 new SequentialCommandGroup(
-                        pick2
-//                        togate
+                        pick2,
+                        new InstantCommand(()->state = 0)
                 )
-                        .whenFinished(()->state = 0)
                         .schedule();
                 state = -1;
                 break;
@@ -147,7 +147,7 @@ public class AutoCopy extends OpMode{
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap,isFar ? new Pose(9,56) : new Pose(12,12),color,null);
+        robot = new Bot().init(hardwareMap,null);
         controller = new GamepadEx(gamepad1);
     }
     @Override
@@ -195,7 +195,7 @@ public class AutoCopy extends OpMode{
     }
     @Override
     public void start(){
-        robot.getDrive().getFollower().setStartingPose(new Pose(color.equalsIgnoreCase("blue")? 56:88 , 8,Math.toRadians(90)));
+        robot.getDrive().getFollower().setStartingPose(new Pose(color.equalsIgnoreCase("blue")? 56:88 , 20,Math.toRadians(90)));
         paths = new PPcommands.Paths(robot.getDrive().getFollower(),color.equalsIgnoreCase("blue"));
         makeAuto(paths);
         robot.getCamera().setOrder(2);

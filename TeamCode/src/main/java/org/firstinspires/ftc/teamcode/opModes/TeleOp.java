@@ -21,7 +21,7 @@ public class TeleOp extends OpMode {
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap, new Pose(), "red", new GamepadEx(this.gamepad1));
+        robot = new Bot().init(hardwareMap, new GamepadEx(this.gamepad1));
         controller1 = new GamepadEx(gamepad1);
         controller2 = new GamepadEx(gamepad1);
     }
