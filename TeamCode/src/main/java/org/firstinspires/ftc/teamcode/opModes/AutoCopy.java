@@ -210,6 +210,8 @@ public class AutoCopy extends OpMode{
         telemetry.addData("pose",robot.getDrive().getPose());
         telemetry.addData("order", robot.getCamera().getOrder());
         telemetry.addData("state", state);
+        telemetry.addData("f1 velocity", robot.getLauncher().flyWheel1.getVelocity());
+        telemetry.addData("f2 velocity" , robot.getLauncher().flyWheel2.getVelocity());
         telemetry.update();
     }
     public double flip(double standard, boolean ifFlip){

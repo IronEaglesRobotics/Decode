@@ -50,8 +50,8 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta;
     Color[] chambers;
-    public static int closeSpeed = 800;
-    public static int farSpeed = 950;
+    public static int closeSpeed = 950;
+    public static int farSpeed = 1050;
     public static double power = .43;
     double speed1 = 0;
     double speed2 = 0;
@@ -82,10 +82,19 @@ public class Launcher extends SubsystemBase {
         }
         return Color.Nothing;
     }
+
+    public Command plusVelo(){
+        return new InstantCommand(()-> speed1 = speed1 + 100)
+        ;
+    }
+    public Command minusVelo(){
+        return new InstantCommand(()-> speed1 = speed1 - 100)
+                ;
+    }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = -(isClose? closeSpeed:farSpeed);
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -123,7 +132,7 @@ public class Launcher extends SubsystemBase {
             @Override
             public void end(boolean interrupted) {
                 pusher.setPosition(.2);
-                new WaitCommand(1800).schedule();
+                new WaitCommand(1000).schedule();
             }
         };
     };
@@ -131,10 +140,10 @@ public class Launcher extends SubsystemBase {
         return new SequentialCommandGroup(
             shoot(),
             toNext(),
-            new WaitCommand(300),
+            new WaitCommand(150),
             shoot(),
             toNext(),
-            new WaitCommand(300),
+            new WaitCommand(150),
             shoot());
     }
 
@@ -201,7 +210,7 @@ public class Launcher extends SubsystemBase {
         controller.setPID(kp,ki,kd);
         controller.setSetPoint(current);
         spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(),current));
-        flyWheel1.setVelocity(speed1);
+        flyWheel1.set(speed1);
         flyWheel2.setVelocity(-speed1);
     }
 

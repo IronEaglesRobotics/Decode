@@ -66,6 +66,10 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.getDrive().turnTo(Math.toRadians(90)));
         controller2.getGamepadButton(GamepadKeys.Button.A)
                 .whenPressed(robot.getLauncher().fire());
+        controller1.getGamepadButton(GamepadKeys.Button.DPAD_UP)
+                .whenPressed(robot.getLauncher().plusVelo());
+        controller1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
+                .whenPressed(robot.getLauncher().minusVelo());
     }
     @Override
     public void loop(){
