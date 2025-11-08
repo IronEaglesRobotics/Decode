@@ -16,7 +16,7 @@ public class TeleOP extends OpMode {
         REST, NEAR, FAR
     }
     GamepadEx controller1;
-    private TelemetryManager telemetryM;
+    public TelemetryManager telemetryM;
 
 
     private final PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
@@ -80,15 +80,10 @@ public class TeleOP extends OpMode {
 //        telemetryM.debug("intake D2", robot.getIntake().getDistance()[1]);
 //        telemetryM.debug("Intake Ball", robot.getIntake().hasBall());
 //
-//        telemetryM.debug("shooter velo: ", robot.getShooter().getVelocity() / 28.0 * 60);
-//
+        telemetryM.debug("shooter velo: ", robot.getShooter().getVelocity() / 28.0 * 60);
         telemetryM.debug("state", robot.robotstate);
-//
-//
-//        telemetryM.debug("left stick y", gamepad1.left_stick_y);
-//        telemetryM.debug("left stick x", gamepad1.left_stick_x);
-//        telemetryM.debug("right stick x", -gamepad1.right_stick_x);
-//        telemetry.update();
+
+        telemetryM.update(telemetry);
         panelsTelemetry.getFtcTelemetry().update();
 
     }

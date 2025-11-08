@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.hardware.motors.CRServoEx;
@@ -42,7 +44,7 @@ public class Robot {
         return this;
     }
 
-    public Follower getFollower(){
+    public Follower getFollower() {
         return follower;
     }
 
@@ -52,6 +54,8 @@ public class Robot {
         private ServoEx lever;
         public static double leverUp = .35;
         public static double leverDown = 0.52;
+        public static double leverHold = 0.45;
+
 
         public Lever init(HardwareMap hardwareMap) {
             this.lever = new ServoEx(hardwareMap, "lever"); // T
@@ -60,6 +64,10 @@ public class Robot {
 
         public void up() {
             lever.set(leverUp);
+        }
+
+        public void hold() {
+            lever.set(leverHold);
         }
 
         public void down() {
@@ -129,7 +137,7 @@ public class Robot {
         public static double distance = 3.5;
         private DcMotorEx intake;
         private static int in = -1;
-        private static double slow = -.2;
+        private static double slow = -.1;
         private static int out = 1;
 
         public Intake init(HardwareMap hardwareMap) {
@@ -216,7 +224,7 @@ public class Robot {
 
 
         public void rest() {
-            setPower(0);
+            setPower(-.25);
             shooterHood.set(rest);
         }
 
@@ -250,11 +258,12 @@ public class Robot {
     public static double leverTime = 0.5;
     public boolean farShot = true;
     public boolean zit = false;
+    public boolean autoSwitch = false;
 
 
     public void robotMacro(GamepadEx controller1, double runtime) {
 
-        boolean rapidShoot = controller1.wasJustPressed(GamepadKeys.Button.A); //BUCKETH
+        boolean rapidShoot = controller1.wasJustPressed(GamepadKeys.Button.A) || autoSwitch; //BUCKETH
         boolean shoot = controller1.wasJustPressed(GamepadKeys.Button.X); // BUCKETL
         boolean A = controller1.wasJustPressed(GamepadKeys.Button.A); // SPECIMENINTAKE
         boolean INTAKE = controller1.wasJustPressed(GamepadKeys.Button.DPAD_DOWN); //
@@ -277,7 +286,7 @@ public class Robot {
             case IDLE:
                 //Idle Actions
                 conveyor.stop();
-                intake.slow();
+                intake.setPower(0);
                 lever.down();
                 if (INTAKE) {
                     robotstate = robotStates.INTAKE;
@@ -291,7 +300,7 @@ public class Robot {
                 lever.down();
 
                 //Intakes ball?
-                if (ballCheck(runtime, 1, .2)) {
+                if (shooter.hasBall()) {
                     robotstate = robotStates.HAS1;
                     balls = 1;
                 }
@@ -327,7 +336,7 @@ public class Robot {
             case HAS2:
                 conveyor.seperate();
                 intake.intake();
-                lever.down();
+//                lever.down();
 
                 //Intakes 3rd ball?
                 if (ballCheck(runtime, 0, .5) && delayed) {
@@ -351,7 +360,7 @@ public class Robot {
             case HAS3:
                 conveyor.seperate();
                 intake.slow();
-                lever.down();
+//                lever.down();
 
 
                 //Shoot?
@@ -371,38 +380,39 @@ public class Robot {
                 if (delayed) {
                     lever.down();
 
-                //Shot the ball?
-                switch (transition) {
-                    //reload
-                    case 0:
-                        if (!ballCheck(runtime, 1, .1)) {
-                            intake.intake();
-                            conveyor.intake();
-                            transition++;
-                        }
-                        break;
-                    //done reloading?
-                    case 1:
-                        if (ballCheck(runtime, 1, foo) || balls == 1) {
-                            switch (balls) {
-                                case 1:
-                                    robotstate = robotStates.INTAKE;
-                                    rapid = false;
-                                    break;
-                                case 2:
-                                    robotstate = robotStates.HAS1;
-                                    break;
-                                case 3:
-                                    robotstate = robotStates.HAS2;
-                                    break;
+                    //Shot the ball?
+                    switch (transition) {
+                        //reload
+                        case 0:
+                            if (!ballCheck(runtime, 1, .1)) {
+                                intake.intake();
+                                conveyor.intake();
+                                transition++;
                             }
-                            balls--;
-                            transition = 0;
-                        }
-                        break;
+                            break;
+                        //done reloading?
+                        case 1:
+                            if (ballCheck(runtime, 1, foo) || balls == 1) {
+                                switch (balls) {
+                                    case 1:
+                                        robotstate = robotStates.INTAKE;
+                                        rapid = false;
+                                        break;
+                                    case 2:
+                                        robotstate = robotStates.HAS1;
+                                        lever.down();
+                                        break;
+                                    case 3:
+                                        robotstate = robotStates.HAS2;
+                                        lever.down();
+                                        break;
+                                }
+                                balls--;
+                                transition = 0;
+                            }
+                            break;
+                    }
                 }
-                }
-
                 break;
             case SPIT:
                 break;
