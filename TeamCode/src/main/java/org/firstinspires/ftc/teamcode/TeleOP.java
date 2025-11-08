@@ -29,6 +29,7 @@ public class TeleOP extends OpMode {
         robot.getFollower().update();
         controller1 = new GamepadEx(gamepad1);
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+        robot.shooter.setNear(.68);
     }
 
     @Override

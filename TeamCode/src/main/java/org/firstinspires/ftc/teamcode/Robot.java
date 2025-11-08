@@ -190,7 +190,7 @@ public class Robot {
         private MotorEx shooter;
         private ServoEx shooterHood;
         public static double powerFar = 1;
-        public static double powerNear = .65;
+        public static double powerNear = .61;
         public static double hoodFar = .6;
         public static double hoodNear = .68;
         public static double rest = .77;
@@ -238,6 +238,10 @@ public class Robot {
 
         public boolean hasBall() {
             return getDistance()[0] < distance || getDistance()[1] < distance;
+        }
+
+        public void setNear(double power){
+            powerNear = power;
         }
 
     }

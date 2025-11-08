@@ -6,7 +6,6 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
@@ -15,8 +14,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
-@Autonomous(name = "Blue auto")
-public class Auton extends OpMode {
+@Autonomous(name = "Red auto")
+public class AutonRed extends OpMode {
     private Robot robot;
     GamepadEx controller1;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -26,19 +25,20 @@ public class Auton extends OpMode {
     private double timer;
     private boolean foo = true;
 
-    private shotTier tier = shotTier.NEAR;
+    private shotTier tier = shotTier.REST;
 
     private enum shotTier {
         REST, NEAR, FAR
     }
 
-    private final Pose startPose = new Pose(26, 130, Math.toRadians(145)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(60, 96, Math.toRadians(145)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pickup1Pose = new Pose(22, 87, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup1Control = new Pose(48, 85, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Transition = new Pose(48, 75, Math.toRadians(242)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(20, 62, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Control = new Pose(37, 63, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose startPose = new Pose(118, 130, Math.toRadians(35)); // Mirrored Start Pose: x'=144-26=118, angle'=180-145=35
+    private final Pose scorePose = new Pose(84, 96, Math.toRadians(35)); // Mirrored Scoring Pose: x'=144-60=84, angle'=180-145=35
+    private final Pose pickup1Pose = new Pose(122, 89, Math.toRadians(0)); // Mirrored Highest (First Set) of Artifacts: x'=144-22=122, angle'=180-180=0
+    private final Pose pickup1Control = new Pose(96, 87, Math.toRadians(180)); // Mirrored Highest (First Set) Control: x'=144-48=96, angle'=180-0=180
+    private final Pose pickup2Transition = new Pose(96, 77, Math.toRadians(298)); // Mirrored Middle (Second Set) Transition: x'=144-48=96, angle'=180-242=-62 (or 298)
+    private final Pose pickup2Pose = new Pose(124, 64, Math.toRadians(0)); // Mirrored Lowest (Third Set) of Artifacts: x'=144-20=124, angle'=180-180=0
+    private final Pose pickup2Control = new Pose(107, 65, Math.toRadians(180)); // Mirrored Lowest (Third Set) Control: x'=144-37=107, angle'=180-0=180
+
 
     private Follower follower() {
         return robot.getFollower();
@@ -60,9 +60,9 @@ public class Auton extends OpMode {
         scorePreloads.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
 
         getPickup1 = robot.getFollower().pathBuilder()
-                .addPath(new BezierLine(scorePose, offsetPose(scorePose, 0, -5, Math.toRadians(60))))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), offsetPose(scorePose, 0, 0, Math.toRadians(60)).getHeading())
-                .addPath(new BezierCurve(offsetPose(scorePose, 0, -5, Math.toRadians(60)), pickup1Control, pickup1Pose))
+                .addPath(new BezierLine(scorePose, offsetPose(scorePose, 0, -5, Math.toRadians(-60))))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), offsetPose(scorePose, 0, 0, Math.toRadians(-60)).getHeading())
+                .addPath(new BezierCurve(offsetPose(scorePose, 0, -5, Math.toRadians(-60)), pickup1Control, pickup1Pose))
                 .setTangentHeadingInterpolation()
                 .setBrakingStart(.4)
 //                .addParametricCallback(0.9,(()->tier = shotTier.NEAR))
