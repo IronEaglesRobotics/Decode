@@ -39,6 +39,8 @@ public class Auton extends OpMode {
     private final Pose pickup2Transition = new Pose(48, 75, Math.toRadians(242)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(20, 62, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Control = new Pose(37, 63, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose parkPose = new Pose(60, 100, Math.toRadians(145)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+
 
     private Follower follower() {
         return robot.getFollower();
@@ -52,12 +54,15 @@ public class Auton extends OpMode {
         return new Pose(pose.getX() + x, pose.getY() + y, pose.getHeading());
     }
 
-    private Path scorePreloads;
+    private Path scorePreloads, park;
     private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2;
 
     public void buildPaths() {
         scorePreloads = new Path(new BezierLine(startPose, scorePose));
         scorePreloads.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
+        park = new Path (new BezierLine(scorePose, parkPose));
+        park.setConstantHeadingInterpolation(scorePose.getHeading());
+
 
         getPickup1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierLine(scorePose, offsetPose(scorePose, 0, -5, Math.toRadians(60))))
@@ -65,7 +70,7 @@ public class Auton extends OpMode {
                 .addPath(new BezierCurve(offsetPose(scorePose, 0, -5, Math.toRadians(60)), pickup1Control, pickup1Pose))
                 .setTangentHeadingInterpolation()
                 .setBrakingStart(.4)
-//                .addParametricCallback(0.9,(()->tier = shotTier.NEAR))
+                .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
                 .build();
 
         launchBatch1 = follower().pathBuilder()
@@ -80,6 +85,7 @@ public class Auton extends OpMode {
                 .addPath(new BezierCurve(pickup2Transition, pickup2Control, pickup2Pose))
                 .setTangentHeadingInterpolation()
                 .setBrakingStart(.4)
+                .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
                 .build();
 
         launchBatch2 = follower().pathBuilder()
@@ -126,7 +132,6 @@ public class Auton extends OpMode {
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()) {
-                    timer = getRuntime() + 1.5;
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
                         follower().followPath(launchBatch1, true);
@@ -159,7 +164,6 @@ public class Auton extends OpMode {
                 break;
             case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()) {
-                    timer = getRuntime() + 1.5;
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
                         follower().followPath(launchBatch2, true);
@@ -179,8 +183,14 @@ public class Auton extends OpMode {
                 robot.autoSwitch = false;
                 if (robot.balls == 0) {
                     //follow get 2nd batch of balls
-//                    follower().followPath(getPickup2,.8, true);
+                    follower().followPath(park, true);
                     tier = shotTier.REST;
+
+                    setPathState(9);
+                }
+                break;
+            case 9:
+                if (!follower().isBusy()){
                     setPathState(-1);
                 }
                 break;

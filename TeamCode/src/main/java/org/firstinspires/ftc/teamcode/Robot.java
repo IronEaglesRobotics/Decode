@@ -53,7 +53,7 @@ public class Robot {
     public static class Lever {
         private ServoEx lever;
         public static double leverUp = .35;
-        public static double leverDown = 0.52;
+        public static double leverDown = 0.535;
         public static double leverHold = 0.45;
 
 
@@ -137,7 +137,7 @@ public class Robot {
         public static double distance = 3.5;
         private DcMotorEx intake;
         private static int in = -1;
-        private static double slow = -.1;
+        private static double slow = -.3;
         private static int out = 1;
 
         public Intake init(HardwareMap hardwareMap) {
@@ -190,9 +190,9 @@ public class Robot {
         private MotorEx shooter;
         private ServoEx shooterHood;
         public static double powerFar = 1;
-        public static double powerNear = .61;
+        public static double powerNear = .6;
         public static double hoodFar = .6;
-        public static double hoodNear = .68;
+        public static double hoodNear = .67;
         public static double rest = .77;
         public static double distance = 4;
 

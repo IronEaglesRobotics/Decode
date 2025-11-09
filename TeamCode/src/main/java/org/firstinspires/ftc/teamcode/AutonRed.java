@@ -38,6 +38,7 @@ public class AutonRed extends OpMode {
     private final Pose pickup2Transition = new Pose(96, 77, Math.toRadians(298)); // Mirrored Middle (Second Set) Transition: x'=144-48=96, angle'=180-242=-62 (or 298)
     private final Pose pickup2Pose = new Pose(124, 64, Math.toRadians(0)); // Mirrored Lowest (Third Set) of Artifacts: x'=144-20=124, angle'=180-180=0
     private final Pose pickup2Control = new Pose(107, 65, Math.toRadians(180)); // Mirrored Lowest (Third Set) Control: x'=144-37=107, angle'=180-0=180
+    private final Pose parkPose = new Pose(84, 100, Math.toRadians(145)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
 
 
     private Follower follower() {
@@ -52,20 +53,22 @@ public class AutonRed extends OpMode {
         return new Pose(pose.getX() + x, pose.getY() + y, pose.getHeading());
     }
 
-    private Path scorePreloads;
+    private Path scorePreloads, park;
     private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2;
 
     public void buildPaths() {
         scorePreloads = new Path(new BezierLine(startPose, scorePose));
         scorePreloads.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
+        park = new Path (new BezierLine(scorePose, parkPose));
+        park.setConstantHeadingInterpolation(scorePose.getHeading());
 
         getPickup1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierLine(scorePose, offsetPose(scorePose, 0, -5, Math.toRadians(-60))))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), offsetPose(scorePose, 0, 0, Math.toRadians(-60)).getHeading())
                 .addPath(new BezierCurve(offsetPose(scorePose, 0, -5, Math.toRadians(-60)), pickup1Control, pickup1Pose))
                 .setTangentHeadingInterpolation()
+                .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
                 .setBrakingStart(.4)
-//                .addParametricCallback(0.9,(()->tier = shotTier.NEAR))
                 .build();
 
         launchBatch1 = follower().pathBuilder()
@@ -80,6 +83,7 @@ public class AutonRed extends OpMode {
                 .addPath(new BezierCurve(pickup2Transition, pickup2Control, pickup2Pose))
                 .setTangentHeadingInterpolation()
                 .setBrakingStart(.4)
+                .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
                 .build();
 
         launchBatch2 = follower().pathBuilder()
@@ -95,7 +99,7 @@ public class AutonRed extends OpMode {
         switch (pathState) {
             case 0: // Go to Launch 1 location
                 robot.robotstate = Robot.robotStates.CALIBRATE;
-                if (getRuntime() > time ){
+                if (getRuntime() > time) {
                     robot.getFollower().followPath(scorePreloads, true);
                     setPathState(1);
                 }
@@ -105,7 +109,7 @@ public class AutonRed extends OpMode {
                     robot.robotstate = Robot.robotStates.HAS2;
                 }
                 if (!follower().isBusy()) {
-                    if(foo){
+                    if (foo) {
                         timer = getRuntime() + 1;
                         foo = false;
                     }
@@ -126,7 +130,6 @@ public class AutonRed extends OpMode {
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()) {
-                    timer = getRuntime() + 1.5;
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
                         follower().followPath(launchBatch1, true);
@@ -138,7 +141,7 @@ public class AutonRed extends OpMode {
                 break;
             case 4: //if at launch pos, then shoot
                 if (!follower().isBusy()) {
-                    if(foo){
+                    if (foo) {
                         timer = getRuntime() + 1;
                         foo = false;
                     }
@@ -159,7 +162,6 @@ public class AutonRed extends OpMode {
                 break;
             case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()) {
-                    timer = getRuntime() + 1.5;
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
                         follower().followPath(launchBatch2, true);
@@ -179,8 +181,14 @@ public class AutonRed extends OpMode {
                 robot.autoSwitch = false;
                 if (robot.balls == 0) {
                     //follow get 2nd batch of balls
-//                    follower().followPath(getPickup2,.8, true);
+                    follower().followPath(park, true);
                     tier = shotTier.REST;
+
+                    setPathState(9);
+                }
+                break;
+            case 9:
+                if (!follower().isBusy()) {
                     setPathState(-1);
                 }
                 break;

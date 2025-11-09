@@ -17,7 +17,7 @@ public class TeleOP extends OpMode {
     }
     GamepadEx controller1;
     public TelemetryManager telemetryM;
-
+    private double shotPower = .63;
 
     private final PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
 
@@ -29,7 +29,7 @@ public class TeleOP extends OpMode {
         robot.getFollower().update();
         controller1 = new GamepadEx(gamepad1);
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        robot.shooter.setNear(.68);
+        robot.shooter.setNear(shotPower);
     }
 
     @Override
@@ -56,6 +56,12 @@ public class TeleOP extends OpMode {
             tier = shotTier.REST;
         }
 
+        if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)) {
+            shotPower++;
+    } else if (controller1.wasJustPressed((GamepadKeys.Button.DPAD_LEFT))){
+            shotPower--;
+        }
+
         switch (tier){
             case FAR:
                 robot.getShooter().farShot();
@@ -71,16 +77,6 @@ public class TeleOP extends OpMode {
 
         robot.robotMacro(controller1,getRuntime());
 
-
-
-//        telemetryM.debug("D1", robot.getShooter().getDistance()[0]);
-//        telemetryM.debug("D2", robot.getShooter().getDistance()[1]);
-//        telemetryM.debug("Shooter Ball", robot.getShooter().hasBall());
-//
-//        telemetryM.debug("intake D1", robot.getIntake().getDistance()[0]);
-//        telemetryM.debug("intake D2", robot.getIntake().getDistance()[1]);
-//        telemetryM.debug("Intake Ball", robot.getIntake().hasBall());
-//
         telemetryM.debug("shooter velo: ", robot.getShooter().getVelocity() / 28.0 * 60);
         telemetryM.debug("state", robot.robotstate);
 
