@@ -12,11 +12,14 @@ import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.ParallelRaceGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.teamcode.hardware.PPcommands;
+
+import java.util.function.BooleanSupplier;
 
 @Autonomous(name =  "CAuto")
 public class AutoCopy extends OpMode{
@@ -28,6 +31,8 @@ public class AutoCopy extends OpMode{
     GamepadEx controller; // plz DO NOT feed into Bot
     int delay;
     int state = 0;
+    int green = 0;
+    boolean wantsShoot = false;
     public PPcommands.Paths paths;
     Command farshoot;
     Command closeshoot;
@@ -57,7 +62,7 @@ public class AutoCopy extends OpMode{
                         robot.getIntake().start()
                                 .alongWith(robot.getLauncher().toZero()),
                     robot.getDrive().pathCommand(paths.Path3,.05),
-                        new WaitCommand(200)
+                        new WaitCommand(400)
                 )
 
         );
@@ -100,11 +105,14 @@ public class AutoCopy extends OpMode{
                 break;
             case 0:
                 new SequentialCommandGroup(
-                        closeshoot(),
+                        closeshoot()
+                                .whenFinished(()-> wantsShoot = true),
                         robot.getLauncher().flywheelOn(!isFar),
                         new WaitCommand(700),
+//                        robot.getLauncher().setlaunch(green,robot.getCamera().getOrder()),
+                        new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
-                        new WaitCommand(500),
+                        new WaitCommand(250),
                         new InstantCommand(()->state=-2)
                 )
                         .schedule();
@@ -114,29 +122,38 @@ public class AutoCopy extends OpMode{
                 state = -1;
                 break;
             case 2:
-                pick1
-                        .whenFinished(()->state = 0)
-                        .schedule();
+                robot.getLauncher().toZero().schedule();
                 state = -1;
                 break;
             case 3:
+                wantsShoot = false;
                 robot.loading()
+                        .raceWith(new WaitUntilCommand(()->wantsShoot))
                         .andThen(robot.getIntake().stop())
                         .schedule();
                 new SequentialCommandGroup(
                         pick3
-                        .whenFinished(()->state = 0)
+                        .whenFinished(()-> {
+                            green = 2;
+                            state = 0;
+                        })
                 )
                         .schedule();
                 state = -1;
                 break;
             case 4:
+
+                wantsShoot = false;
                 robot.loading()
+                        .raceWith(new WaitUntilCommand(()->wantsShoot))
                         .andThen(robot.getIntake().stop())
                         .schedule();
                 new SequentialCommandGroup(
                         pick2,
-                        new InstantCommand(()->state = 0)
+                        new InstantCommand(()-> {
+                            green = 2;
+                            state = 0;
+                        })
                 )
                         .schedule();
                 state = -1;
@@ -199,7 +216,7 @@ public class AutoCopy extends OpMode{
         paths = new PPcommands.Paths(robot.getDrive().getFollower(),color.equalsIgnoreCase("blue"));
         makeAuto(paths);
         robot.getCamera().setOrder(2);
-        robot.loading().schedule();
+        robot.getLauncher().setlaunch(0,robot.getCamera().getOrder()).schedule();
     }
 
     @Override
@@ -207,11 +224,15 @@ public class AutoCopy extends OpMode{
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
-        telemetry.addData("pose",robot.getDrive().getPose());
-        telemetry.addData("order", robot.getCamera().getOrder());
-        telemetry.addData("state", state);
-        telemetry.addData("f1 velocity", robot.getLauncher().flyWheel1.getVelocity());
-        telemetry.addData("f2 velocity" , robot.getLauncher().flyWheel2.getVelocity());
+        telemetry.addData("pose: ",robot.getDrive().getPose());
+        telemetry.addData("order: ", robot.getCamera().getOrder());
+        telemetry.addData("state: ", state);
+        telemetry.addData("f1 velocity: ", robot.getLauncher().flyWheel1.getVelocity());
+        telemetry.addData("f2 velocity: " , robot.getLauncher().flyWheel2.getVelocity());
+        telemetry.addData("wantsShoot: ",wantsShoot);
+        telemetry.addData("target",robot.getLauncher().current);
+        telemetry.addData("current",robot.getLauncher().spinner.getCurrentPosition());
+        telemetry.addData("can shoot",robot.getLauncher().canShoot());
         telemetry.update();
     }
     public double flip(double standard, boolean ifFlip){

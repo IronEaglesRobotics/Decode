@@ -24,11 +24,6 @@ public class testsrevo extends OpMode {
 
     @Override
     public void loop() {
-        if(gamepad1.a){
-            pusher.setPosition(push);
-        }
-        if(gamepad1.b){
-          pusher.setPosition(starting);
-        }
+        pusher.setPosition(0);
     }
 }

@@ -33,24 +33,16 @@ public class Launcher extends SubsystemBase {
     public static double kp = 7;
     public static double ki = 10;
     public static double kd = 0.1;
-    public static double kp1 = 7;
-    public static double ki1 = 10;
-    public static double kd1 = 0.1;
-    public static double kp2 = 7;
-    public static double ki2 = 10;
-    public static double kd2 = 0.1;
-    PIDController controller = new PIDController(kp,ki,kd);
-    PIDController FW1 = new PIDController(kp,ki,kd);
-    PIDController FW2 = new PIDController(kp,ki,kd);
+    public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
-    public static int halfDelta = -260;
+    public static int halfDelta = -238;
     public static int fullDelta = -475;
     public int current = 0;
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta;
     Color[] chambers;
-    public static int closeSpeed = 950;
+    public static int closeSpeed = 900;
     public static int farSpeed = 1050;
     public static double power = .43;
     double speed1 = 0;
@@ -66,6 +58,7 @@ public class Launcher extends SubsystemBase {
         flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
         pusher = hardwareMap.get(Servo.class,"pusher");
+        pusher.setDirection(Servo.Direction.REVERSE);
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers[0] = Color.Nothing;
@@ -93,8 +86,8 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = -(isClose? closeSpeed:farSpeed);
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -115,13 +108,13 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                pusher.setPosition(0);
+                pusher.setPosition(0.06);
                 time = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return time + 700 < System.currentTimeMillis();
+                return time + 200 < System.currentTimeMillis();
             }
 
             @Override
@@ -131,19 +124,46 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                pusher.setPosition(.2);
-                new WaitCommand(1000).schedule();
+                pusher.setPosition(0);
+                new WaitCommand(150).schedule();
             }
         };
-    };
+    }
+
+    public Command setlaunch(int greenLoc,int order) {
+        return new Command() {
+            @Override
+            public Set<Subsystem> getRequirements() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public void initialize() {
+                if (greenLoc == 0) {
+                    current = CHAMBER1;
+                } else if (greenLoc == 1) {
+                    current = CHAMBER2;
+                } else if (greenLoc == 2) {
+                    current = CHAMBER3;
+                }
+                if (greenLoc == -1){
+                    current = CHAMBER1;
+                }
+                else {
+                    current -= fullDelta * (order - 1);
+                }
+            }
+        };
+    }
+    public boolean canShoot(){
+        return ((current - halfDelta)%fullDelta) == 0 && controller.atSetPoint();
+    }
     public Command fire(){
         return new SequentialCommandGroup(
             shoot(),
             toNext(),
-            new WaitCommand(150),
             shoot(),
             toNext(),
-            new WaitCommand(150),
             shoot());
     }
 
@@ -210,7 +230,7 @@ public class Launcher extends SubsystemBase {
         controller.setPID(kp,ki,kd);
         controller.setSetPoint(current);
         spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(),current));
-        flyWheel1.set(speed1);
+        flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
     }
 
@@ -252,31 +272,19 @@ public class Launcher extends SubsystemBase {
         @Override
         public void end(boolean interrupted) {
             if(!interrupted){
-                int greenLoc = 0;
                 if (launcher.chambers[0] == Color.Green){
-                    greenLoc = 0;
                     launcher.current = CHAMBER1;
                 }
                 else if (launcher.chambers[1] == Color.Green) {
-                    greenLoc = 1;
                     launcher.current = CHAMBER2;
                 }
                 else if(launcher.chambers[2] == Color.Green){
-                    greenLoc = 2;
                     launcher.current = CHAMBER3;
                 }
-                int exception = 0;
-                for (Color color : launcher.chambers){
-                    if (color == Color.Purple){
-                        exception++;
-                    }
+                else {
+                    launcher.current = CHAMBER1;
                 }
-                if (exception == 3){
-                    launcher.current = halfDelta;
-                }
-                else{
-                    launcher.current -= fullDelta * (order - 1);
-                }
+                launcher.current -= fullDelta * (order - 1);
 
             }
             else {

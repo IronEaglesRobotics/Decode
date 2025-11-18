@@ -59,6 +59,7 @@ public class Bot extends Robot {
         public Aim(Bot robot){
             bot = robot;
             addRequirements(bot.camera, bot.drive);
+            holdPoint = robot.drive.getPose();
         }
 
         @Override
@@ -83,7 +84,8 @@ public class Bot extends Robot {
 
         @Override
         public void end(boolean interrupted) {
-//            bot.getLauncher().shoot().schedule();
+            bot.getDrive().getFollower().startTeleopDrive(true);
+            bot.getLauncher().fire().schedule();
         }
     }
 }

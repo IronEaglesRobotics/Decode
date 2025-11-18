@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
@@ -14,13 +15,16 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 
+import java.util.function.Supplier;
+
 @TeleOp(name = "test teleop")
 public class testTeleop extends OpMode {
     Bot robot;
     GamepadEx controller1;
     GamepadEx controller2;
     boolean isBot = true;
-
+    boolean manualDrive = true;
+    public Supplier<Command> toShoot;
 
 
     @Override
@@ -32,18 +36,28 @@ public class testTeleop extends OpMode {
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
-        robot.getCamera().getMotif().schedule();
+        toShoot = ()-> robot.getDrive().moveTo(56,95.5,135);
+        robot.getCamera().getMotif()
+                .whenFinished(()->
+                    controller1.getGamepadButton(GamepadKeys.Button.A)
+                    .toggleWhenPressed(
+                            robot.getIntake().start()
+                                    .alongWith(robot.loading())
+                                    .andThen(robot.getIntake().stop())
+                            ,robot.getIntake().stop()
+                    ))
+                .schedule();
 //        controller1.getGamepadButton(GamepadKeys.Button.A)
 //                .whenPressed(robot.getIntake().start());
 //        controller1.getGamepadButton(GamepadKeys.Button.Y)
 //                        .whenPressed(robot.loading());
-        controller1.getGamepadButton(GamepadKeys.Button.A)
-                .toggleWhenPressed(
-                        robot.getIntake().start()
-                                .alongWith(robot.loading())
-                                .andThen(robot.getIntake().stop())
-                        ,robot.getIntake().stop()
-                );
+//        controller1.getGamepadButton(GamepadKeys.Button.A)
+//                .toggleWhenPressed(
+//                        robot.getIntake().start()
+//                                .alongWith(robot.loading())
+//                                .andThen(robot.getIntake().stop())
+//                        ,robot.getIntake().stop()
+//                );
 //        controller1.getGamepadButton(GamepadKeys.Button.B)
 //                .whenPressed(robot.getIntake().stop());
         controller1.getGamepadButton(GamepadKeys.Button.X)
@@ -70,37 +84,26 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.getLauncher().plusVelo());
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
                 .whenPressed(robot.getLauncher().minusVelo());
+        controller2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+                .whenPressed(robot.aim());
     }
     @Override
     public void loop(){
         controller1.readButtons();
         controller2.readButtons();
-        robot.getDrive().getFollower().setTeleOpDrive(
-                controller1.getLeftY(),
-                -controller1.getLeftX(),
-                -controller1.getRightX(),
-                true);
-        if(controller1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > .1){
-            isBot = false;
+        if (manualDrive){
+            robot.getDrive().getFollower().setTeleOpDrive(
+                    controller1.getLeftY(),
+                    -controller1.getLeftX(),
+                    -controller1.getRightX(),
+                    true);
         }
-        if(controller1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > .1){
-            isBot = true;
+        if (controller2.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
+            manualDrive = false;
+            robot.getDrive().moveTo(56,95,135)
+                    .whenFinished(()->manualDrive = true)
+                    .schedule();
         }
-
-//        if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_UP)){
-//            robot.loading().schedule();
-//        }
-//
-//        if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)){
-//            robot.aim().schedule();
-//        }
-//
-//        if(gamepad1.left_bumper){
-//            robot.getLauncher().shoot();
-//        }
-//        else if (controller1.wasJustReleased(GamepadKeys.Button.LEFT_BUMPER)){
-//            robot.getLauncher().retract();
-//        }
 
         CommandScheduler.getInstance().run();
         telemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
