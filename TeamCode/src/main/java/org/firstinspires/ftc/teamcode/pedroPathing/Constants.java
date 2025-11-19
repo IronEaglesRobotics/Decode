@@ -33,6 +33,7 @@ public class Constants {
         followerConstants.forwardZeroPowerAcceleration(-62.20);
         followerConstants.lateralZeroPowerAcceleration(-93.88);
         followerConstants.setCentripetalScaling(0.0002);
+//        followerConstants.setTurnHeadingErrorThreshold(.001);
         return new FollowerBuilder(followerConstants,hardwareMap)
                 .pathConstraints(pathConstraints)
                 .mecanumDrivetrain(driveConstants)

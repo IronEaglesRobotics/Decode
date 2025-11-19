@@ -114,6 +114,7 @@ public class testTeleop extends OpMode {
         telemetry.addData("flywheel 1", robot.getLauncher().flyWheel1.getVelocity());
         telemetry.addData("flywheel 2", robot.getLauncher().flyWheel2.getVelocity());
         telemetry.addData("is field centric",!isBot);
+        telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
         telemetry.addLine(robot.getLauncher().getTelemetry());
         FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(),60);
         telemetry.update();

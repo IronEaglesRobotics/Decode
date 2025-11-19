@@ -30,7 +30,7 @@ public class Launcher extends SubsystemBase {
     public MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
-    public static double kp = 7;
+    public static double kp = 10;
     public static double ki = 10;
     public static double kd = 0.1;
     public PIDController controller = new PIDController(kp,ki,kd);
@@ -42,7 +42,7 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta;
     Color[] chambers;
-    public static int closeSpeed = 900;
+    public static int closeSpeed = 850;
     public static int farSpeed = 1050;
     public static double power = .43;
     double speed1 = 0;
@@ -59,12 +59,13 @@ public class Launcher extends SubsystemBase {
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
+        pusher.setPosition(0.00000001);
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers[0] = Color.Nothing;
         chambers[1] = Color.Nothing;
         chambers[2] = Color.Nothing;
-        controller.setTolerance(20);
+        controller.setTolerance(40);
     }
     public Color getColor(RevColorSensorV3 cs){
         if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < .8) {
