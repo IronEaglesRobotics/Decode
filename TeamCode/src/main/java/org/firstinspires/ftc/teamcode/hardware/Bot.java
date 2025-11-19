@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -7,7 +8,7 @@ import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
-
+@Configurable
 public class Bot extends Robot {
     Cam camera;
     Drive drive;
@@ -48,44 +49,47 @@ public class Bot extends Robot {
         return new Launcher.Loading(launcher,camera.order);
     }
 
-
-    public class Aim extends CommandBase{
+    @Configurable
+    public static class Aim extends CommandBase{
         Bot bot;
+
         double sensitivity = 2;
         double correctionFactor = 0.5;
         Pose holdPoint;
 
         private boolean turning = false;
+
+        double angleError;
+        public static double kP = 1;
         public Aim(Bot robot){
             bot = robot;
             addRequirements(bot.camera, bot.drive);
-            holdPoint = robot.drive.getPose();
         }
 
         @Override
         public void initialize() {
-            bot.getDrive().getFollower().holdPoint(
-                    new Pose(holdPoint.getX(),holdPoint.getY(),bot.camera.getFiducialAngle())
-            );
+//            bot.getDrive().getFollower().holdPoint(
+//                    new Pose(holdPoint.getX(),holdPoint.getY(),bot.camera.getFiducialAngle())
+//            );
+            angleError = bot.camera.getFiducialAngle();
         }
 
         @Override
         public void execute() {
-            bot.drive.follower.setPose(
-                    new Pose(bot.drive.getX(),bot.drive.getY(),bot.camera.getBotPose().getHeading())
-            );
+            if (!bot.getDrive().getFollower().isTurning()){
+                double turnAngle = angleError * kP;
+                bot.drive.turn(turnAngle).schedule();
+            }
         }
 
         @Override
         public boolean isFinished() {
-            double angleError = bot.camera.getFiducialAngle();
-            return Math.abs(angleError) <= sensitivity && !bot.drive.follower.isTurning();
+            return Math.abs(bot.camera.getFiducialAngle()) <= 4 && !bot.drive.getFollower().isTurning();
         }
 
         @Override
         public void end(boolean interrupted) {
-            bot.getDrive().getFollower().startTeleopDrive(true);
-            bot.getLauncher().fire().schedule();
+            bot.getDrive().getFollower().startTeleOpDrive(true);
         }
     }
 }
