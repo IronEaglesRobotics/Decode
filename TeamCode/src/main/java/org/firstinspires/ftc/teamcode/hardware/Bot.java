@@ -8,18 +8,21 @@ import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 @Configurable
 public class Bot extends Robot {
     Cam camera;
     Drive drive;
     Launcher launcher;
     Intake intake;
-    public Bot init(HardwareMap hardwareMap, GamepadEx gamepad){
+    public Bot init(HardwareMap hardwareMap, GamepadEx gamepad, Telemetry telemetry){
         camera = new Cam(hardwareMap);
         intake = new Intake(hardwareMap);
         launcher = new Launcher(hardwareMap);
         if (gamepad == null){
-            drive = new Drive(hardwareMap);
+            drive = new Drive(hardwareMap,telemetry);
         } else {
             drive = new Drive(hardwareMap,gamepad);
         }

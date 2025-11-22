@@ -39,7 +39,7 @@ public class testTeleop extends OpMode {
     @Override
     public void init() {
         controller1 = new GamepadEx(gamepad1);
-        robot = new Bot().init(hardwareMap,controller1);
+        robot = new Bot().init(hardwareMap,controller1,telemetry);
         controller2 = new GamepadEx(gamepad2);
         robot.getDrive().getFollower().update();
         CommandScheduler.getInstance().reset();

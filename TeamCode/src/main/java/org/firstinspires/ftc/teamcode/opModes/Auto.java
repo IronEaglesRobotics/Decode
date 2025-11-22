@@ -83,7 +83,7 @@ public class Auto extends OpMode{
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap,null);
+        robot = new Bot().init(hardwareMap,null,telemetry);
         controller = new GamepadEx(gamepad1);
     }
     @Override
