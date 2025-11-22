@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -28,11 +29,14 @@ public class Robot {
     public Lever lever;
     @Getter
     public Conveyor conveyor;
+    @Getter
     private Follower follower;
     @Getter
     public Intake intake;
     @Getter
     public Shooter shooter;
+    @Getter
+    public LED ledController;
 
 
     public Robot init(HardwareMap hardwareMap) {
@@ -41,11 +45,8 @@ public class Robot {
         this.intake = new Intake().init(hardwareMap);
         this.shooter = new Shooter().init(hardwareMap);
         this.follower = Constants.createFollower(hardwareMap);
+        this.ledController = new LED().init(hardwareMap);
         return this;
-    }
-
-    public Follower getFollower() {
-        return follower;
     }
 
 
@@ -134,7 +135,7 @@ public class Robot {
 
         private ColorRangeSensor iColor;
         private DistanceSensor iDistance;
-        public static double distance = 3.5;
+        public static double distance = 3;
         private DcMotorEx intake;
         private static int in = -1;
         private static double slow = -.3;
@@ -190,11 +191,15 @@ public class Robot {
         private MotorEx shooter;
         private ServoEx shooterHood;
         public static double powerFar = 1;
-        public static double powerNear = .6;
-        public static double hoodFar = .6;
-        public static double hoodNear = .67;
-        public static double rest = .77;
-        public static double distance = 4;
+        public static double powerNear = .575;
+        //        public static double powerNear = 1;
+        public double hoodFar = .435;
+        public static double hoodNear = .53;
+        //        public static double hoodNear = .74;
+        public static double rest = .67;
+        public static double idlePower = -.15;
+
+        public static double distance = 2.5;
 
 
         public Shooter init(HardwareMap hardwareMap) {
@@ -224,7 +229,7 @@ public class Robot {
 
 
         public void rest() {
-            setPower(-.25);
+            setPower(idlePower);
             shooterHood.set(rest);
         }
 
@@ -240,10 +245,39 @@ public class Robot {
             return getDistance()[0] < distance || getDistance()[1] < distance;
         }
 
-        public void setNear(double power){
+        public void setNear(double power) {
             powerNear = power;
         }
 
+        public void setHood(double angle) {
+            hoodFar = angle;
+        }
+
+    }
+
+    @Configurable
+    public static class LED {
+        private RevBlinkinLedDriver ledDriver;
+
+        public LED init(HardwareMap hardwareMap){
+            this.ledDriver = hardwareMap.get(RevBlinkinLedDriver.class,"led");
+            return this;
+        }
+
+        public void pattern0(){
+            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.STROBE_WHITE);
+        }
+
+        public void pattern1(){
+            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.STROBE_BLUE);
+        }
+
+        public void pattern2(){
+            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.STROBE_GOLD);
+        }
+        public void pattern3(){
+            ledDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.STROBE_RED);
+        }
     }
 
     public robotStates robotstate = robotStates.CALIBRATE;
@@ -302,6 +336,7 @@ public class Robot {
 //                shooter.resthood();
                 intake.intake();
                 lever.down();
+                ledController.pattern0();
 
                 //Intakes ball?
                 if (shooter.hasBall()) {
@@ -316,6 +351,7 @@ public class Robot {
                 conveyor.seperate();
                 intake.intake();
                 lever.down();
+                ledController.pattern1();
 
                 //Intakes 2nd ball?
                 if (shooter.hasBall() && intake.hasBall()) {
@@ -340,7 +376,8 @@ public class Robot {
             case HAS2:
                 conveyor.seperate();
                 intake.intake();
-//                lever.down();
+                ledController.pattern2();
+
 
                 //Intakes 3rd ball?
                 if (ballCheck(runtime, 0, .5) && delayed) {
@@ -364,8 +401,7 @@ public class Robot {
             case HAS3:
                 conveyor.seperate();
                 intake.slow();
-//                lever.down();
-
+                ledController.pattern3();
 
                 //Shoot?
                 if (shoot || rapid) {

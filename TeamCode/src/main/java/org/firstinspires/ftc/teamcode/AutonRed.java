@@ -68,7 +68,7 @@ public class AutonRed extends OpMode {
                 .addPath(new BezierCurve(offsetPose(scorePose, 0, -5, Math.toRadians(-60)), pickup1Control, pickup1Pose))
                 .setTangentHeadingInterpolation()
                 .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
-                .setBrakingStart(.4)
+//                .setBrakingStart(.4)
                 .build();
 
         launchBatch1 = follower().pathBuilder()
@@ -82,7 +82,7 @@ public class AutonRed extends OpMode {
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Transition.getHeading())
                 .addPath(new BezierCurve(pickup2Transition, pickup2Control, pickup2Pose))
                 .setTangentHeadingInterpolation()
-                .setBrakingStart(.4)
+//                .setBrakingStart(.4)
                 .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
                 .build();
 
@@ -106,7 +106,8 @@ public class AutonRed extends OpMode {
             case 1: // immediately prep shooter -> if at location, launch
                 tier = shotTier.NEAR;
                 if (robot.robotstate == Robot.robotStates.IDLE) {
-                    robot.robotstate = Robot.robotStates.HAS2;
+                    robot.robotstate = Robot.robotStates.HAS3;
+                    robot.balls = 3;
                 }
                 if (!follower().isBusy()) {
                     if (foo) {
@@ -123,7 +124,7 @@ public class AutonRed extends OpMode {
             case 2: //is the robot done launching? if yes, go to pickup 1 and stop shooter
                 robot.autoSwitch = false;
                 if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
-                    follower().followPath(getPickup1, .6, true);
+                    follower().followPath(getPickup1, .8, true);
                     tier = shotTier.REST;
                     setPathState(3);
                 }
@@ -155,7 +156,7 @@ public class AutonRed extends OpMode {
                 robot.autoSwitch = false;
                 if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
                     //follow get 2nd batch of balls
-                    follower().followPath(getPickup2, .8, true);
+                    follower().followPath(getPickup2, 1, true);
                     tier = shotTier.REST;
                     setPathState(6);
                 }
