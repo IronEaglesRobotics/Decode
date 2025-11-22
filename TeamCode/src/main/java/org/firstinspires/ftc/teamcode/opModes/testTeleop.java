@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -16,7 +17,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 
 import java.util.function.Supplier;
-
+@Configurable
 @TeleOp(name = "test teleop")
 public class testTeleop extends OpMode {
     Bot robot;
@@ -26,9 +27,9 @@ public class testTeleop extends OpMode {
     boolean manualDrive = true;
     public Supplier<Command> toShoot;
 
-    public static double kP = 1;
+    public static double kP = 0.0199;
     public static double kI = 0;
-    public static double kD = 0;
+    public static double kD = 0.01;
 
     double headingIntegral = 0;
     double lastHeadingError = 0;
@@ -113,9 +114,9 @@ public class testTeleop extends OpMode {
                     double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
 
                     // limit
-                    pid = Math.max(-1, Math.min(1, pid));
+                    pid = Math.max(-0.3, Math.min(0.3, pid));
 
-                    turnOutput = pid;
+                    turnOutput = -pid;
                 }
                 else{
                     turnOutput = manualTurn;

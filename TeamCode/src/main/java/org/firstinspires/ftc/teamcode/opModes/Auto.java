@@ -74,7 +74,8 @@ public class Auto extends OpMode{
 //                new WaitCommand(200),
 //                robot.getIntake().stop()
         pick1 = new ParallelCommandGroup(
-                robot.getDrive().moveTo(paths.Path1.endPose().getX(),120,135),
+                robot.getDrive().moveTo(paths.Path1.endPose().getX(),130,
+                        90),
                 robot.getLauncher().toZero()
         );
     }
@@ -133,7 +134,8 @@ public class Auto extends OpMode{
     }
     @Override
     public void start(){
-        robot.getDrive().getFollower().setStartingPose(new Pose(color.equalsIgnoreCase("blue")? 14:118 , 135,Math.toRadians(135)));
+        robot.getDrive().getFollower().setStartingPose(new Pose(color.equalsIgnoreCase("blue")? 14:129 ,
+                135,Paths.flipAng(135,color.equalsIgnoreCase("blue"))));
         paths = new Paths(robot.getDrive().getFollower(),color.equalsIgnoreCase("blue"));
         makeAuto(paths);
         robot.getLauncher().flywheelOn(!isFar).schedule();
@@ -263,20 +265,24 @@ public class Auto extends OpMode{
         public PathChain Path9;
         public PathChain Path10;
         public PathChain Path11;
+        public PathChain Path12;
+        public PathChain Path13;
         public PathChain[] shootPaths;
 
         public Paths(Follower follower, boolean isBlue) {
-            double startX = isBlue ? 15:118;
-            double shootX = isBlue ? 32:88;
-            double prePickX = isBlue ? 35:100;
-            double postPickX1 = isBlue ? 0:130;
-            double postPickX2 = isBlue ? 5:127;
+            double startX = isBlue ? 15:125;
+            double shootX = isBlue ? 32:102;
+            double prePickX = isBlue ? 35:109;
+            double postPickX1 = isBlue ? 0:142;
+            double postPickX2 = isBlue ? 5:137;
+            double farStartX = isBlue ? 56:88;
+            double farShootX = isBlue ? 50:94;
             Path1 = follower
                     .pathBuilder()
                     .addPath(
                             new BezierLine(new Pose(startX, 135.000), new Pose(shootX, 95.500))
                     )
-                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(122,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(127,isBlue))
                     .build();
             Path1Ex = follower
                     .pathBuilder()
@@ -291,7 +297,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 71.000))
                     )
-                    .setLinearHeadingInterpolation(flipAng(122,isBlue), flipAng(180,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(127,isBlue), flipAng(180,isBlue))
                     .build();
 
             Path3 = follower
@@ -319,7 +325,7 @@ public class Auto extends OpMode{
                                     new Pose(shootX, 95.500)
                             )
                     )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(122,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(127,isBlue))
                     .build();
 
             Path6 = follower
@@ -327,7 +333,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 92.000))
                     )
-                    .setLinearHeadingInterpolation(flipAng(122,isBlue), flipAng(180,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(127,isBlue), flipAng(180,isBlue))
                     .build();
 
             Path7 = follower
@@ -343,7 +349,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(postPickX2, 92.000), new Pose(shootX, 95.500))
                     )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(122,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(127,isBlue))
                     .build();
 
             Path9 = follower
@@ -351,7 +357,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(shootX, 95.000), new Pose(prePickX, 35.500))
                     )
-                    .setLinearHeadingInterpolation(flipAng(122,isBlue),flipAng(180,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(127,isBlue),flipAng(180,isBlue))
                     .build();
 
             Path10 = follower
@@ -372,7 +378,7 @@ public class Auto extends OpMode{
             shootPaths = new PathChain[]{Path1,Path5,Path8,Path11};
         }
 
-        public double flipAng(double degrees, boolean ifFlip){
+        public static double flipAng(double degrees, boolean ifFlip){
             return Math.toRadians(90 +((degrees - 90) * (ifFlip ? 1:-1)));
         }
     }
