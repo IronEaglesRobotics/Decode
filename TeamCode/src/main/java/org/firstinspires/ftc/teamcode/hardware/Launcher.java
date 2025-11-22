@@ -59,7 +59,7 @@ public class Launcher extends SubsystemBase {
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
-        pusher.setPosition(0.00000001);
+        pusher.setPosition(0.0000001);
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers[0] = Color.Nothing;
@@ -153,6 +153,11 @@ public class Launcher extends SubsystemBase {
                 else {
                     current -= fullDelta * (order - 1);
                 }
+            }
+
+            @Override
+            public boolean isFinished() {
+                return controller.atSetPoint();
             }
         };
     }
@@ -289,7 +294,7 @@ public class Launcher extends SubsystemBase {
 
             }
             else {
-                launcher.current = halfDelta+fullDelta;
+                launcher.current = CHAMBER1;
             }
         }
     }

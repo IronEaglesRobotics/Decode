@@ -7,9 +7,8 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.CommandBase;
-import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.pedroCommand.HoldPointCommand;
@@ -17,8 +16,7 @@ import com.seattlesolvers.solverslib.pedroCommand.*;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 public class Drive extends SubsystemBase {
     Follower follower;
@@ -64,6 +62,21 @@ public class Drive extends SubsystemBase {
     public TurnToCommand turnTo(double degrees){
         return new TurnToCommand(follower,Math.toRadians(degrees));
     }
+    public Command cancelablePath(PathChain chain){
+        return new CancelablePathCommand(follower,chain);
+    }
+    public Command cancelablePath(Path chain){
+        return new CancelablePathCommand(follower,chain);
+    }
+    public Command cancelablePath(PathChain chain, BooleanSupplier supplier){
+        return new CancelablePathCommand(follower,chain)
+                .andThen(new WaitUntilCommand(supplier));
+    }
+    public Command cancelablePath(Path chain, BooleanSupplier supplier){
+        return new CancelablePathCommand(follower,chain)
+                .andThen(new WaitUntilCommand(supplier));
+    }
+
 
     public Follower getFollower() {
         return follower;
@@ -90,6 +103,30 @@ public class Drive extends SubsystemBase {
     @Override
     public void periodic() {
         follower.update();
+    }
+
+    public static class CancelablePathCommand extends FollowPathCommand {
+        Follower follower;
+        public CancelablePathCommand(Follower follower, PathChain pathChain) {
+            super(follower,pathChain);
+            this.follower = follower;
+        }
+        public CancelablePathCommand(Follower follower, Path path){
+            super(follower,path);
+            this.follower = follower;
+        }
+        public CancelablePathCommand(Follower follower, Path path, double maxPower){
+            super(follower,path,maxPower);
+            this.follower = follower;
+        }
+        public CancelablePathCommand(Follower follower, PathChain pathChain, double maxPower) {
+            super(follower,pathChain,maxPower);
+            this.follower = follower;
+        }
+        @Override
+        public void end(boolean interrupted){
+            follower.breakFollowing();
+        }
     }
 
 }

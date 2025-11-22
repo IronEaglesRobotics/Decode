@@ -37,29 +37,16 @@ public class testTeleop extends OpMode {
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
         toShoot = ()-> robot.getDrive().moveTo(56,95.5,135);
-        robot.getCamera().getMotif()
-                .whenFinished(()->
-                    controller1.getGamepadButton(GamepadKeys.Button.A)
-                    .toggleWhenPressed(
-                            robot.getIntake().start()
-                                    .alongWith(robot.loading())
-                                    .andThen(robot.getIntake().stop())
-                            ,robot.getIntake().stop()
-                    ))
-                .schedule();
-//        controller1.getGamepadButton(GamepadKeys.Button.A)
-//                .whenPressed(robot.getIntake().start());
-//        controller1.getGamepadButton(GamepadKeys.Button.Y)
-//                        .whenPressed(robot.loading());
-//        controller1.getGamepadButton(GamepadKeys.Button.A)
-//                .toggleWhenPressed(
-//                        robot.getIntake().start()
-//                                .alongWith(robot.loading())
-//                                .andThen(robot.getIntake().stop())
-//                        ,robot.getIntake().stop()
-//                );
-//        controller1.getGamepadButton(GamepadKeys.Button.B)
-//                .whenPressed(robot.getIntake().stop());
+
+        controller1.getGamepadButton(GamepadKeys.Button.A)
+                .toggleWhenPressed(
+                        robot.getIntake().start()
+                                .alongWith(robot.loading())
+                                .andThen(robot.getIntake().stop())
+                        ,robot.getIntake().stop()
+                );
+        controller1.getGamepadButton(GamepadKeys.Button.B)
+                .whenPressed(robot.getIntake().stop());
         controller1.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(robot.getIntake().reverse());
         controller2.getGamepadButton(GamepadKeys.Button.X)
