@@ -20,7 +20,7 @@ public class Bot extends Robot {
     public Bot init(HardwareMap hardwareMap, GamepadEx gamepad, Telemetry telemetry){
         camera = new Cam(hardwareMap);
         intake = new Intake(hardwareMap);
-        launcher = new Launcher(hardwareMap);
+        launcher = new Launcher(hardwareMap,telemetry);
         if (gamepad == null){
             drive = new Drive(hardwareMap,telemetry);
         } else {

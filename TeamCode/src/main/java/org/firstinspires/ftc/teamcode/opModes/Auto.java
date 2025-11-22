@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
+import com.seattlesolvers.solverslib.command.ConditionalCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
@@ -39,6 +40,7 @@ public class Auto extends OpMode{
     Command pick2;
     Command pick1;
     int shot = 0;
+    boolean finished;
     private void makeAuto(Paths paths) {
         togate = robot.getDrive().pathCommand(paths.Path4);
         pick3 = new SequentialCommandGroup(
@@ -46,7 +48,7 @@ public class Auto extends OpMode{
                 new SequentialCommandGroup(
                         robot.getIntake().start()
                                 .alongWith(robot.getLauncher().toZero()),
-                        robot.getDrive().pathCommand(paths.Path7,.05),
+                        robot.getDrive().pathCommand(paths.Path7,.5),
                         new WaitCommand(200)
                 )
         );
@@ -55,7 +57,7 @@ public class Auto extends OpMode{
                 new SequentialCommandGroup(
                         robot.getIntake().start()
                                 .alongWith(robot.getLauncher().toZero()),
-                        robot.getDrive().pathCommand(paths.Path3,.05),
+                        robot.getDrive().pathCommand(paths.Path3,.5),
                         new WaitCommand(400)
                 )
 
@@ -146,18 +148,14 @@ public class Auto extends OpMode{
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
-        telemetry.addData("pose",robot.getDrive().getPose());
         telemetry.addData("order", robot.getCamera().getOrder());
-        telemetry.addData("state", state);
         telemetry.addData("last state", lastState);
-        telemetry.addData("f1 velocity", robot.getLauncher().flyWheel1.getVelocity());
-        telemetry.addData("f2 velocity" , robot.getLauncher().flyWheel2.getVelocity());
         telemetry.addData("wantsShoot",wantsShoot);
         telemetry.addData("target",robot.getLauncher().current);
         telemetry.addData("current",robot.getLauncher().spinner.getCurrentPosition());
         telemetry.addData("can shoot",robot.getLauncher().canShoot());
         telemetry.addData("is busy",robot.getDrive().getFollower().isBusy());
-        telemetry.addData("chambers", robot.getLauncher().getTelemetry());
+        telemetry.addData("loading finished", finished);
         telemetry.update();
     }
 
@@ -190,7 +188,10 @@ public class Auto extends OpMode{
                                 .whenFinished(()-> wantsShoot = true),
                         new WaitUntilCommand(()->!robot.getDrive().getFollower().isBusy()),
 //                        new WaitCommand(700),
-                        new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
+                        new ConditionalCommand(robot.getLauncher().toShoot(),
+                                new WaitUntilCommand(() -> robot.getLauncher().atTarget()),
+                                ()->!robot.getLauncher().shootPos()),
+                        new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
                         new WaitCommand(250),
                         new InstantCommand(()->state=-2)
@@ -204,16 +205,19 @@ public class Auto extends OpMode{
                 break;
             case 2:
                 lastState = 2;
+                pick1.schedule();
                 robot.getLauncher().toZero().schedule();
                 robot.getLauncher().flywheelOff().schedule();
                 state = -1;
                 break;
             case 3:
+                finished = false;
                 lastState = 3;
                 wantsShoot = false;
                 robot.loading()
                         .raceWith(new WaitUntilCommand(()->wantsShoot))
                         .andThen(robot.getIntake().stop())
+                        .whenFinished(()->finished = true)
                         .schedule();
                 new SequentialCommandGroup(
                         pick3
@@ -226,11 +230,13 @@ public class Auto extends OpMode{
                 state = -1;
                 break;
             case 4:
+                finished = false;
                 lastState = 4;
                 wantsShoot = false;
                 robot.loading()
                         .raceWith(new WaitUntilCommand(()->wantsShoot))
                         .andThen(robot.getIntake().stop())
+                        .whenFinished(()->finished = true)
                         .schedule();
                 new SequentialCommandGroup(
                         pick2,
@@ -261,7 +267,7 @@ public class Auto extends OpMode{
 
         public Paths(Follower follower, boolean isBlue) {
             double startX = isBlue ? 15:118;
-            double shootX = isBlue ? 40:88;
+            double shootX = isBlue ? 32:88;
             double prePickX = isBlue ? 35:100;
             double postPickX1 = isBlue ? 0:130;
             double postPickX2 = isBlue ? 5:127;
@@ -270,7 +276,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(startX, 135.000), new Pose(shootX, 95.500))
                     )
-                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(130,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(122,isBlue))
                     .build();
             Path1Ex = follower
                     .pathBuilder()
@@ -285,7 +291,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 71.000))
                     )
-                    .setLinearHeadingInterpolation(flipAng(130,isBlue), flipAng(180,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(122,isBlue), flipAng(180,isBlue))
                     .build();
 
             Path3 = follower
@@ -313,7 +319,7 @@ public class Auto extends OpMode{
                                     new Pose(shootX, 95.500)
                             )
                     )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(122,isBlue))
                     .build();
 
             Path6 = follower
@@ -321,7 +327,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 92.000))
                     )
-                    .setLinearHeadingInterpolation(flipAng(135,isBlue), flipAng(180,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(122,isBlue), flipAng(180,isBlue))
                     .build();
 
             Path7 = follower
@@ -337,7 +343,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(postPickX2, 92.000), new Pose(shootX, 95.500))
                     )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(122,isBlue))
                     .build();
 
             Path9 = follower
@@ -345,7 +351,7 @@ public class Auto extends OpMode{
                     .addPath(
                             new BezierLine(new Pose(shootX, 95.000), new Pose(prePickX, 35.500))
                     )
-                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(180,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(122,isBlue),flipAng(180,isBlue))
                     .build();
 
             Path10 = follower

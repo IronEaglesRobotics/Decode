@@ -17,11 +17,16 @@ import com.seattlesolvers.solverslib.controller.PIDController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 @Configurable
 public class Launcher extends SubsystemBase {
@@ -41,15 +46,15 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
-    Color[] chambers;
-    public static int closeSpeed = 920;
+    List<Color> chambers;
+    public static int closeSpeed = 910;
     public static int farSpeed = 1050;
     public static double power = .43;
     double speed1 = 0;
     double speed2 = 0;
 
-    public Launcher(HardwareMap hardwareMap){
-        this.chambers = new Color[3];
+    public Launcher(HardwareMap hardwareMap, Telemetry telemetry){
+        this.chambers = new ArrayList<>(3);
         spinner = new MotorEx(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
         spinner.resetEncoder();
         spinner.setRunMode(Motor.RunMode.VelocityControl);
@@ -62,9 +67,9 @@ public class Launcher extends SubsystemBase {
         pusher.setPosition(0.0000001);
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
-        chambers[0] = Color.Nothing;
-        chambers[1] = Color.Nothing;
-        chambers[2] = Color.Nothing;
+        chambers.add(Color.Nothing);
+        chambers.add(Color.Nothing);
+        chambers.add(Color.Nothing);
         controller.setTolerance(40);
     }
     public Color getColor(RevColorSensorV3 cs){
@@ -162,7 +167,13 @@ public class Launcher extends SubsystemBase {
         };
     }
     public boolean canShoot(){
-        return ((current - halfDelta)%fullDelta) == 0 && controller.atSetPoint();
+        return shootPos() && atTarget();
+    }
+    public boolean shootPos(){
+        return ((current - halfDelta)%fullDelta) == 0;
+    }
+    public boolean atTarget(){
+        return controller.atSetPoint();
     }
     public Command fire(){
         return new SequentialCommandGroup(
@@ -203,10 +214,22 @@ public class Launcher extends SubsystemBase {
         };
     }
     public Command toShoot(){
-        return new InstantCommand(()->{
-            current = current + halfDelta;
-//            current = Math.max(Math.min(current, 2000), -5000);
-        });
+        return new Command() {
+            @Override
+            public Set<Subsystem> getRequirements() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public void initialize() {
+                current += halfDelta;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return controller.atSetPoint();
+            }
+        };
     }
     public Command toZero(){
         return new Command() {
@@ -228,7 +251,7 @@ public class Launcher extends SubsystemBase {
     }
 
     public String getTelemetry(){
-        return "slot 0: " + chambers[0] + " slot 1: " + chambers[1] +" slot 2: " + chambers[2];
+        return "slot 0: " + chambers.get(0) + " slot 1: " + chambers.get(1) +" slot 2: " + chambers.get(2);
     }
 
     @Override
@@ -255,44 +278,48 @@ public class Launcher extends SubsystemBase {
         public void initialize() {
             currentChamber = 0;
             launcher.current = 0;
+            launcher.chambers.set(0,Color.Nothing);
+            launcher.chambers.set(1,Color.Nothing);
+            launcher.chambers.set(2,Color.Nothing);
         }
 
         @Override
         public void execute() {
-            if (launcher.controller.atSetPoint()){
+            if (launcher.controller.atSetPoint() && !isFinished()){
                 color1 = launcher.getColor(launcher.cs1);
                 color2 = launcher.getColor(launcher.cs2);
                 Color color = color1 != Color.Nothing ? color1 : color2;
 
-                if (color != Color.Nothing) {
-                    launcher.chambers[currentChamber] = color;
+                if (color != Color.Nothing ) {
+                    launcher.chambers.set(currentChamber,color);
                     currentChamber += 1;
-                    launcher.fan();
+                    launcher.current += fullDelta;
                 }
             }
         }
 
         @Override
         public boolean isFinished() {
-            return currentChamber >= 3;
+            return !launcher.chambers.contains(Color.Nothing);
         }
 
         @Override
         public void end(boolean interrupted) {
             if(!interrupted){
-                if (launcher.chambers[0] == Color.Green){
-                    launcher.current = CHAMBER1;
+                launcher.current = halfDelta;
+                if (launcher.chambers.get(0) == Color.Green){
+                    launcher.current += fullDelta;
                 }
-                else if (launcher.chambers[1] == Color.Green) {
-                    launcher.current = CHAMBER2;
+                else if (launcher.chambers.get(1) == Color.Green) {
+                    launcher.current += fullDelta*2;
                 }
-                else if(launcher.chambers[2] == Color.Green){
-                    launcher.current = CHAMBER3;
+                else if(launcher.chambers.get(2) == Color.Green){
+                    launcher.current += fullDelta*3;
                 }
                 else {
-                    launcher.current = CHAMBER1;
+                    launcher.current += fullDelta;
                 }
-                launcher.current -= fullDelta * (order - 1);
+//                launcher.current -= fullDelta * (order - 1);
 
             }
             else {
@@ -301,7 +328,7 @@ public class Launcher extends SubsystemBase {
         }
     }
 
-    public enum Color{
+    public enum Color {
         Purple,
         Green,
         Nothing
