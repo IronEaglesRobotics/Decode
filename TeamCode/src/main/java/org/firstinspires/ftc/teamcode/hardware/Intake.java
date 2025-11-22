@@ -12,10 +12,10 @@ public class Intake extends SubsystemBase {
         bar = hardwareMap.get(DcMotor.class,"bar");
     }
     public Command start(){
-        return new InstantCommand(()->bar.setPower(-1));
+        return new InstantCommand(()->bar.setPower(1));
     }
     public Command reverse(){
-        return new InstantCommand(()->bar.setPower(1));
+        return new InstantCommand(()->bar.setPower(-1));
     }
     public Command stop(){
         return new InstantCommand(()->bar.setPower(0));

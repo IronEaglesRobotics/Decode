@@ -84,7 +84,7 @@ public class Bot extends Robot {
 
         @Override
         public boolean isFinished() {
-            return Math.abs(bot.camera.getFiducialAngle()) <= 5 && !bot.drive.getFollower().isTurning();
+            return Math.abs(bot.camera.getFiducialAngle()) <= 3;
         }
 
         @Override

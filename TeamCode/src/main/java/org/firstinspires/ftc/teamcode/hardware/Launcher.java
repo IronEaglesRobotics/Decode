@@ -40,9 +40,9 @@ public class Launcher extends SubsystemBase {
     public int current = 0;
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
-    private static final int CHAMBER3 = halfDelta;
+    private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     Color[] chambers;
-    public static int closeSpeed = 850;
+    public static int closeSpeed = 920;
     public static int farSpeed = 1050;
     public static double power = .43;
     double speed1 = 0;
@@ -244,6 +244,8 @@ public class Launcher extends SubsystemBase {
         Launcher launcher;
         int order;
         int currentChamber = 0;
+        Color color1;
+        Color color2;
         public Loading(Launcher temp,int Torder){
             launcher = temp;
             order = Torder;
@@ -258,12 +260,12 @@ public class Launcher extends SubsystemBase {
         @Override
         public void execute() {
             if (launcher.controller.atSetPoint()){
-                if (launcher.getColor(launcher.cs1) != Color.Nothing) {
-                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs1);
-                    currentChamber += 1;
-                    launcher.fan();
-                } else if (launcher.getColor(launcher.cs2) != Color.Nothing) {
-                    launcher.chambers[currentChamber] = launcher.getColor(launcher.cs2);
+                color1 = launcher.getColor(launcher.cs1);
+                color2 = launcher.getColor(launcher.cs2);
+                Color color = color1 != Color.Nothing ? color1 : color2;
+
+                if (color != Color.Nothing) {
+                    launcher.chambers[currentChamber] = color;
                     currentChamber += 1;
                     launcher.fan();
                 }
@@ -272,7 +274,7 @@ public class Launcher extends SubsystemBase {
 
         @Override
         public boolean isFinished() {
-            return currentChamber == 3;
+            return currentChamber >= 3;
         }
 
         @Override
