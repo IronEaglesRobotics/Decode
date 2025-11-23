@@ -128,7 +128,7 @@ public class TeleOP extends OpMode {
         }
 
 
-        robot.robotMacro(controller1, getRuntime());
+        robot.robotMacro(controller1, getRuntime(),false);
 
         telemetryM.debug("Shooter PID", String.join(",", Arrays.stream(this.robot.getShooter().getPIDValues()).mapToObj(Double::toString).collect(Collectors.joining(","))));
         telemetryM.addData("shooter_velo ", robot.getShooter().calculatedVelocity());

@@ -72,7 +72,6 @@ public class Auton extends OpMode {
         launchBatch1 = follower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup1Pose(), this.config.getScorePose()))
                 .setLinearHeadingInterpolation(this.config.getPickup1Pose().getHeading(), this.config.getScorePose().getHeading())
-//                .addParametricCallback(.1, (() -> tier = shotTier.NEAR))
                 .build();
 
         getPickup2 = robot.getFollower().pathBuilder()
@@ -86,7 +85,6 @@ public class Auton extends OpMode {
         launchBatch2 = follower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
                 .setLinearHeadingInterpolation(this.config.getPickup2Pose().getHeading(), this.config.getScorePose().getHeading())
-//                .addParametricCallback(.1, (() -> tier = shotTier.NEAR))
                 .build();
         //add more pathchains as see fit
     }
@@ -106,70 +104,52 @@ public class Auton extends OpMode {
                     robot.balls = 3;
                 }
                 if (!follower().isBusy() && robot.shooter.atTargetVelocity()) {
-//                    if (foo) {
-//                        timer = getRuntime() + 1;
-//                        foo = false;
-//                    }
-//                    if (getRuntime() > timer) {
                         robot.autoSwitch = true;
                         setPathState(2);
-//                        foo = true;
-//                    }
                 }
                 break;
             case 2: //is the robot done launching? if yes, go to pickup 1 and stop shooter
                 robot.autoSwitch = false;
                 if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
                     follower().followPath(getPickup1, true);
-//                    tier = shotTier.REST;
                     setPathState(3);
                 }
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
-                if (!follower().isBusy()) {
-                    if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
+                if (!follower().isBusy() || robot.robotstate == Robot.robotStates.HAS3) {
+                    if (getRuntime() > timer  || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
                         follower().followPath(launchBatch1, true);
                         setPathState(4);
                     }
-//                    tier = shotTier.NEAR;
                 }
 
                 break;
-            case 4: //if at launch pos, then shoot
-                if (!follower().isBusy()) {
-                    if (foo) {
-                        timer = getRuntime() + 1;
-                        foo = false;
-                    }
-                    if (getRuntime() > timer) {
+            case 4: //if at launch pos and shooter fast enough, then shoot
+                if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
                         robot.autoSwitch = true;
                         setPathState(5);
-                    }
                 }
                 break;
             case 5: //if all balls are launched, reset the shooter and go to next position
                 robot.autoSwitch = false;
                 if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
-                    //follow get 2nd batch of balls
                     follower().followPath(getPickup2, true);
-//                    tier = shotTier.REST;
                     setPathState(6);
                 }
                 break;
             case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
-                if (!follower().isBusy()) {
+                if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
                         follower().followPath(launchBatch2, true);
                         setPathState(7);
-//                        tier = shotTier.NEAR;
                     }
                 }
 
                 break;
             case 7: //if at launch pos, then shoot
-                if (!follower().isBusy()) {
+                if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
                     robot.autoSwitch = true;
                     setPathState(8);
                 }
@@ -179,8 +159,7 @@ public class Auton extends OpMode {
                 if (robot.balls == 0) {
                     //follow get 2nd batch of balls
                     follower().followPath(park, true);
-//                    tier = shotTier.REST;
-
+                    tier = shotTier.REST;
                     setPathState(9);
                 }
                 break;
@@ -238,7 +217,7 @@ public class Auton extends OpMode {
         robot.getFollower().update();
 
         runAuto();
-        robot.robotMacro(controller1, getRuntime());
+        robot.robotMacro(controller1, getRuntime(), true);
 
         switch (tier) {
             case FAR:

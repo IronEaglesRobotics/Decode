@@ -29,7 +29,7 @@ public class AutoConfig {
             .pickup2Transition(new Pose(96, 77, Math.toRadians(298)))
             .pickup2Pose(new Pose(124, 64, Math.toRadians(0)))
             .pickup2Control(new Pose(107, 65, Math.toRadians(180)))
-            .parkPose(new Pose(84, 100, Math.toRadians(145)))
+            .parkPose(new Pose(90, 115, Math.toRadians(145)))
             .build();
     public static final AutoConfig blue = AutoConfig.builder()
             .team("blue")
@@ -40,6 +40,6 @@ public class AutoConfig {
             .pickup2Transition(new Pose(48, 75, Math.toRadians(242)))
             .pickup2Pose(new Pose(16, 62, Math.toRadians(180)))
             .pickup2Control(new Pose(37, 63, Math.toRadians(0)))
-            .parkPose(new Pose(60, 100, Math.toRadians(145)))
+            .parkPose(new Pose(55, 115, Math.toRadians(145)))
             .build();
 }
