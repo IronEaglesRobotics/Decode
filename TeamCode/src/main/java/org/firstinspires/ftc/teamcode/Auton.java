@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import android.app.GameManager;
+
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -14,8 +16,9 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
+import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
-@Autonomous(name = "Blue auto")
+@Autonomous(name = "9 ball auto")
 public class Auton extends OpMode {
     private Robot robot;
     GamepadEx controller1;
@@ -32,15 +35,8 @@ public class Auton extends OpMode {
         REST, NEAR, FAR
     }
 
-    private final Pose startPose = new Pose(26, 130, Math.toRadians(145)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(60, 96, Math.toRadians(145)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pickup1Pose = new Pose(22, 87, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup1Control = new Pose(48, 85, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Transition = new Pose(48, 75, Math.toRadians(242)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(20, 62, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Control = new Pose(37, 63, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose parkPose = new Pose(60, 100, Math.toRadians(145)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
 
+    private AutoConfig config;
 
     private Follower follower() {
         return robot.getFollower();
@@ -58,40 +54,39 @@ public class Auton extends OpMode {
     private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2;
 
     public void buildPaths() {
-        scorePreloads = new Path(new BezierLine(startPose, scorePose));
-        scorePreloads.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
-        park = new Path (new BezierLine(scorePose, parkPose));
-        park.setConstantHeadingInterpolation(scorePose.getHeading());
+        scorePreloads = new Path(new BezierLine(this.config.getStartPose(), this.config.getScorePose()));
+        scorePreloads.setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getStartPose().getHeading());
+        park = new Path(new BezierLine(this.config.getStartPose(), this.config.getParkPose()));
+        park.setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getParkPose().getHeading());
 
 
         getPickup1 = robot.getFollower().pathBuilder()
-                .addPath(new BezierLine(scorePose, offsetPose(scorePose, 0, -5, Math.toRadians(60))))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), offsetPose(scorePose, 0, 0, Math.toRadians(60)).getHeading())
-                .addPath(new BezierCurve(offsetPose(scorePose, 0, -5, Math.toRadians(60)), pickup1Control, pickup1Pose))
+                .addPath(new BezierLine(this.config.getStartPose(), offsetPose(this.config.getStartPose(), 0, -5, Math.toRadians(60))))
+                .setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), offsetPose(this.config.getScorePose(), 0, 0, Math.toRadians(60)).getHeading())
+                .addPath(new BezierCurve(offsetPose(this.config.getScorePose(), 0, -5, Math.toRadians(60)), this.config.getPickup1Control(), this.config.getPickup1Pose()))
                 .setTangentHeadingInterpolation()
-                .setBrakingStart(.4)
-                .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
+//                .setBrakingStart(.4)
+                .addParametricCallback(.99, (() -> timer = getRuntime() + 2.5))
                 .build();
 
         launchBatch1 = follower().pathBuilder()
-                .addPath(new BezierLine(pickup1Pose, scorePose))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), scorePose.getHeading())
-                .addParametricCallback(.1,(()->tier = shotTier.NEAR))
+                .addPath(new BezierLine(this.config.getPickup1Pose(), this.config.getScorePose()))
+                .setLinearHeadingInterpolation(this.config.getPickup1Pose().getHeading(), this.config.getScorePose().getHeading())
+//                .addParametricCallback(.1, (() -> tier = shotTier.NEAR))
                 .build();
 
         getPickup2 = robot.getFollower().pathBuilder()
-                .addPath(new BezierLine(scorePose, pickup2Transition))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Transition.getHeading())
-                .addPath(new BezierCurve(pickup2Transition, pickup2Control, pickup2Pose))
+                .addPath(new BezierLine(this.config.getScorePose(), this.config.getPickup2Transition()))
+                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), this.config.getPickup2Transition().getHeading())
+                .addPath(new BezierCurve(this.config.getPickup2Transition(), this.config.getPickup2Control(), this.config.getPickup2Pose()))
                 .setTangentHeadingInterpolation()
-                .setBrakingStart(.4)
-                .addParametricCallback(.99,(()->timer = getRuntime() + 2.5))
+                .addParametricCallback(.99, (() -> timer = getRuntime() + 2.5))
                 .build();
 
         launchBatch2 = follower().pathBuilder()
-                .addPath(new BezierLine(pickup2Pose, scorePose))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
-                .addParametricCallback(.1,(()->tier = shotTier.NEAR))
+                .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
+                .setLinearHeadingInterpolation(this.config.getPickup2Pose().getHeading(), this.config.getScorePose().getHeading())
+//                .addParametricCallback(.1, (() -> tier = shotTier.NEAR))
                 .build();
         //add more pathchains as see fit
     }
@@ -101,32 +96,32 @@ public class Auton extends OpMode {
         switch (pathState) {
             case 0: // Go to Launch 1 location
                 robot.robotstate = Robot.robotStates.CALIBRATE;
-                if (getRuntime() > time ){
+                if (getRuntime() > time) {
                     robot.getFollower().followPath(scorePreloads, true);
                     setPathState(1);
                 }
             case 1: // immediately prep shooter -> if at location, launch
-                tier = shotTier.NEAR;
                 if (robot.robotstate == Robot.robotStates.IDLE) {
-                    robot.robotstate = Robot.robotStates.HAS2;
+                    robot.robotstate = Robot.robotStates.HAS3;
+                    robot.balls = 3;
                 }
-                if (!follower().isBusy()) {
-                    if(foo){
-                        timer = getRuntime() + 1;
-                        foo = false;
-                    }
-                    if (getRuntime() > timer) {
+                if (!follower().isBusy() && robot.shooter.atTargetVelocity()) {
+//                    if (foo) {
+//                        timer = getRuntime() + 1;
+//                        foo = false;
+//                    }
+//                    if (getRuntime() > timer) {
                         robot.autoSwitch = true;
                         setPathState(2);
-                        foo = true;
-                    }
+//                        foo = true;
+//                    }
                 }
                 break;
             case 2: //is the robot done launching? if yes, go to pickup 1 and stop shooter
                 robot.autoSwitch = false;
                 if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
-                    follower().followPath(getPickup1, .6, true);
-                    tier = shotTier.REST;
+                    follower().followPath(getPickup1, true);
+//                    tier = shotTier.REST;
                     setPathState(3);
                 }
                 break;
@@ -143,7 +138,7 @@ public class Auton extends OpMode {
                 break;
             case 4: //if at launch pos, then shoot
                 if (!follower().isBusy()) {
-                    if(foo){
+                    if (foo) {
                         timer = getRuntime() + 1;
                         foo = false;
                     }
@@ -157,8 +152,8 @@ public class Auton extends OpMode {
                 robot.autoSwitch = false;
                 if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
                     //follow get 2nd batch of balls
-                    follower().followPath(getPickup2, .8, true);
-                    tier = shotTier.REST;
+                    follower().followPath(getPickup2, true);
+//                    tier = shotTier.REST;
                     setPathState(6);
                 }
                 break;
@@ -184,13 +179,13 @@ public class Auton extends OpMode {
                 if (robot.balls == 0) {
                     //follow get 2nd batch of balls
                     follower().followPath(park, true);
-                    tier = shotTier.REST;
+//                    tier = shotTier.REST;
 
                     setPathState(9);
                 }
                 break;
             case 9:
-                if (!follower().isBusy()){
+                if (!follower().isBusy()) {
                     setPathState(-1);
                 }
                 break;
@@ -210,22 +205,31 @@ public class Auton extends OpMode {
         opmodeTimer.resetTimer();
 
         robot = new Robot().init(hardwareMap);
-        robot.getFollower().setPose(startPose);
         controller1 = new GamepadEx(gamepad1);
-        buildPaths();
         robot.getFollower().update();
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     }
 
     @Override
     public void init_loop() {
+        if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
+            this.config = AutoConfig.blue;
+        } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
+            this.config = AutoConfig.red;
+        }
+        telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
+        controller1.readButtons();
+
     }
 
     @Override
     public void start() {
+        robot.getFollower().setPose(this.config.getStartPose());
+        buildPaths();
+        robot.getFollower().update();
         opmodeTimer.resetTimer();
         setPathState(0);
-        timer= getRuntime() + 2;
+        timer = getRuntime() + 2;
     }
 
     @Override

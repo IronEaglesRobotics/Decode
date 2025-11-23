@@ -14,7 +14,9 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.paths.Path;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp")
@@ -28,7 +30,6 @@ public class TeleOP extends OpMode {
 
     GamepadEx controller1;
     public TelemetryManager telemetryM;
-    //    private double shotPower = 1;
 
     private Supplier<PathChain> pathChain;
     private Supplier<PathChain> pathChainFar;
@@ -129,13 +130,16 @@ public class TeleOP extends OpMode {
 
         robot.robotMacro(controller1, getRuntime());
 
-        telemetryM.debug("shooter velo: ", robot.getShooter().getVelocity() / 28.0 * 60);
+        telemetryM.debug("Shooter PID", String.join(",", Arrays.stream(this.robot.getShooter().getPIDValues()).mapToObj(Double::toString).collect(Collectors.joining(","))));
+        telemetryM.addData("shooter_velo ", robot.getShooter().calculatedVelocity());
         telemetryM.debug("state", robot.robotstate);
         telemetryM.debug("x:" + robot.getFollower().getPose().getX());
         telemetryM.debug("y:" + robot.getFollower().getPose().getY());
         telemetryM.debug("heading:" + robot.getFollower().getPose().getHeading());
+        telemetryM.addData("at target velocty", robot.shooter.atTargetVelocity());
+        telemetryM.addData("target velocity", robot.shooter.targetVelocity);
+
         telemetryM.update(telemetry);
-        panelsTelemetry.getFtcTelemetry().update();
 
     }
 }
