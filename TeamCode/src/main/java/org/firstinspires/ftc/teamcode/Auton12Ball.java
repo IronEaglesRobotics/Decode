@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 
-import android.app.GameManager;
-
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
@@ -18,8 +15,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
-@Autonomous(name = "9 ball auto")
-public class Auton extends OpMode {
+@Autonomous(name = "12 ball auto")
+public class Auton12Ball extends OpMode {
     private Robot robot;
     GamepadEx controller1;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -50,14 +47,16 @@ public class Auton extends OpMode {
         return new Pose(pose.getX() + x, pose.getY() + y, pose.getHeading());
     }
 
-    private Path scorePreloads, park;
-    private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2;
+    private Path scorePreloads, park, openGate;
+    private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2, getPickup3, launchBatch3;
 
     public void buildPaths() {
         scorePreloads = new Path(new BezierLine(this.config.getStartPose(), this.config.getScorePose()));
         scorePreloads.setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getStartPose().getHeading());
         park = new Path(new BezierLine(this.config.getStartPose(), this.config.getParkPose()));
         park.setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getParkPose().getHeading());
+        openGate = new Path (new BezierLine(this.config.getPickup1Pose(),this.config.getOpenGate()));
+        openGate.setLinearHeadingInterpolation(this.config.getPickup1Pose().getHeading(), this.config.getOpenGate().getHeading());
 
 
         getPickup1 = robot.getFollower().pathBuilder()
@@ -70,8 +69,8 @@ public class Auton extends OpMode {
                 .build();
 
         launchBatch1 = follower().pathBuilder()
-                .addPath(new BezierLine(this.config.getPickup1Pose(), this.config.getScorePose()))
-                .setLinearHeadingInterpolation(this.config.getPickup1Pose().getHeading(), this.config.getScorePose().getHeading())
+                .addPath(new BezierLine(this.config.getOpenGate(), this.config.getScorePose()))
+                .setLinearHeadingInterpolation(this.config.getOpenGate().getHeading(), this.config.getScorePose().getHeading())
                 .build();
 
         getPickup2 = robot.getFollower().pathBuilder()
@@ -80,10 +79,25 @@ public class Auton extends OpMode {
                 .addPath(new BezierCurve(this.config.getPickup2Transition(), this.config.getPickup2Control(), this.config.getPickup2Pose()))
                 .setTangentHeadingInterpolation()
                 .addParametricCallback(.99, (() -> timer = getRuntime() + 2.5))
+
                 .build();
 
         launchBatch2 = follower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
+                .setLinearHeadingInterpolation(this.config.getPickup2Pose().getHeading(), this.config.getScorePose().getHeading())
+                .build();
+
+        getPickup3 = robot.getFollower().pathBuilder()
+                .addPath(new BezierLine(this.config.getScorePose(), this.config.getPickup3Transition()))
+                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), this.config.getPickup3Transition().getHeading())
+                .addPath(new BezierCurve(this.config.getPickup3Transition(), this.config.getPickup3Control(), this.config.getPickup3Pose()))
+                .setBrakingStart(.75)
+                .setTangentHeadingInterpolation()
+                .addParametricCallback(.99, (() -> timer = getRuntime() + 2.5))
+                .build();
+
+        launchBatch3 = follower().pathBuilder()
+                .addPath(new BezierLine(this.config.getPickup3Pose(), this.config.getScorePose()))
                 .setLinearHeadingInterpolation(this.config.getPickup2Pose().getHeading(), this.config.getScorePose().getHeading())
                 .build();
         //add more pathchains as see fit
@@ -106,40 +120,46 @@ public class Auton extends OpMode {
                 if (!follower().isBusy() && robot.shooter.atTargetVelocity()) {
                         robot.autoSwitch = true;
                         setPathState(2);
+                        timer = getRuntime() + 3;
                 }
                 break;
             case 2: //is the robot done launching? if yes, go to pickup 1 and stop shooter
                 robot.autoSwitch = false;
-                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
+                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0 && timer < getRuntime()) {
                     follower().followPath(getPickup1, true);
                     setPathState(3);
                 }
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
-                if (!follower().isBusy() || robot.robotstate == Robot.robotStates.HAS3) {
+                if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
                     if (getRuntime() > timer  || robot.robotstate == Robot.robotStates.HAS3) {
                         follower().breakFollowing();
                         //follow next path
-                        follower().followPath(launchBatch1, true);
-                        setPathState(4);
+                        follower().followPath(openGate, true);
+                        setPathState(13);
                     }
                 }
-
+            case 13:
+                if (!follower().isBusy()){
+                    follower().followPath(launchBatch1,true);
+                    setPathState(4);
+                }
                 break;
             case 4: //if at launch pos and shooter fast enough, then shoot
                 if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
                         robot.autoSwitch = true;
                         setPathState(5);
+                        timer =getRuntime() + 3;
                 }
                 break;
             case 5: //if all balls are launched, reset the shooter and go to next position
                 robot.autoSwitch = false;
-                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0) {
+                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0 && timer < getRuntime()) {
                     follower().followPath(getPickup2, true);
                     setPathState(6);
                 }
                 break;
-            case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
+            case 6://if Got all 3 of second batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
@@ -154,18 +174,44 @@ public class Auton extends OpMode {
                 if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
                     robot.autoSwitch = true;
                     setPathState(8);
+                    timer = getRuntime() + 3;
                 }
                 break;
-            case 8:
+            case 8: //if all balls are launched, reset the shooter and go to next position
                 robot.autoSwitch = false;
-                if (robot.balls == 0) {
-                    //follow get 2nd batch of balls
-                    follower().followPath(park, true);
-                    tier = shotTier.REST;
+                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0 && timer < getRuntime()) {
+                    follower().followPath(getPickup3, true);
                     setPathState(9);
                 }
                 break;
-            case 9:
+            case 9://if Got all 3 of Third batch || patch ended 1.5 secs passed, go to launch pose
+                if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
+                    if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
+                        //follow next path
+                        follower().breakFollowing();
+                        follower().followPath(launchBatch3, true);
+                        setPathState(10);
+                    }
+                }
+
+                break;
+            case 10: //if at launch pos, then shoot
+                if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
+                    robot.autoSwitch = true;
+                    setPathState(11);
+                    timer = getRuntime() + 3;
+                }
+                break;
+            case 11:
+                robot.autoSwitch = false;
+                if (robot.balls == 0 && timer < getRuntime()) {
+                    //park the robot
+                    follower().followPath(park, true);
+                    tier = shotTier.REST;
+                    setPathState(12);
+                }
+                break;
+            case 12:
                 if (!follower().isBusy()) {
                     setPathState(-1);
                     stop();

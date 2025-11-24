@@ -235,7 +235,7 @@ public class AutonRed extends OpMode {
         robot.getFollower().update();
 
         runAuto();
-        robot.robotMacro(controller1, getRuntime());
+        robot.robotMacro(controller1, getRuntime(),true);
 
         switch (tier) {
             case FAR:

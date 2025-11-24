@@ -15,9 +15,13 @@ public class AutoConfig {
     private Pose scorePose; // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private Pose pickup1Pose; // Highest (First Set) of Artifacts from the Spike Mark.
     private Pose pickup1Control; // Highest (First Set) of Artifacts from the Spike Mark.
+    private Pose openGate;
     private Pose pickup2Transition; // Middle (Second Set) of Artifacts from the Spike Mark.
     private Pose pickup2Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Pose pickup2Control; // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private Pose pickup3Pose;
+    private Pose pickup3Control;
+    private Pose pickup3Transition;
     private Pose parkPose; // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
 
     public static final AutoConfig red = AutoConfig.builder()
@@ -37,9 +41,13 @@ public class AutoConfig {
             .scorePose(new Pose(60, 96, Math.toRadians(145)))
             .pickup1Pose(new Pose(22, 86, Math.toRadians(180)))
             .pickup1Control(new Pose(48, 84, Math.toRadians(0)))
+            .openGate(new Pose(15,76, Math.toRadians(75)))
             .pickup2Transition(new Pose(48, 75, Math.toRadians(242)))
             .pickup2Pose(new Pose(16, 62, Math.toRadians(180)))
             .pickup2Control(new Pose(37, 63, Math.toRadians(0)))
+            .pickup3Transition(new Pose(56, 75, Math.toRadians(255)))
+            .pickup3Pose(new Pose (12,40,Math.toRadians(180)))
+            .pickup3Control(new Pose(44,38,Math.toRadians(0)))
             .parkPose(new Pose(55, 115, Math.toRadians(145)))
             .build();
 }
