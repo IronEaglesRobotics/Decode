@@ -51,7 +51,16 @@ public class Drive extends SubsystemBase {
     }
 
     public FollowPathCommand moveTo(Pose pose) {
-        return pathCommand(new PathChain(new Path(new BezierLine(follower.getPose(), pose))));
+        return pathCommand(follower.pathBuilder()
+                .addPath(new Path(new BezierLine(follower.getPose(), pose)))
+                .setLinearHeadingInterpolation(follower.getHeading(),pose.getHeading())
+                .build());
+    }
+    public RealFollowPathCommand moveTo(Pose pose,double speed) {
+        return new RealFollowPathCommand(follower,follower.pathBuilder()
+                .addPath(new Path(new BezierLine(follower.getPose(), pose)))
+                .setLinearHeadingInterpolation(follower.getHeading(),pose.getHeading())
+                .build(),speed);
     }
 
     public FollowPathCommand moveTo(double x, double y, double z) {
@@ -84,6 +93,12 @@ public class Drive extends SubsystemBase {
 
     public Command cancelablePath(PathChain chain) {
         return new CancelablePathCommand(follower, chain);
+    }
+    public Command cancelablePath(Pose pose) {
+        return new CancelablePathCommand(follower, follower.pathBuilder()
+                .addPath(new Path(new BezierLine(follower.getPose(),pose)))
+                .setLinearHeadingInterpolation(follower.getHeading(), pose.getHeading())
+                .build());
     }
 
     public Command cancelablePath(Path chain) {

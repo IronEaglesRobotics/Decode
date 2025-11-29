@@ -4,6 +4,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -11,7 +12,6 @@ import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.ConditionalCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
@@ -35,63 +35,13 @@ public class Auto extends OpMode{
     States nextState;
     boolean wantsShoot = false;
     public Paths paths;
-    Command togate;
-    Command pick3;
-    Command pick2;
-    Command finish;
-    Command pickFar;
     int shot = 0;
     boolean finished;
-    private void makeAuto(Paths paths) {
-        togate = robot.getDrive().pathCommand(paths.Path4);
-        pick3 = new SequentialCommandGroup(
-                robot.getDrive().pathCommand(paths.Path6),
-                new SequentialCommandGroup(
-                        robot.getIntake().start()
-                                .alongWith(robot.getLauncher().toZero()),
-                        robot.getDrive().pathCommand(paths.Path7,.5),
-                        new WaitCommand(200)
-                )
-        );
-        pick2 = new SequentialCommandGroup(
-                robot.getDrive().pathCommand(paths.Path2),
-                new SequentialCommandGroup(
-                        robot.getIntake().start()
-                                .alongWith(robot.getLauncher().toZero()),
-                        robot.getDrive().pathCommand(paths.Path3,.5),
-                        new WaitCommand(400)
-                )
 
-        );
-//        pick1 = new SequentialCommandGroup(
-//                robot.getDrive().pathCommand(paths.Path9),
-//                new SequentialCommandGroup(
-//                        robot.getIntake().start(),
-//                        new ParallelCommandGroup(
-//                                robot.loading(),
-//                                robot.getDrive().pathCommand(paths.Path10)
-//                        )
-//                ),
-//                new WaitCommand(200),
-//                robot.getIntake().stop()
-        finish = robot.getDrive().moveTo(!isFar ?
-                new Pose(paths.Path1.endPoint().getX(),130,90) :
-                new Pose(paths.Path12.endPoint().getX(), 30, 90));
-        pickFar = new SequentialCommandGroup(
-                robot.getDrive().pathCommand(paths.Path9),
-                new SequentialCommandGroup(
-                        robot.getIntake().start()
-                                .alongWith(robot.getLauncher().toZero()),
-                        robot.getDrive().pathCommand(paths.Path10,.5),
-                        new WaitCommand(400)
-                )
-        );
-    }
-
-    public FollowPathCommand closeshoot(){
-        return robot.getDrive().pathCommand(
-                !isFar ? paths.shootPaths[shot++] : paths.farShootPaths[shot++]);
-    }
+//    public FollowPathCommand closeshoot(){
+//        return robot.getDrive().pathCommand(
+//                !isFar ? paths.shootPaths[shot++] : paths.farShootPaths[shot++]);
+//    }
 
     @Override
     public void init() {
@@ -146,9 +96,8 @@ public class Auto extends OpMode{
         robot.getDrive().getFollower().setStartingPose(
             new Pose( !isFar ? color == Alliance.Blue? 14:129 : color == Alliance.Blue ? 56:88,
             isFar ? 9:135,
-            Paths.flipAng(isFar ? 90:135,color == Alliance.Blue)));
+            paths.flipAng(isFar ? 90:135,color == Alliance.Blue)));
         paths = new Paths(robot.getDrive().getFollower(),color == Alliance.Blue);
-        makeAuto(paths);
         nextState = isFar ? States.pick2 : States.pickFar;
         robot.getLauncher().flywheelOn(!isFar).schedule();
 //        robot.getCamera().getMotif()
@@ -202,8 +151,8 @@ public class Auto extends OpMode{
             case shoot:
                 lastState = States.shoot;
                 new SequentialCommandGroup(
-                        closeshoot()
-                                .whenFinished(()-> wantsShoot = true),
+                        //closeshoot()
+                                //.whenFinished(()-> wantsShoot = true),
                         new WaitUntilCommand(()->!robot.getDrive().getFollower().isBusy()),
 //                        new WaitCommand(700),
                         new ConditionalCommand(robot.getLauncher().toShoot(),
@@ -228,7 +177,7 @@ public class Auto extends OpMode{
                         .whenFinished(()->finished = true)
                         .schedule();
                 new SequentialCommandGroup(
-                        pickFar
+                        paths.Pick3()
                         .whenFinished(()-> {
                             state = States.shoot;
                         })
@@ -238,7 +187,7 @@ public class Auto extends OpMode{
                 break;
             case finish:
                 lastState = States.finish;
-                finish.schedule();
+                paths.finish().schedule();
                 robot.getLauncher().toZero().schedule();
                 robot.getLauncher().flywheelOff().schedule();
                 state = States.idle;
@@ -254,7 +203,7 @@ public class Auto extends OpMode{
                         .whenFinished(()->finished = true)
                         .schedule();
                 new SequentialCommandGroup(
-                        pick3
+                        paths.Pick1()
                                 .whenFinished(()-> {
                                     state = States.shoot;
                                 })
@@ -273,7 +222,7 @@ public class Auto extends OpMode{
                         .whenFinished(()->finished = true)
                         .schedule();
                 new SequentialCommandGroup(
-                        pick2,
+                        paths.Pick2(),
                         new InstantCommand(()-> {
                             state = States.shoot;
                         })
@@ -293,22 +242,21 @@ public class Auto extends OpMode{
         pickFar,
         finish
     }
-    public static class Paths {
-        public PathChain Path1;
-        public PathChain Path1Ex;
-        public PathChain Path2;
-        public PathChain Path3;
-        public PathChain Path4;
-        public PathChain Path5;
-        public PathChain Path6;
-        public PathChain Path7;
-        public PathChain Path8;
-        public PathChain Path9;
-        public PathChain Path10;
-        public PathChain Path11;
-        public PathChain Path12;
-        public PathChain[] shootPaths;
-        public PathChain[] farShootPaths;
+    public class Paths {
+        public Follower follower;
+        public Pose Path1;
+        public Pose Path1Ex;
+        public Pose Path2;
+        public Pose Path3;
+        public Pose Path4;
+        public Pose Path5;
+        public Pose Path6;
+        public Pose Path7;
+        public Pose Path8;
+        public Pose Path9;
+        public Pose Path10;
+        public Pose Path11;
+        public Pose Path12;
 
         public Paths(Follower follower, boolean isBlue) {
             double startX = isBlue ? 15:125;
@@ -318,36 +266,11 @@ public class Auto extends OpMode{
             double postPickX2 = isBlue ? 5:137;
             double farStartX = isBlue ? 56:88;
             double farShootX = isBlue ? 50:94;
-            Path1 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(startX, 135.000), new Pose(shootX, 95.500))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(127,isBlue))
-                    .build();
-            Path1Ex = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(startX, 135.000), new Pose(shootX, 95.500))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(135,isBlue),flipAng(90,isBlue))
-                    .build();
+            Path1 = new Pose(shootX, 95.500,flipAng(135,isBlue));
+            Path1Ex = new Pose(shootX, 95.500,flipAng(90,isBlue));
+            Path2 = new Pose(prePickX, 71.000,flipAng(180,isBlue));
 
-            Path2 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 71.000))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(127,isBlue), flipAng(180,isBlue))
-                    .build();
-
-            Path3 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(prePickX, 71.000), new Pose(postPickX1, 71.000))
-                    )
-                    .setConstantHeadingInterpolation(flipAng(180,isBlue))
-                    .build();
+            Path3 = new Pose(postPickX1, 71.000,180);
 
 //            Path4 = follower
 //                    .pathBuilder()
@@ -357,72 +280,27 @@ public class Auto extends OpMode{
 //                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(270,isBlue))
 //                    .build();
 
-            Path5 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierCurve(
-                                    new Pose(postPickX1, 71.000),
-                                    new Pose(isBlue ? 43 : 101, 52.500),
-                                    new Pose(shootX, 95.500)
-                            )
-                    )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(127,isBlue))
-                    .build();
+//            Path5 = follower
+//                    .pathBuilder()
+//                    .addPath(
+//                            new BezierCurve(
+//                                    new Pose(postPickX1, 71.000),
+//                                    new Pose(isBlue ? 43 : 101, 52.500),
+//                                    new Pose(shootX, 95.500)
+//                            )
+//                    )
+//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(127,isBlue))
+//                    .build();
 
-            Path6 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(shootX, 95.500), new Pose(prePickX, 92.000))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(127,isBlue), flipAng(180,isBlue))
-                    .build();
+            Path6 = new Pose(prePickX, 92.000,flipAng(180,isBlue));
 
-            Path7 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(prePickX, 92.000), new Pose(postPickX2, 92.000))
-                    )
-                    .setConstantHeadingInterpolation(flipAng(180,isBlue))
-                    .build();
+            Path7 =  new Pose(postPickX2, 92.000,flipAng(180,isBlue));
 
-            Path8 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(postPickX2, 92.000), new Pose(shootX, 95.500))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(127,isBlue))
-                    .build();
+            Path9 = new Pose(prePickX, 35.500,flipAng(180,isBlue));
 
-            Path9 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(farShootX, 95.000), new Pose(prePickX, 35.500))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(127,isBlue),flipAng(180,isBlue))
-                    .build();
+            Path10 = new Pose(postPickX2, 35.500,flipAng(180,isBlue));
 
-            Path10 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(prePickX, 35.500), new Pose(postPickX2, 35.500))
-                    )
-                    .setConstantHeadingInterpolation(flipAng(180,isBlue))
-                    .build();
-
-            Path11 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(postPickX2, 35.500), new Pose(farShootX, 95.000))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(120,isBlue))
-                    .build();
-            Path12 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(farStartX, 9), new Pose(farShootX, 14))
-                    )
-                    .setLinearHeadingInterpolation(flipAng(90,isBlue), flipAng(120,isBlue))
-                    .build();
+            Path11 = new Pose(farShootX, 14,flipAng(120,isBlue));
 //            Path13 = follower
 //                    .pathBuilder()
 //                    .addPath(
@@ -430,11 +308,56 @@ public class Auto extends OpMode{
 //                    )
 //                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
 //                    .build();
-            shootPaths = new PathChain[]{Path1,Path5,Path8,Path11};
-            farShootPaths = new PathChain[]{Path12,Path11};
+        }
+        public Command PathShoot(){
+            return robot.getDrive().moveTo(Path1);
+        }
+        public Command PathShootEx(){
+            return robot.getDrive().moveTo(Path1Ex);
+        }
+        public Command farPathShootEx(){
+            return robot.getDrive().moveTo(Path11);
+        }
+        public Command Pick1(){
+            return new SequentialCommandGroup(
+                    robot.getDrive().moveTo(Path6),
+                    new SequentialCommandGroup(
+                            robot.getIntake().start()
+                                    .alongWith(robot.getLauncher().toZero()),
+                            robot.getDrive().moveTo(Path7,.5),
+                            new WaitCommand(200)
+                    )
+            );
+        }
+        public Command Pick2(){
+            return new SequentialCommandGroup(
+                    robot.getDrive().moveTo(Path2),
+                    new SequentialCommandGroup(
+                            robot.getIntake().start()
+                                    .alongWith(robot.getLauncher().toZero()),
+                            robot.getDrive().moveTo(Path3,.5),
+                            new WaitCommand(200)
+                    )
+            );
+        }
+        public Command Pick3(){
+            return new SequentialCommandGroup(
+                    robot.getDrive().moveTo(Path9),
+                    new SequentialCommandGroup(
+                            robot.getIntake().start()
+                                    .alongWith(robot.getLauncher().toZero()),
+                            robot.getDrive().moveTo(Path10,.5),
+                            new WaitCommand(200)
+                    )
+            );
+        }
+        public Command finish(){
+            return robot.getDrive().moveTo(!isFar ?
+                    new Pose(paths.Path1.getX(),130,90) :
+                    new Pose(paths.Path12.getX(), 30, 90));
         }
 
-        public static double flipAng(double degrees, boolean ifFlip){
+        public double flipAng(double degrees, boolean ifFlip){
             return Math.toRadians(90 +((degrees - 90) * (ifFlip ? 1:-1)));
         }
     }
