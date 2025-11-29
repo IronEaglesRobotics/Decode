@@ -24,21 +24,22 @@ import org.firstinspires.ftc.teamcode.hardware.Bot;
 @Autonomous(name =  "Auto")
 public class Auto extends OpMode{
 
-    private String color = "blue";
+    private Alliance color = Alliance.Blue;
     private boolean isFar = false;
     private int lines = 4;
     Bot robot;
     GamepadEx controller; // plz DO NOT feed into Bot
     int delay;
-    int state = -3;
-    int lastState = -3;
-    int green = 0;
+    States state = States.motifDetect;
+    States lastState = States.idle;
+    States nextState;
     boolean wantsShoot = false;
     public Paths paths;
     Command togate;
     Command pick3;
     Command pick2;
-    Command pick1;
+    Command finish;
+    Command pickFar;
     int shot = 0;
     boolean finished;
     private void makeAuto(Paths paths) {
@@ -73,15 +74,23 @@ public class Auto extends OpMode{
 //                ),
 //                new WaitCommand(200),
 //                robot.getIntake().stop()
-        pick1 = new ParallelCommandGroup(
-                robot.getDrive().moveTo(paths.Path1.endPose().getX(),130,
-                        90),
-                robot.getLauncher().toZero()
+        finish = robot.getDrive().moveTo(!isFar ?
+                new Pose(paths.Path1.endPoint().getX(),130,90) :
+                new Pose(paths.Path12.endPoint().getX(), 30, 90));
+        pickFar = new SequentialCommandGroup(
+                robot.getDrive().pathCommand(paths.Path9),
+                new SequentialCommandGroup(
+                        robot.getIntake().start()
+                                .alongWith(robot.getLauncher().toZero()),
+                        robot.getDrive().pathCommand(paths.Path10,.5),
+                        new WaitCommand(400)
+                )
         );
     }
 
     public FollowPathCommand closeshoot(){
-        return robot.getDrive().pathCommand(paths.shootPaths[shot++]);
+        return robot.getDrive().pathCommand(
+                !isFar ? paths.shootPaths[shot++] : paths.farShootPaths[shot++]);
     }
 
     @Override
@@ -105,10 +114,10 @@ public class Auto extends OpMode{
             lines = 1;
         }
         if(controller.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
-            color = "red";
+            color = Alliance.Red;
         }
         if(controller.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-            color = "blue";
+            color = Alliance.Blue;
         }
         if(controller.wasJustPressed(GamepadKeys.Button.RIGHT_STICK_BUTTON)){
             isFar = true;
@@ -134,10 +143,13 @@ public class Auto extends OpMode{
     }
     @Override
     public void start(){
-        robot.getDrive().getFollower().setStartingPose(new Pose(color.equalsIgnoreCase("blue")? 14:129 ,
-                135,Paths.flipAng(135,color.equalsIgnoreCase("blue"))));
-        paths = new Paths(robot.getDrive().getFollower(),color.equalsIgnoreCase("blue"));
+        robot.getDrive().getFollower().setStartingPose(
+            new Pose( !isFar ? color == Alliance.Blue? 14:129 : color == Alliance.Blue ? 56:88,
+            isFar ? 9:135,
+            Paths.flipAng(isFar ? 90:135,color == Alliance.Blue)));
+        paths = new Paths(robot.getDrive().getFollower(),color == Alliance.Blue);
         makeAuto(paths);
+        nextState = isFar ? States.pick2 : States.pickFar;
         robot.getLauncher().flywheelOn(!isFar).schedule();
 //        robot.getCamera().getMotif()
 //                .andThen(robot.getLauncher().setlaunch(0,robot.getCamera().getOrder())
@@ -169,22 +181,26 @@ public class Auto extends OpMode{
 
     public void run(){
         switch (state){
-            case -3:
+            case motifDetect:
                 robot.getCamera().getMotif()
-                        .raceWith(robot.getDrive().cancelablePath(paths.Path1Ex)
+                        .raceWith(new ConditionalCommand(
+                                    robot.getDrive().cancelablePath(paths.Path1Ex),
+                                    new WaitCommand(1000),
+                                    ()->!isFar)
                                 .whenFinished(()->robot.getCamera().setOrder(1)))
-                        .andThen(robot.getLauncher().setlaunch(0,robot.getCamera().getOrder())
-                        .whenFinished(()->state = 0))
+                        .andThen(robot.getLauncher().setlaunch(0,robot.getCamera().getOrder()))
+                        .andThen(new WaitCommand(delay))
+                        .whenFinished(()->state = States.shoot)
                         .schedule();
-                state = -1;
+                state = States.idle;
                 break;
-            case -2:
-                state = lines;
+            case swap:
+                state = nextState;
                 lines-=1;
-            case -1:
+            case idle:
                 break;
-            case 0:
-                lastState = 0;
+            case shoot:
+                lastState = States.shoot;
                 new SequentialCommandGroup(
                         closeshoot()
                                 .whenFinished(()-> wantsShoot = true),
@@ -196,25 +212,41 @@ public class Auto extends OpMode{
                         new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
                         new WaitCommand(250),
-                        new InstantCommand(()->state=-2)
+                        new InstantCommand(()->state=States.swap)
                 )
                         .schedule();
-                state = -1;
+                state = States.idle;
                 break;
-            case 1:
-                lastState = 1;
-                state = -1;
+            case pickFar:
+                finished = false;
+                lastState = States.pickFar;
+                nextState = States.finish;
+                wantsShoot = false;
+                robot.loading()
+                        .raceWith(new WaitUntilCommand(()->wantsShoot))
+                        .andThen(robot.getIntake().stop())
+                        .whenFinished(()->finished = true)
+                        .schedule();
+                new SequentialCommandGroup(
+                        pickFar
+                        .whenFinished(()-> {
+                            state = States.shoot;
+                        })
+                )
+                        .schedule();
+                state = States.idle;
                 break;
-            case 2:
-                lastState = 2;
-                pick1.schedule();
+            case finish:
+                lastState = States.finish;
+                finish.schedule();
                 robot.getLauncher().toZero().schedule();
                 robot.getLauncher().flywheelOff().schedule();
-                state = -1;
+                state = States.idle;
                 break;
-            case 3:
+            case pick1:
                 finished = false;
-                lastState = 3;
+                lastState = States.pick1;
+                nextState = States.finish;
                 wantsShoot = false;
                 robot.loading()
                         .raceWith(new WaitUntilCommand(()->wantsShoot))
@@ -224,16 +256,16 @@ public class Auto extends OpMode{
                 new SequentialCommandGroup(
                         pick3
                                 .whenFinished(()-> {
-                                    green = 2;
-                                    state = 0;
+                                    state = States.shoot;
                                 })
                 )
                         .schedule();
-                state = -1;
+                state = States.idle;
                 break;
-            case 4:
+            case pick2:
                 finished = false;
-                lastState = 4;
+                lastState = States.pick2;
+                nextState = States.pick1;
                 wantsShoot = false;
                 robot.loading()
                         .raceWith(new WaitUntilCommand(()->wantsShoot))
@@ -243,14 +275,23 @@ public class Auto extends OpMode{
                 new SequentialCommandGroup(
                         pick2,
                         new InstantCommand(()-> {
-                            green = 2;
-                            state = 0;
+                            state = States.shoot;
                         })
                 )
                         .schedule();
-                state = -1;
+                state = States.idle;
                 break;
         }
+    }
+    public enum States {
+        motifDetect,
+        idle,
+        swap,
+        shoot,
+        pick1,
+        pick2,
+        pickFar,
+        finish
     }
     public static class Paths {
         public PathChain Path1;
@@ -266,8 +307,8 @@ public class Auto extends OpMode{
         public PathChain Path10;
         public PathChain Path11;
         public PathChain Path12;
-        public PathChain Path13;
         public PathChain[] shootPaths;
+        public PathChain[] farShootPaths;
 
         public Paths(Follower follower, boolean isBlue) {
             double startX = isBlue ? 15:125;
@@ -355,7 +396,7 @@ public class Auto extends OpMode{
             Path9 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(shootX, 95.000), new Pose(prePickX, 35.500))
+                            new BezierLine(new Pose(farShootX, 95.000), new Pose(prePickX, 35.500))
                     )
                     .setLinearHeadingInterpolation(flipAng(127,isBlue),flipAng(180,isBlue))
                     .build();
@@ -371,15 +412,34 @@ public class Auto extends OpMode{
             Path11 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(postPickX2, 35.500), new Pose(shootX, 95.000))
+                            new BezierLine(new Pose(postPickX2, 35.500), new Pose(farShootX, 95.000))
                     )
-                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
+                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(120,isBlue))
                     .build();
+            Path12 = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(farStartX, 9), new Pose(farShootX, 14))
+                    )
+                    .setLinearHeadingInterpolation(flipAng(90,isBlue), flipAng(120,isBlue))
+                    .build();
+//            Path13 = follower
+//                    .pathBuilder()
+//                    .addPath(
+//                            new BezierLine(new Pose(postPickX2, 35.500), new Pose(shootX, 95.000))
+//                    )
+//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
+//                    .build();
             shootPaths = new PathChain[]{Path1,Path5,Path8,Path11};
+            farShootPaths = new PathChain[]{Path12,Path11};
         }
 
         public static double flipAng(double degrees, boolean ifFlip){
             return Math.toRadians(90 +((degrees - 90) * (ifFlip ? 1:-1)));
         }
+    }
+    public enum Alliance{
+        Red,
+        Blue
     }
 }
