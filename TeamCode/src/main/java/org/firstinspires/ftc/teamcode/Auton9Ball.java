@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 
-import android.app.GameManager;
-
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
@@ -19,7 +16,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 @Autonomous(name = "9 ball auto")
-public class Auton extends OpMode {
+public class Auton9Ball extends OpMode {
     private Robot robot;
     GamepadEx controller1;
     private Timer pathTimer, actionTimer, opmodeTimer;

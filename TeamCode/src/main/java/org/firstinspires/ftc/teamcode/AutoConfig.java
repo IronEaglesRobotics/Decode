@@ -50,4 +50,15 @@ public class AutoConfig {
             .pickup3Control(new Pose(44,38,Math.toRadians(0)))
             .parkPose(new Pose(55, 115, Math.toRadians(145)))
             .build();
+
+    public static final AutoConfig blueFar = AutoConfig.builder()
+            .team("blue")
+            .startPose(new Pose(55,9,Math.toRadians(90)))
+            .scorePose(new Pose(60,20,Math.toRadians(118)))
+            .pickup1Pose(new Pose(10,40,Math.toRadians(180)))
+            .pickup1Control(new Pose(51.8,37,Math.toRadians(0)))
+            .pickup2Transition(new Pose(7,30,Math.toRadians(255)))
+            .pickup2Control(new Pose(17.3,50.3,Math.toRadians(0)))
+            .pickup2Pose(new Pose (5,17,Math.toRadians(195)))
+            .build();
 }
