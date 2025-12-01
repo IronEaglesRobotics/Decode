@@ -56,12 +56,36 @@ public class Drive extends SubsystemBase {
                 .setLinearHeadingInterpolation(follower.getHeading(),pose.getHeading())
                 .build());
     }
-    public RealFollowPathCommand moveTo(Pose pose,double speed) {
-        return new RealFollowPathCommand(follower,follower.pathBuilder()
-                .addPath(new Path(new BezierLine(follower.getPose(), pose)))
-                .setLinearHeadingInterpolation(follower.getHeading(),pose.getHeading())
-                .build(),speed);
+    public FollowPathCommand moveTo(Pose start,Pose end) {
+        return pathCommand(follower.pathBuilder()
+                .addPath(new Path(new BezierLine(start, end)))
+                .setLinearHeadingInterpolation(start.getHeading(),end.getHeading())
+                .build());
     }
+    public FollowPathCommand moveTo(Pose pose,double constantHeading) {
+        return pathCommand(follower.pathBuilder()
+                .addPath(new Path(new BezierLine(follower.getPose(), pose)))
+                .setConstantHeadingInterpolation(constantHeading)
+                .build());
+    }
+    public FollowPathCommand moveTo(Pose start,Pose end,double constantHeading) {
+        return pathCommand(follower.pathBuilder()
+                .addPath(new Path(new BezierLine(start, end)))
+                .setConstantHeadingInterpolation(constantHeading)
+                .build());
+    }
+//    public RealFollowPathCommand moveTo(Pose pose,double speed) {
+//        return new RealFollowPathCommand(follower,follower.pathBuilder()
+//                .addPath(new Path(new BezierLine(follower.getPose(), pose)))
+//                .setLinearHeadingInterpolation(follower.getHeading(),pose.getHeading())
+//                .build(),speed);
+//    }
+//    public RealFollowPathCommand moveTo(Pose pose,double speed,double constantHeading) {
+//        return new RealFollowPathCommand(follower,follower.pathBuilder()
+//                .addPath(new Path(new BezierLine(follower.getPose(), pose)))
+//                .setConstantHeadingInterpolation(constantHeading)
+//                .build(),speed);
+//    }
 
     public FollowPathCommand moveTo(double x, double y, double z) {
         Path path = new Path(new BezierLine(follower.getPose(), new Pose(x, y, Math.toRadians(z))));
