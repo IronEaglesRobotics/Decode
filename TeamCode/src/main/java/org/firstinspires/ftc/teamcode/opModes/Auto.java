@@ -40,7 +40,7 @@ public class Auto extends OpMode{
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap,null,telemetry);
+        robot = new Bot().init(hardwareMap,null);
         controller = new GamepadEx(gamepad1);
     }
     @Override
@@ -109,7 +109,7 @@ public class Auto extends OpMode{
         telemetry.addData("order", robot.getCamera().getOrder());
         telemetry.addData("last state", lastState);
         telemetry.addData("wantsShoot",wantsShoot);
-        telemetry.addData("target",robot.getLauncher().current);
+        telemetry.addData("target",robot.getLauncher().pidTarget);
         telemetry.addData("current",robot.getLauncher().spinner.getCurrentPosition());
         telemetry.addData("can shoot",robot.getLauncher().canShoot());
         telemetry.addData("is busy",robot.getDrive().getFollower().isBusy());
@@ -243,6 +243,7 @@ public class Auto extends OpMode{
         public Pose Path1Ex;
         public Pose Path2;
         public Pose Path3;
+        public Pose Path3Ex;
         public Pose Path6;
         public Pose Path7;
         public Pose Path9;
@@ -250,16 +251,18 @@ public class Auto extends OpMode{
         public Pose Path11;
 
         public Paths(boolean isBlue) {
-            double shootX = isBlue ? 32:102;
+            double shootX = isBlue ? 32:106;
             double prePickX = isBlue ? 35:109;
             double postPickX1 = isBlue ? 0:142;
+            double postPickEx = isBlue ? 10:132;
             double postPickX2 = isBlue ? 5:137;
             double farShootX = isBlue ? 50:94;
-            Path1 = new Pose(shootX, 105.500,flipAng(135,isBlue));
+            Path1 = new Pose(shootX, 105.500,flipAng(130,isBlue));
             Path1Ex = new Pose(shootX, 95.500,flipAng(90,isBlue));
             Path2 = new Pose(prePickX, 71.000,flipAng(180,isBlue));
 
-            Path3 = new Pose(postPickX1, 71.000,180);
+            Path3 = new Pose(postPickX1, 71.000,flipAng(180,isBlue));
+            Path3Ex = new Pose(postPickEx, 71.000,flipAng(180,isBlue));
 
 //            Path4 = follower
 //                    .pathBuilder()
@@ -314,7 +317,8 @@ public class Auto extends OpMode{
                             robot.getIntake().start()
                                     .alongWith(robot.getLauncher().toZero()),
                             robot.getDrive().moveTo(Path6,Path7,
-                                    flipAng(180,color==Alliance.Blue)),
+                                    flipAng(180,color==Alliance.Blue),
+                                    .5),
                             new WaitCommand(200)
                     )
             );
@@ -326,8 +330,10 @@ public class Auto extends OpMode{
                             robot.getIntake().start()
                                     .alongWith(robot.getLauncher().toZero()),
                             robot.getDrive().moveTo(Path2,Path3,
-                                    flipAng(180,color==Alliance.Blue)),
-                            new WaitCommand(200)
+                                    flipAng(180,color==Alliance.Blue)
+                            ,.5),
+                            new WaitCommand(200),
+                            robot.getDrive().moveTo(Path3,Path3Ex)
                     )
             );
         }
@@ -338,15 +344,16 @@ public class Auto extends OpMode{
                             robot.getIntake().start()
                                     .alongWith(robot.getLauncher().toZero()),
                             robot.getDrive().moveTo(Path9,Path10,
-                                    flipAng(180,color==Alliance.Blue)),
+                                    flipAng(180,color==Alliance.Blue)
+                            ,.5),
                             new WaitCommand(200)
                     )
             );
         }
         public Command finish(){
             return robot.getDrive().moveTo(!isFar ?
-                    new Pose(paths.Path1.getX(),130,90) :
-                    new Pose(paths.Path11.getX(), 30, 90));
+                    new Pose(paths.Path1.getX(),130,Math.toRadians(90)) :
+                    new Pose(paths.Path11.getX(), 30, Math.toRadians(90)));
         }
 
         public double flipAng(double degrees, boolean ifFlip){

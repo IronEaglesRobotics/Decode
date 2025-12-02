@@ -2,15 +2,11 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.bylazar.configurables.annotations.Configurable;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.button.GamepadButton;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
@@ -40,7 +36,7 @@ public class testTeleop extends OpMode {
     @Override
     public void init() {
         controller1 = new GamepadEx(gamepad1);
-        robot = new Bot().init(hardwareMap,controller1,telemetry);
+        robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
         robot.getDrive().getFollower().update();
         CommandScheduler.getInstance().reset();
@@ -138,13 +134,17 @@ public class testTeleop extends OpMode {
                     .schedule();
         }
 
+        if(controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
+            robot.getLauncher().fixPose();
+        }
+
 
 
         CommandScheduler.getInstance().run();
         telemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
         telemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
         telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
-        telemetry.addData("target", robot.getLauncher().current);
+        telemetry.addData("target", robot.getLauncher().pidTarget);
         telemetry.addData("order", robot.getCamera().getOrder());
         telemetry.addData("flywheel 1", robot.getLauncher().flyWheel1.getVelocity());
         telemetry.addData("flywheel 2", robot.getLauncher().flyWheel2.getVelocity());

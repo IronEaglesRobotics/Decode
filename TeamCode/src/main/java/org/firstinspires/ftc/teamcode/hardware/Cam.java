@@ -22,7 +22,7 @@ public class Cam extends SubsystemBase {
     public Cam(HardwareMap hardwareMap){
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         limelight.setPollRateHz(100);
-        limelight.pipelineSwitch(1);
+        limelight.pipelineSwitch(3);
         limelight.start();
     }
     public void setOrder(int order1){

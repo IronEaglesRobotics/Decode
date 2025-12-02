@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
@@ -15,7 +14,7 @@ public class spinnerTest extends OpMode {
     GamepadEx controller1;
     @Override
     public void init() {
-       robot = new Bot().init(hardwareMap,null,telemetry);
+       robot = new Bot().init(hardwareMap,null);
        controller1 = new GamepadEx(gamepad1);
     }
 

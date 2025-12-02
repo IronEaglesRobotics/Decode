@@ -25,7 +25,7 @@ public class colorsensingtest extends OpMode {
     public void init() {
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
-        launcher = new Launcher(hardwareMap,telemetry);
+        launcher = new Launcher(hardwareMap);
         cont1 = new GamepadEx(gamepad1);
     }
 

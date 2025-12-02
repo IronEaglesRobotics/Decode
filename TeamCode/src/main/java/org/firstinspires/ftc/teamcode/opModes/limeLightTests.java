@@ -1,25 +1,11 @@
 package org.firstinspires.ftc.teamcode.opModes;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.bylazar.panels.Panels;
-import com.pedropathing.geometry.Pose;
-import com.qualcomm.hardware.limelightvision.LLFieldMap;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.hardware.Bot;
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
-import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
-import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 @TeleOp(name="ll test")
@@ -31,7 +17,7 @@ public class limeLightTests extends CommandOpMode {
 
     @Override
     public void initialize() {
-        robot = new Bot().init(hardwareMap,new GamepadEx(gamepad1),telemetry);
+        robot = new Bot().init(hardwareMap,new GamepadEx(gamepad1));
         FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(), 60);
         //robot.aim().schedule();
     }

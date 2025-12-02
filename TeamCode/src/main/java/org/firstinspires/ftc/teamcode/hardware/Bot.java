@@ -2,14 +2,11 @@ package org.firstinspires.ftc.teamcode.hardware;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Configurable
 public class Bot extends Robot {
@@ -17,12 +14,12 @@ public class Bot extends Robot {
     Drive drive;
     Launcher launcher;
     Intake intake;
-    public Bot init(HardwareMap hardwareMap, GamepadEx gamepad, Telemetry telemetry){
+    public Bot init(HardwareMap hardwareMap, GamepadEx gamepad){
         camera = new Cam(hardwareMap);
         intake = new Intake(hardwareMap);
-        launcher = new Launcher(hardwareMap,telemetry);
+        launcher = new Launcher(hardwareMap);
         if (gamepad == null){
-            drive = new Drive(hardwareMap,telemetry);
+            drive = new Drive(hardwareMap);
         } else {
             drive = new Drive(hardwareMap,gamepad);
         }

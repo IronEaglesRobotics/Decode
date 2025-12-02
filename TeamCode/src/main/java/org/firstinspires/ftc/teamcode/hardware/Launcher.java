@@ -2,13 +2,11 @@ package org.firstinspires.ftc.teamcode.hardware;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -18,15 +16,12 @@ import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 @Configurable
 public class Launcher extends SubsystemBase {
@@ -40,20 +35,23 @@ public class Launcher extends SubsystemBase {
     public static double kd = 0.1;
     public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
-    public static int halfDelta = -238;
-    public static int fullDelta = -475;
-    public int current = 0;
+    public static final int halfDelta = -238;
+    public static final int fullDelta = -475;
+    public int pidTarget = 0;
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = 910;
-    public static int farSpeed = 1050;
+    public static int closeSpeed = 870;
+    public static int farSpeed = 970;
+    public static int autoSpeed = 800;
     public static double power = .43;
+
+    public static int safePose = 0;
     double speed1 = 0;
     double speed2 = 0;
 
-    public Launcher(HardwareMap hardwareMap, Telemetry telemetry){
+    public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
         spinner = new MotorEx(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
         spinner.resetEncoder();
@@ -82,6 +80,8 @@ public class Launcher extends SubsystemBase {
         return Color.Nothing;
     }
 
+
+
     public Command plusVelo(){
         return new InstantCommand(()-> speed1 = speed1 + 100)
         ;
@@ -95,6 +95,16 @@ public class Launcher extends SubsystemBase {
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = -(isClose? closeSpeed:farSpeed);
+            //speed2 = isClose? closeSpeed:farSpeed;
+//            flyWheel1.setPower(-power);
+//            flyWheel2.setPower(power);
+        });
+    }
+    public Command flywheelAuto(){
+        return new InstantCommand(()->{
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            speed1 = autoSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
@@ -146,17 +156,17 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 if (greenLoc == 0) {
-                    current = CHAMBER1;
+                    pidTarget = CHAMBER1;
                 } else if (greenLoc == 1) {
-                    current = CHAMBER2;
+                    pidTarget = CHAMBER2;
                 } else if (greenLoc == 2) {
-                    current = CHAMBER3;
+                    pidTarget = CHAMBER3;
                 }
                 if (greenLoc == -1){
-                    current = CHAMBER1;
+                    pidTarget = CHAMBER1;
                 }
                 else {
-                    current -= fullDelta * (order - 1);
+                    pidTarget -= fullDelta * (order - 1);
                 }
             }
 
@@ -170,7 +180,7 @@ public class Launcher extends SubsystemBase {
         return shootPos() && atTarget();
     }
     public boolean shootPos(){
-        return ((current - halfDelta)%fullDelta) == 0;
+        return ((pidTarget - halfDelta)%fullDelta) == 0;
     }
     public boolean atTarget(){
         return controller.atSetPoint();
@@ -185,15 +195,19 @@ public class Launcher extends SubsystemBase {
     }
 
     public void fan(){
-        current= current+fullDelta;
-        current = Math.max(Math.min(current,2000),-5000);
+        pidTarget = pidTarget +fullDelta;
+        pidTarget = Math.max(Math.min(pidTarget,2000),-5000);
     }
     public void Shoot(){
-        current= current+halfDelta;
-        current = Math.max(Math.min(current,2000),-5000);
+        pidTarget = pidTarget +halfDelta;
+        pidTarget = Math.max(Math.min(pidTarget,2000),-5000);
+    }
+
+    public void fixPose(){
+        pidTarget = safePose;
     }
     public void Zero(){
-        current = 0;
+        pidTarget = 0;
     }
     public Command toNext(){
         return new Command() {
@@ -204,7 +218,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                current += fullDelta;
+                pidTarget += fullDelta;
             }
 
             @Override
@@ -222,7 +236,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                current += halfDelta;
+                pidTarget += halfDelta;
             }
 
             @Override
@@ -240,7 +254,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                current = 0;
+                pidTarget = 0;
             }
 
             @Override
@@ -257,10 +271,13 @@ public class Launcher extends SubsystemBase {
     @Override
     public void periodic(){
         controller.setPID(kp,ki,kd);
-        controller.setSetPoint(current);
-        spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(),current));
+        controller.setSetPoint(pidTarget);
+        spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(), pidTarget));
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
+        if(controller.atSetPoint()){
+            safePose = pidTarget;
+        }
     }
 
     public static class Loading extends CommandBase{
@@ -277,7 +294,7 @@ public class Launcher extends SubsystemBase {
         @Override
         public void initialize() {
             currentChamber = 0;
-            launcher.current = 0;
+            launcher.pidTarget = 0;
             launcher.chambers.set(0,Color.Nothing);
             launcher.chambers.set(1,Color.Nothing);
             launcher.chambers.set(2,Color.Nothing);
@@ -293,7 +310,7 @@ public class Launcher extends SubsystemBase {
                 if (color != Color.Nothing ) {
                     launcher.chambers.set(currentChamber,color);
                     currentChamber += 1;
-                    launcher.current += fullDelta;
+                    launcher.pidTarget += fullDelta;
                 }
             }
         }
@@ -306,24 +323,24 @@ public class Launcher extends SubsystemBase {
         @Override
         public void end(boolean interrupted) {
             if(!interrupted){
-                launcher.current = halfDelta;
+                launcher.pidTarget = halfDelta;
                 if (launcher.chambers.get(0) == Color.Green){
-                    launcher.current += fullDelta;
+                    launcher.pidTarget += fullDelta;
                 }
                 else if (launcher.chambers.get(1) == Color.Green) {
-                    launcher.current += fullDelta*2;
+                    launcher.pidTarget += fullDelta*2;
                 }
                 else if(launcher.chambers.get(2) == Color.Green){
-                    launcher.current += fullDelta*3;
+                    launcher.pidTarget += fullDelta*3;
                 }
                 else {
-                    launcher.current += fullDelta;
+                    launcher.pidTarget += fullDelta;
                 }
 //                launcher.current -= fullDelta * (order - 1);
 
             }
             else {
-                launcher.current = CHAMBER1;
+                launcher.pidTarget = CHAMBER1;
             }
         }
     }
@@ -332,5 +349,10 @@ public class Launcher extends SubsystemBase {
         Purple,
         Green,
         Nothing
+    }
+    public enum speed{
+        Close,
+        Far,
+        Auto
     }
 }

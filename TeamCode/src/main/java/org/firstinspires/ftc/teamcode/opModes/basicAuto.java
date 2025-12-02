@@ -2,11 +2,9 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 
@@ -22,7 +20,7 @@ public class basicAuto extends CommandOpMode {
     private final Pose loadingzonepick = new Pose(-55,55,Math.toRadians(90));
     @Override
     public void initialize() {
-        robot = new Bot().init(hardwareMap,null,telemetry);
+        robot = new Bot().init(hardwareMap,null);
         schedule(new main(robot));
     }
 

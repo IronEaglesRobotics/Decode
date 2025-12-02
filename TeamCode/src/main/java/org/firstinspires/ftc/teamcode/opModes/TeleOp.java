@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
@@ -21,7 +20,7 @@ public class TeleOp extends OpMode {
 
     @Override
     public void init() {
-        robot = new Bot().init(hardwareMap, new GamepadEx(this.gamepad1),telemetry);
+        robot = new Bot().init(hardwareMap, new GamepadEx(this.gamepad1));
         controller1 = new GamepadEx(gamepad1);
         controller2 = new GamepadEx(gamepad1);
     }
@@ -64,7 +63,7 @@ public class TeleOp extends OpMode {
         }
 
         telemetry.addData("current: ",robot.getLauncher().spinner.getCurrentPosition());
-        telemetry.addData("target", robot.getLauncher().current);
+        telemetry.addData("target", robot.getLauncher().pidTarget);
         telemetry.update();
         //  .andThen(new WaitCommand()));
 //        controller1.getGamepadButton(GamepadKeys.Button.A)
