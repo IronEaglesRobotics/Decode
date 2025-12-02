@@ -131,16 +131,17 @@ public class Auton12Ball extends OpMode {
                 }
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
-                if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
-                    if (getRuntime() > timer  || robot.robotstate == Robot.robotStates.HAS3) {
-                        follower().breakFollowing();
+                if (!follower().isBusy()) {
+//                    if (getRuntime() > timer  || robot.robotstate == Robot.robotStates.HAS3) {
+//                        follower().breakFollowing();
                         //follow next path
                         follower().followPath(openGate, true);
+                        timer = getRuntime() + 1.75;
                         setPathState(13);
-                    }
+//                    }
                 }
             case 13:
-                if (!follower().isBusy()){
+                if (!follower().isBusy() && getRuntime() > timer){
                     follower().followPath(launchBatch1,true);
                     setPathState(4);
                 }
@@ -186,9 +187,9 @@ public class Auton12Ball extends OpMode {
                 break;
             case 9://if Got all 3 of Third batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
+                    follower().breakFollowing();
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
                         //follow next path
-                        follower().breakFollowing();
                         follower().followPath(launchBatch3, true);
                         setPathState(10);
                     }
@@ -245,6 +246,7 @@ public class Auton12Ball extends OpMode {
         } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
             this.config = AutoConfig.red;
         }
+        this.config = AutoConfig.blue;
         telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
         controller1.readButtons();
 

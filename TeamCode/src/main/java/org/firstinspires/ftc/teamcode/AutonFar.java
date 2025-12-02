@@ -69,7 +69,8 @@ public class AutonFar extends OpMode {
         getPickup2 = robot.getFollower().pathBuilder()
                 .addPath(new BezierCurve(this.config.getScorePose(),this.config.getPickup2Control(), this.config.getPickup2Transition()))
                 .setTangentHeadingInterpolation()
-
+//                .addPath(new BezierLine(this.config.getScorePose(),this.config.getPickup2Transition()))
+//                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(),this.config.getPickup2Transition().getHeading())
                 .build();
 
         getBalls2 = robot.getFollower().pathBuilder()
@@ -130,7 +131,7 @@ public class AutonFar extends OpMode {
                 if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
                     follower().breakFollowing();
                     if (getRuntime() > timer  || robot.robotstate == Robot.robotStates.HAS3) {
-                        follower().breakFollowing();
+//                        follower().breakFollowing();
                         //follow next path
                         follower().followPath(launchBatch1,.7, true);
                         setPathState(4);
@@ -164,14 +165,15 @@ public class AutonFar extends OpMode {
                         follower().breakFollowing();
                         follower().followPath(launchBatch2,.85, true);
                         setPathState(8);
+                        timer = getRuntime() + 2;
                     }
                 }
                 break;
             case 8: //if at launch pos, then shoot
-                if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
+                if (!follower().isBusy() && robot.getShooter().atTargetVelocity() && getRuntime()>timer ) {
                     robot.autoSwitch = true;
                     setPathState(-1);
-                    timer = getRuntime() + 3;
+//                    timer = getRuntime() + 3;
                 }
                 break;
 //            case 8: //if all balls are launched, reset the shooter and go to next position
@@ -242,6 +244,7 @@ public class AutonFar extends OpMode {
         } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
             this.config = AutoConfig.red;
         }
+        this.config = AutoConfig.blueFar;
         telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
         controller1.readButtons();
 
