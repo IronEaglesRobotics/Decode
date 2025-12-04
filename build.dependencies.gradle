@@ -2,6 +2,7 @@ repositories {
     mavenCentral()
     google() // Needed for androidx
     maven { url = "https://mymaven.bylazar.com/releases" }
+
 }
 
 dependencies {
@@ -20,7 +21,6 @@ dependencies {
     implementation 'com.bylazar:fullpanels:1.0.9'
     implementation "com.bylazar:telemetry:1.0.5"
     implementation "com.bylazar:docs:1.0.5"
-//    implementation "com.bylazar:panels:1.0.4"
 
 
     compileOnly 'org.projectlombok:lombok:1.18.42'

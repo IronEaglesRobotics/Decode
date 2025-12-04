@@ -24,7 +24,6 @@ public class AutonFar extends OpMode {
     public TelemetryManager telemetryM;
     private final PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
     private double timer;
-    private boolean foo = true;
 
     private shotTier tier = shotTier.FAR;
 
@@ -69,8 +68,6 @@ public class AutonFar extends OpMode {
         getPickup2 = robot.getFollower().pathBuilder()
                 .addPath(new BezierCurve(this.config.getScorePose(),this.config.getPickup2Control(), this.config.getPickup2Transition()))
                 .setTangentHeadingInterpolation()
-//                .addPath(new BezierLine(this.config.getScorePose(),this.config.getPickup2Transition()))
-//                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(),this.config.getPickup2Transition().getHeading())
                 .build();
 
         getBalls2 = robot.getFollower().pathBuilder()
@@ -83,20 +80,6 @@ public class AutonFar extends OpMode {
                 .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
                 .setLinearHeadingInterpolation(this.config.getPickup2Pose().getHeading(), this.config.getScorePose().getHeading())
                 .build();
-//
-//        getPickup3 = robot.getFollower().pathBuilder()
-//                .addPath(new BezierLine(this.config.getScorePose(), this.config.getPickup3Transition()))
-//                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), this.config.getPickup3Transition().getHeading())
-//                .addPath(new BezierCurve(this.config.getPickup3Transition(), this.config.getPickup3Control(), this.config.getPickup3Pose()))
-//                .setBrakingStart(.75)
-//                .setTangentHeadingInterpolation()
-//                .addParametricCallback(.99, (() -> timer = getRuntime() + 2.5))
-//                .build();
-//
-//        launchBatch3 = follower().pathBuilder()
-//                .addPath(new BezierLine(this.config.getPickup3Pose(), this.config.getScorePose()))
-//                .setLinearHeadingInterpolation(this.config.getPickup2Pose().getHeading(), this.config.getScorePose().getHeading())
-//                .build();
 //        //add more pathchains as see fit
     }
 
@@ -176,46 +159,8 @@ public class AutonFar extends OpMode {
 //                    timer = getRuntime() + 3;
                 }
                 break;
-//            case 8: //if all balls are launched, reset the shooter and go to next position
-//                robot.autoSwitch = false;
-//                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0 && timer < getRuntime()) {
-//                    follower().followPath(getPickup3, true);
-//                    setPathState(9);
-//                }
-//                break;
-//            case 9://if Got all 3 of Third batch || patch ended 1.5 secs passed, go to launch pose
-//                if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
-//                    if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
-//                        //follow next path
-//                        follower().breakFollowing();
-//                        follower().followPath(launchBatch3, true);
-//                        setPathState(10);
-//                    }
-//                }
-//
-//                break;
-//            case 10: //if at launch pos, then shoot
-//                if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
-//                    robot.autoSwitch = true;
-//                    setPathState(11);
-//                    timer = getRuntime() + 3;
-//                }
-//                break;
-//            case 11:
-//                robot.autoSwitch = false;
-//                if (robot.balls == 0 && timer < getRuntime()) {
-//                    //park the robot
-//                    follower().followPath(park, true);
-//                    tier = shotTier.REST;
-//                    setPathState(12);
-//                }
-//                break;
-//            case 12:
-//                if (!follower().isBusy()) {
-//                    setPathState(-1);
-//                    stop();
-//                }
-//                break;
+
+                //ADD MOVEMENT OFF LINE
         }
     }
 
@@ -242,9 +187,8 @@ public class AutonFar extends OpMode {
         if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             this.config = AutoConfig.blueFar;
         } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-            this.config = AutoConfig.red;
+            this.config = AutoConfig.redFar;
         }
-        this.config = AutoConfig.blueFar;
         telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
         controller1.readButtons();
 

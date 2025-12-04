@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
-//import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
-
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.BezierLine;
@@ -14,9 +11,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.paths.Path;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp")
@@ -61,7 +56,6 @@ public class TeleOP extends OpMode {
 
     @Override
     public void start() {
-//        robot.getFollower().update();
         robot.getFollower().startTeleopDrive();
     }
 
@@ -90,12 +84,12 @@ public class TeleOP extends OpMode {
 
         //Auto Drive turning
         if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_UP)) {
-            robot.getFollower().followPath(pathChain.get(),true);
+            robot.getFollower().followPath(pathChain.get(), true);
             automatedDrive = true;
         }
 
-        if (controller1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)>0.5) {
-            robot.getFollower().followPath(pathChainFar.get(),true);
+        if (controller1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
+            robot.getFollower().followPath(pathChainFar.get(), true);
             automatedDrive = true;
         }
 
@@ -105,15 +99,9 @@ public class TeleOP extends OpMode {
             automatedDrive = false;
         }
 
-        if(controller1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)){
-            robot.getFollower().setPose(new Pose(72,84,Math.toRadians(135)));
+        if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)) {
+            robot.getFollower().setPose(new Pose(72, 84, Math.toRadians(135)));
         }
-
-//        if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)) {
-//            robot.getShooter().hoodFar += 0.01;
-//        } else if (controller1.wasJustPressed((GamepadKeys.Button.DPAD_LEFT))) {
-//            robot.getShooter().hoodFar -= 0.01;
-////        }
 
         switch (tier) {
             case FAR:
@@ -128,9 +116,9 @@ public class TeleOP extends OpMode {
         }
 
 
-        robot.robotMacro(controller1, getRuntime(),false);
+        robot.robotMacro(controller1, getRuntime(), false);
 
-        telemetryM.debug("Shooter PID", String.join(",", Arrays.stream(this.robot.getShooter().getPIDValues()).mapToObj(Double::toString).collect(Collectors.joining(","))));
+//        telemetryM.debug("Shooter PID", String.join(",", Arrays.stream(this.robot.getShooter().getPIDValues()).mapToObj(Double::toString).collect(Collectors.joining(","))));
         telemetryM.addData("shooter_velo ", robot.getShooter().calculatedVelocity());
         telemetryM.debug("state", robot.robotstate);
         telemetryM.debug("x:" + robot.getFollower().getPose().getX());
@@ -138,6 +126,7 @@ public class TeleOP extends OpMode {
         telemetryM.debug("heading:" + robot.getFollower().getPose().getHeading());
         telemetryM.addData("at target velocty", robot.shooter.atTargetVelocity());
         telemetryM.addData("target velocity", robot.shooter.targetVelocity);
+        telemetryM.addData("balls", robot.balls);
 
         telemetryM.update(telemetry);
 

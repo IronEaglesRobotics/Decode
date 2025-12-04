@@ -64,7 +64,6 @@ public class Auton12Ball extends OpMode {
                 .setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), offsetPose(this.config.getScorePose(), 0, 0, Math.toRadians(60)).getHeading())
                 .addPath(new BezierCurve(offsetPose(this.config.getScorePose(), 0, -5, Math.toRadians(60)), this.config.getPickup1Control(), this.config.getPickup1Pose()))
                 .setTangentHeadingInterpolation()
-//                .setBrakingStart(.4)
                 .addParametricCallback(.99, (() -> timer = getRuntime() + 2.5))
                 .build();
 
@@ -112,7 +111,7 @@ public class Auton12Ball extends OpMode {
                     robot.getFollower().followPath(scorePreloads, true);
                     setPathState(1);
                 }
-            case 1: // immediately prep shooter -> if at location, launch
+            case 1: // if at location, launch
                 if (robot.robotstate == Robot.robotStates.IDLE) {
                     robot.robotstate = Robot.robotStates.HAS3;
                     robot.balls = 3;
@@ -124,17 +123,16 @@ public class Auton12Ball extends OpMode {
                 }
                 break;
             case 2: //is the robot done launching? if yes, go to pickup 1 and stop shooter
+
+                //getRuntime > timer shouldn't be needed. Kept for now, remove later.
                 robot.autoSwitch = false;
-                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0 && timer < getRuntime()) {
+                if (robot.robotstate == Robot.robotStates.INTAKE && robot.balls == 0 && getRuntime() > timer) {
                     follower().followPath(getPickup1, true);
                     setPathState(3);
                 }
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()) {
-//                    if (getRuntime() > timer  || robot.robotstate == Robot.robotStates.HAS3) {
-//                        follower().breakFollowing();
-                        //follow next path
                         follower().followPath(openGate, true);
                         timer = getRuntime() + 1.75;
                         setPathState(13);
@@ -150,7 +148,7 @@ public class Auton12Ball extends OpMode {
                 if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
                         robot.autoSwitch = true;
                         setPathState(5);
-                        timer =getRuntime() + 3;
+                        timer = getRuntime() + 3;
                 }
                 break;
             case 5: //if all balls are launched, reset the shooter and go to next position
@@ -187,8 +185,8 @@ public class Auton12Ball extends OpMode {
                 break;
             case 9://if Got all 3 of Third batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
-                    follower().breakFollowing();
                     if (getRuntime() > timer || robot.robotstate == Robot.robotStates.HAS3) {
+                        follower().breakFollowing();
                         //follow next path
                         follower().followPath(launchBatch3, true);
                         setPathState(10);
@@ -246,7 +244,6 @@ public class Auton12Ball extends OpMode {
         } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
             this.config = AutoConfig.red;
         }
-        this.config = AutoConfig.blue;
         telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
         controller1.readButtons();
 
