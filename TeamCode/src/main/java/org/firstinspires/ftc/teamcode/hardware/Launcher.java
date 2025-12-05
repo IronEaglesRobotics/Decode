@@ -31,8 +31,8 @@ public class Launcher extends SubsystemBase {
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
     public static double kp = 10;
-    public static double ki = 10;
-    public static double kd = 0.1;
+    public static double ki = 0;
+    public static double kd = 0.125;
     public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
     public static final int halfDelta = -238;
@@ -44,7 +44,7 @@ public class Launcher extends SubsystemBase {
     List<Color> chambers;
     public static int closeSpeed = 870;
     public static int farSpeed = 970;
-    public static int autoSpeed = 800;
+    public static int autoSpeed = 850;
     public static double power = .43;
 
     public static int safePose = 0;
@@ -100,11 +100,11 @@ public class Launcher extends SubsystemBase {
 //            flyWheel2.setPower(power);
         });
     }
-    public Command flywheelAuto(){
+    public Command flywheelAuto(boolean isClose){
         return new InstantCommand(()->{
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            speed1 = autoSpeed;
+            speed1 = -(isClose? autoSpeed:farSpeed);
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
@@ -141,7 +141,6 @@ public class Launcher extends SubsystemBase {
             @Override
             public void end(boolean interrupted) {
                 pusher.setPosition(0);
-                new WaitCommand(150).schedule();
             }
         };
     }
@@ -189,8 +188,10 @@ public class Launcher extends SubsystemBase {
         return new SequentialCommandGroup(
             shoot(),
             toNext(),
+            new WaitCommand(400),
             shoot(),
             toNext(),
+            new WaitCommand(400),
             shoot());
     }
 
@@ -204,7 +205,8 @@ public class Launcher extends SubsystemBase {
     }
 
     public void fixPose(){
-        pidTarget = safePose;
+        int fixer = spinner.getCurrentPosition()/fullDelta;
+        pidTarget = fullDelta * fixer;
     }
     public void Zero(){
         pidTarget = 0;
@@ -262,6 +264,13 @@ public class Launcher extends SubsystemBase {
                 return controller.atSetPoint();
             }
         };
+    }
+    public int calculateVelo(MotorEx flywheel){
+        return (int) (Math.abs(flywheel.getCorrectedVelocity())/.83);
+    }
+    public boolean atSpeed(){
+        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 110 &&
+                Math.abs(speed1 + calculateVelo(flyWheel2)) < 110;
     }
 
     public String getTelemetry(){

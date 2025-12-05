@@ -79,11 +79,14 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.getLauncher().minusVelo());
         controller2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
                 .whenPressed(robot.aim());
+        controller2.getGamepadButton(GamepadKeys.Button.DPAD_UP)
+                .whenPressed(robot.getLauncher().flywheelAuto(true));
         controller1.getGamepadButton(GamepadKeys.Button.Y)
                 .toggleWhenPressed(
                         new InstantCommand(() -> aprilCentric = true),
                         new InstantCommand(() -> aprilCentric = false)
                 );
+        robot.getCamera().getMotif().schedule();
     }
     @Override
     public void loop(){
@@ -146,8 +149,9 @@ public class testTeleop extends OpMode {
         telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
         telemetry.addData("target", robot.getLauncher().pidTarget);
         telemetry.addData("order", robot.getCamera().getOrder());
-        telemetry.addData("flywheel 1", robot.getLauncher().flyWheel1.getVelocity());
-        telemetry.addData("flywheel 2", robot.getLauncher().flyWheel2.getVelocity());
+        telemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
+        telemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
+        telemetry.addData("can Shoot", robot.getLauncher().canShoot());
         telemetry.addData("is field centric",!isBot);
         telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
         telemetry.addLine(robot.getLauncher().getTelemetry());

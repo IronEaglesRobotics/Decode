@@ -89,12 +89,12 @@ public class Auto extends OpMode{
     @Override
     public void start(){
         robot.getDrive().getFollower().setStartingPose(
-            new Pose( !isFar ? color == Alliance.Blue? 14:129 : color == Alliance.Blue ? 56:88,
+            new Pose( !isFar ? color == Alliance.Blue? 14:129 : color == Alliance.Blue ? 50:88,
             isFar ? 9:135,
             isFar ? Math.toRadians(90): Math.toRadians(color == Alliance.Blue? 135:45)));
         paths = new Paths(color == Alliance.Blue);
         nextState = !isFar ? States.pick1 : States.pickFar;
-        robot.getLauncher().flywheelOn(!isFar).schedule();
+        robot.getLauncher().flywheelAuto(!isFar).schedule();
 //        robot.getCamera().getMotif()
 //                .andThen(robot.getLauncher().setlaunch(0,robot.getCamera().getOrder())
 //                        .raceWith(new WaitUntilCommand(()->wantsShoot)))
@@ -126,12 +126,12 @@ public class Auto extends OpMode{
     public void run(){
         switch (state){
             case motifDetect:
-                robot.getCamera().getMotif()
+                robot.getCamera().getMotif().andThen(new WaitCommand(600))
                         .raceWith(new ConditionalCommand(
-                                    robot.getDrive().cancelablePath(paths.Path1Ex),
+                                    robot.getDrive().cancelablePath(paths.Path1Ex)
+                                            .whenFinished(()->robot.getCamera().setOrder(1)),
                                     new WaitCommand(1000),
-                                    ()->!isFar)
-                                .whenFinished(()->robot.getCamera().setOrder(1)))
+                                    ()->!isFar))
                         .andThen(robot.getLauncher().setlaunch(0,robot.getCamera().getOrder()))
                         .andThen(new WaitCommand(delay))
                         .whenFinished(()->state = States.shoot)
@@ -149,11 +149,13 @@ public class Auto extends OpMode{
                         (!isFar? paths.PathShoot() : paths.farPathShoot())
                                 .whenFinished(()-> wantsShoot = true),
                         new WaitUntilCommand(()->!robot.getDrive().getFollower().isBusy()),
-//                        new WaitCommand(700),
+                        new WaitCommand(700),
                         new ConditionalCommand(robot.getLauncher().toShoot(),
                                 new WaitUntilCommand(() -> robot.getLauncher().atTarget()),
                                 ()->!robot.getLauncher().shootPos()),
                         new WaitUntilCommand(()->robot.getLauncher().canShoot()),
+                        robot.aim(),
+                        new WaitCommand(100),
                         robot.getLauncher().fire(),
                         new WaitCommand(250),
                         new InstantCommand(()->state=States.swap)
