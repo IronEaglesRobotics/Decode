@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp")
 public class TeleOP extends OpMode {
     private Robot robot;
+    private AutoConfig config;
     private shotTier tier = shotTier.REST;
 
     private enum shotTier {
@@ -32,14 +33,14 @@ public class TeleOP extends OpMode {
 
 
     private final PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
-    private Pose shootPose = new Pose(60, 96, Math.toRadians(145));
-    private Pose shootPoseFar = new Pose(75, 18, Math.toRadians(120));
+    private final Pose shootPose = this.config.getShootPose();
+    private final Pose shootPoseFar = this.config.getShootPoseFar();
 
 
     @Override
     public void init() {
         robot = new Robot().init(hardwareMap);
-        robot.getFollower().setStartingPose(new Pose(45, 96, Math.toRadians(180)));
+        robot.getFollower().setStartingPose(this.config.getStartPose());
         robot.getFollower().update();
         controller1 = new GamepadEx(gamepad1);
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -52,6 +53,17 @@ public class TeleOP extends OpMode {
                 .addPath(new Path(new BezierLine(robot.getFollower()::getPose, shootPoseFar)))
                 .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(robot.getFollower()::getHeading, shootPoseFar.getHeading(), 0.8))
                 .build();
+    }
+
+    @Override
+    public void init_loop(){
+        if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
+            this.config = AutoConfig.blueTeleOp;
+        } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
+            this.config = AutoConfig.redTeleOp;
+        }
+        telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
+        controller1.readButtons();
     }
 
     @Override
@@ -100,7 +112,7 @@ public class TeleOP extends OpMode {
         }
 
         if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)) {
-            robot.getFollower().setPose(new Pose(72, 84, Math.toRadians(135)));
+            robot.getFollower().setPose(this.config.getResetPose());
         }
 
         switch (tier) {

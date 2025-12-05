@@ -23,11 +23,14 @@ public class AutoConfig {
     private Pose pickup3Control;
     private Pose pickup3Transition;
     private Pose parkPose; // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private Pose shootPose;
+    private Pose shootPoseFar;
+    private Pose resetPose;
 
     public static final AutoConfig red = AutoConfig.builder()
             .team("red")
             // Original: (26, 130, 145) -> New: (118, 130, 35)
-            .startPose(new Pose(118, 130, Math.toRadians(35)))
+            .startPose(new Pose(122, 130, Math.toRadians(35)))
             // Original: (60, 96, 145) -> New: (84, 96, 35)
             .scorePose(new Pose(84, 96, Math.toRadians(35)))
             // Original: (22, 86, 180) -> New: (122, 86, 0)
@@ -52,10 +55,38 @@ public class AutoConfig {
             .parkPose(new Pose(89, 115, Math.toRadians(35)))
             .build();
 
+//    public static final AutoConfig red = AutoConfig.builder()
+//            .team("red")
+//            // Original: (26, 130, 145) -> New: (118, 130, 35)
+//            .startPose(new Pose(118, 130, Math.toRadians(35)))
+//            // Original: (60, 96, 145) -> New: (84, 96, 35)
+//            .scorePose(new Pose(84, 96, Math.toRadians(35)))
+//            // Original: (22, 86, 180) -> New: (122, 86, 0)
+//            .pickup1Pose(new Pose(116, 86, Math.toRadians(0)))
+//            // Original: (48, 84, 0) -> New: (96, 84, 180)
+//            .pickup1Control(new Pose(94, 82, Math.toRadians(180)))
+//            // Original: (16, 78, 90) -> New: (128, 78, 90)
+//            .openGate(new Pose(121,78, Math.toRadians(100)))
+//            // Original: (48, 75, 210) -> New: (96, 75, -30)
+//            .pickup2Transition(new Pose(96, 75, Math.toRadians(180 - 210)))
+//            // Original: (16, 62, 180) -> New: (128, 62, 0)
+//            .pickup2Pose(new Pose(122, 60, Math.toRadians(0)))
+//            // Original: (37, 63, 0) -> New: (107, 63, 180)
+//            .pickup2Control(new Pose(104, 60, Math.toRadians(180)))
+//            // Original: (56, 75, 255) -> New: (88, 75, -75)
+//            .pickup3Transition(new Pose(88, 75, Math.toRadians(180 - 255)))
+//            // Original: (12, 40, 180) -> New: (132, 40, 0)
+//            .pickup3Pose(new Pose (122,40,Math.toRadians(0)))
+//            // Original: (44, 38, 0) -> New: (100, 38, 180)
+//            .pickup3Control(new Pose(95,35,Math.toRadians(180)))
+//            // Original: (55, 115, 145) -> New: (89, 115, 35)
+//            .parkPose(new Pose(89, 115, Math.toRadians(35)))
+//            .build();
+
     public static final AutoConfig redFar = AutoConfig.builder()
             .team("red")
             // Original: (55, 9, 90) -> New: (89, 9, 90)
-            .startPose(new Pose(89,9,Math.toRadians(90)))
+            .startPose(new Pose(81,9,Math.toRadians(90)))
             // Original: (60, 20, 112) -> New: (84, 20, 68)
             .scorePose(new Pose(84,20,Math.toRadians(68)))
             // Original: (10, 40, 180) -> New: (134, 40, 0)
@@ -76,7 +107,7 @@ public class AutoConfig {
             .scorePose(new Pose(60, 96, Math.toRadians(145)))
             .pickup1Pose(new Pose(22, 86, Math.toRadians(180)))
             .pickup1Control(new Pose(48, 84, Math.toRadians(0)))
-            .openGate(new Pose(16,78, Math.toRadians(90)))
+            .openGate(new Pose(17,77.5, Math.toRadians(90)))
             .pickup2Transition(new Pose(48, 75, Math.toRadians(210)))
             .pickup2Pose(new Pose(16, 62, Math.toRadians(180)))
             .pickup2Control(new Pose(37, 63, Math.toRadians(0)))
@@ -96,4 +127,27 @@ public class AutoConfig {
             .pickup2Control(new Pose(17.3,50.3,Math.toRadians(0)))
             .pickup2Pose(new Pose (5,17,Math.toRadians(195)))
             .build();
+
+    public static final AutoConfig blueTeleOp = AutoConfig.builder()
+            .team("blue")
+            .startPose(new Pose(55, 115, Math.toRadians(145)))
+            .shootPose(new Pose(62, 94, Math.toRadians(140)))
+            .shootPoseFar(new Pose(75, 18, Math.toRadians(117)))
+            .resetPose(new Pose(72, 84, Math.toRadians(135)))
+            .build();
+
+    public static final AutoConfig redTeleOp = AutoConfig.builder()
+            .team("red")
+            // Original: (55, 115, 145) -> New: (89, 115, 35)
+            .startPose(new Pose(81, 115, Math.toRadians(35)))
+            // Original: (62, 94, 140) -> New: (82, 94, 40)
+            .shootPose(new Pose(74, 94, Math.toRadians(40)))
+            // Original: (75, 18, 117) -> New: (69, 18, 63)
+            .shootPoseFar(new Pose(61, 18, Math.toRadians(63)))
+            // Original: (72, 84, 135) -> New: (72, 84, 45)
+            .resetPose(new Pose(64, 84, Math.toRadians(45)))
+            .build();
+
+
+
 }
