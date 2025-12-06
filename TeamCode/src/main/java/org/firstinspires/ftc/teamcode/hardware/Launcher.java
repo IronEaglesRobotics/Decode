@@ -161,7 +161,7 @@ public class Launcher extends SubsystemBase {
                 } else if (greenLoc == 2) {
                     pidTarget = CHAMBER3;
                 }
-                if (greenLoc == -1){
+                if (greenLoc == -1 || order == 0){
                     pidTarget = CHAMBER1;
                 }
                 else {

@@ -16,8 +16,8 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 
-@Autonomous(name = "Auto")
-public class Auto extends OpMode {
+@Autonomous(name = "Auto Gate")
+public class AutoGate extends OpMode {
 
     private Alliance color = Alliance.Blue;
     private boolean isFar = false;
@@ -250,6 +250,7 @@ public class Auto extends OpMode {
         public Pose Path2;
         public Pose Path3;
         public Pose Path3Ex;
+        public Pose Path4;
         public Pose Path6;
         public Pose Path7;
         public Pose Path9;
@@ -270,26 +271,6 @@ public class Auto extends OpMode {
             Path3 = new Pose(postPickX1, 71.000, flipAng(180, isBlue));
             Path3Ex = new Pose(postPickEx, 71.000, flipAng(180, isBlue));
 
-//            Path4 = follower
-//                    .pathBuilder()
-//                    .addPath(
-//                            new BezierLine(new Pose(flip(19.000,isBlue), 69.000), new Pose(flip(5.000,isBlue), 75.000))
-//                    )
-//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(270,isBlue))
-//                    .build();
-
-//            Path5 = follower
-//                    .pathBuilder()
-//                    .addPath(
-//                            new BezierCurve(
-//                                    new Pose(postPickX1, 71.000),
-//                                    new Pose(isBlue ? 43 : 101, 52.500),
-//                                    new Pose(shootX, 95.500)
-//                            )
-//                    )
-//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(127,isBlue))
-//                    .build();
-
             Path6 = new Pose(prePickX, 92.000, flipAng(180, isBlue));
 
             Path7 = new Pose(postPickX2, 92.000, flipAng(180, isBlue));
@@ -299,13 +280,6 @@ public class Auto extends OpMode {
             Path10 = new Pose(postPickX1, 44.500, flipAng(180, isBlue));
 
             Path11 = new Pose(farShootX, 14, flipAng(100, isBlue));
-//            Path13 = follower
-//                    .pathBuilder()
-//                    .addPath(
-//                            new BezierLine(new Pose(postPickX2, 35.500), new Pose(shootX, 95.000))
-//                    )
-//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
-//                    .build();
         }
 
         public Command PathShoot() {
@@ -329,6 +303,8 @@ public class Auto extends OpMode {
                             robot.getDrive().moveTo(Path6, Path7,
                                     flipAng(180, color == Alliance.Blue),
                                     .5),
+                            new WaitCommand(200),
+                            robot.getDrive().turnTo(90),
                             new WaitCommand(200)
                     )
             );
@@ -341,8 +317,8 @@ public class Auto extends OpMode {
                             robot.getIntake().start()
                                     .alongWith(robot.getLauncher().toZero()),
                             robot.getDrive().moveTo(Path2, Path3,
-                                    flipAng(180, color == Alliance.Blue)
-                                    , .5),
+                                    flipAng(180, color == Alliance.Blue),
+                                    .5),
                             new WaitCommand(200),
                             robot.getDrive().moveTo(Path3, Path3Ex)
                     )
