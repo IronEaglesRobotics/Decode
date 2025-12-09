@@ -154,7 +154,7 @@ public class AutoGate extends OpMode {
                         new WaitCommand(700),
                         new ConditionalCommand(robot.getLauncher().toShoot(),
                                 new WaitUntilCommand(() -> robot.getLauncher().atTarget()),
-                                () -> !robot.getLauncher().shootPos()),
+                                () -> !robot.getLauncher().atShootPos()),
                         new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
                         robot.aim(),
                         new WaitCommand(100),

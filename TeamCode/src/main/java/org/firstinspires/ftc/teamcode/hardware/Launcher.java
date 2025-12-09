@@ -15,11 +15,11 @@ import com.seattlesolvers.solverslib.controller.PIDController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -144,6 +144,10 @@ public class Launcher extends SubsystemBase {
             }
         };
     }
+    public Command setlaunch(int order) {
+        int i = chambers.indexOf(Color.Green);
+        return setlaunch(i,order);
+    }
 
     public Command setlaunch(int greenLoc,int order) {
         return new Command() {
@@ -176,9 +180,9 @@ public class Launcher extends SubsystemBase {
         };
     }
     public boolean canShoot(){
-        return shootPos() && atTarget();
+        return atShootPos() && atTarget();
     }
-    public boolean shootPos(){
+    public boolean atShootPos(){
         return ((pidTarget - halfDelta)%fullDelta) == 0;
     }
     public boolean atTarget(){
@@ -215,7 +219,9 @@ public class Launcher extends SubsystemBase {
         return new Command() {
             @Override
             public Set<Subsystem> getRequirements() {
-                return Collections.emptySet();
+                Set<Subsystem> set = new HashSet<>();
+                set.add(Launcher.this);
+                return set;
             }
 
             @Override
@@ -233,7 +239,9 @@ public class Launcher extends SubsystemBase {
         return new Command() {
             @Override
             public Set<Subsystem> getRequirements() {
-                return Collections.emptySet();
+                Set<Subsystem> set = new HashSet<>();
+                set.add(Launcher.this);
+                return set;
             }
 
             @Override
@@ -247,11 +255,33 @@ public class Launcher extends SubsystemBase {
             }
         };
     }
+    public Command backShoot(){
+        return new Command() {
+            @Override
+            public Set<Subsystem> getRequirements() {
+                Set<Subsystem> set = new HashSet<>();
+                set.add(Launcher.this);
+                return set;
+            }
+
+            @Override
+            public void initialize() {
+                pidTarget -= halfDelta;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return controller.atSetPoint();
+            }
+        };
+    }
     public Command toZero(){
         return new Command() {
             @Override
             public Set<Subsystem> getRequirements() {
-                return Collections.emptySet();
+                Set<Subsystem> set = new HashSet<>();
+                set.add(Launcher.this);
+                return set;
             }
 
             @Override
@@ -288,6 +318,9 @@ public class Launcher extends SubsystemBase {
             safePose = pidTarget;
         }
     }
+    public class Shooter extends SubsystemBase{
+
+    }
 
     public static class Loading extends CommandBase{
         Launcher launcher;
@@ -298,6 +331,12 @@ public class Launcher extends SubsystemBase {
         public Loading(Launcher temp,int Torder){
             launcher = temp;
             order = Torder;
+        }
+        @Override
+        public Set<Subsystem> getRequirements() {
+            Set<Subsystem> set = new HashSet<>();
+            set.add(launcher);
+            return set;
         }
 
         @Override
@@ -322,16 +361,7 @@ public class Launcher extends SubsystemBase {
                     launcher.pidTarget += fullDelta;
                 }
             }
-        }
-
-        @Override
-        public boolean isFinished() {
-            return !launcher.chambers.contains(Color.Nothing);
-        }
-
-        @Override
-        public void end(boolean interrupted) {
-            if(!interrupted){
+            else if(!launcher.chambers.contains(Color.Nothing) && !launcher.atShootPos()){
                 launcher.pidTarget = halfDelta;
                 if (launcher.chambers.get(0) == Color.Green){
                     launcher.pidTarget += fullDelta;
@@ -345,10 +375,18 @@ public class Launcher extends SubsystemBase {
                 else {
                     launcher.pidTarget += fullDelta;
                 }
-//                launcher.current -= fullDelta * (order - 1);
-
+                launcher.pidTarget -= fullDelta * (order - 1);
             }
-            else {
+        }
+
+        @Override
+        public boolean isFinished() {
+            return !launcher.chambers.contains(Color.Nothing) && launcher.atShootPos();
+        }
+
+        @Override
+        public void end(boolean interrupted) {
+            if(interrupted){
                 launcher.pidTarget = CHAMBER1;
             }
         }

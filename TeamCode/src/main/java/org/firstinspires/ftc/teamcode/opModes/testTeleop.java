@@ -46,8 +46,9 @@ public class testTeleop extends OpMode {
 
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
-                        robot.getIntake().start()
-                                .alongWith(robot.loading())
+                        robot.getLauncher().toZero()
+                                .andThen(robot.getIntake().start()
+                                .alongWith(robot.loading()))
                                 .andThen(robot.getIntake().stop())
                         ,robot.getIntake().stop()
                 );
@@ -81,6 +82,8 @@ public class testTeleop extends OpMode {
                 .whenPressed(robot.aim());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_UP)
                 .whenPressed(robot.getLauncher().flywheelAuto(true));
+        controller2.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
+                .whenPressed(robot.getLauncher().backShoot());
         controller1.getGamepadButton(GamepadKeys.Button.Y)
                 .toggleWhenPressed(
                         new InstantCommand(() -> aprilCentric = true),
