@@ -39,6 +39,10 @@ public class Cam extends SubsystemBase {
 //        return 99.9;
     }
 
+    public double getTargetArea(){
+        return limelight.getLatestResult().getTa();
+    }
+
     public Limelight3A getLimelight() {
         return limelight;
     }

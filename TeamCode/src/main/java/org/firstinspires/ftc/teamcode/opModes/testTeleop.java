@@ -158,7 +158,7 @@ public class testTeleop extends OpMode {
         telemetry.addData("is field centric",!isBot);
         telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
         telemetry.addLine(robot.getLauncher().getTelemetry());
-        FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(),60);
+        FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(),20);
         telemetry.update();
     }
 
