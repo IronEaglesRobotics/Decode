@@ -11,6 +11,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
+import org.firstinspires.ftc.teamcode.hardware.Storage;
 
 import java.util.function.Supplier;
 @Configurable
@@ -38,6 +39,7 @@ public class testTeleop extends OpMode {
         controller1 = new GamepadEx(gamepad1);
         robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
+        robot.getDrive().getFollower().setStartingPose(Storage.instance.pose);
         robot.getDrive().getFollower().update();
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());

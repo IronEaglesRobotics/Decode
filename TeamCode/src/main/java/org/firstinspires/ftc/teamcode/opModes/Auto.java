@@ -16,6 +16,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
+import org.firstinspires.ftc.teamcode.hardware.Storage;
 
 @Autonomous(name = "Auto")
 public class Auto extends OpMode {
@@ -125,6 +126,7 @@ public class Auto extends OpMode {
     public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
+        Storage.getInstance().setPose(robot.getDrive().getPose());
         super.stop();
     }
 
