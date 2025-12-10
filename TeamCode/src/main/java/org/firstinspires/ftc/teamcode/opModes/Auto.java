@@ -92,8 +92,8 @@ public class Auto extends OpMode {
     @Override
     public void start() {
         robot.getDrive().getFollower().setStartingPose(
-                new Pose(!isFar ? color == Alliance.Blue ? 14 : 129 : color == Alliance.Blue ? 50 : 88,
-                        isFar ? 9 : 135,
+                new Pose(!isFar ? color == Alliance.Blue ? 14 : 129 : color == Alliance.Blue ? 45 : 88,
+                        isFar ? 23 : 135,
                         isFar ? Math.toRadians(90) : Math.toRadians(color == Alliance.Blue ? 135 : 45)));
         paths = new Paths(color == Alliance.Blue);
         nextState = !isFar ? States.pick1 : States.pickFar;
@@ -117,6 +117,8 @@ public class Auto extends OpMode {
         telemetry.addData("can shoot", robot.getLauncher().canShoot());
         telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
         telemetry.addData("loading finished", finished);
+        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
+        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
         telemetry.update();
     }
 
@@ -135,7 +137,12 @@ public class Auto extends OpMode {
                                 robot.getDrive().cancelablePath(paths.Path1Ex),
                                 ()->isFar))
                         .andThen(new WaitCommand(700))
-                        .andThen(robot.getLauncher().setlaunch(0, robot.getCamera().getOrder()))
+                        .whenFinished(()-> state = States.settingLaunch)
+                        .schedule();
+                state = States.idle;
+                break;
+            case settingLaunch:
+                robot.getLauncher().setlaunch(0, robot.getCamera().getOrder())
                         .andThen(new WaitCommand(delay))
                         .whenFinished(() -> state = States.shoot)
                         .schedule();
@@ -237,6 +244,7 @@ public class Auto extends OpMode {
 
     public enum States {
         motifDetect,
+        settingLaunch,
         idle,
         swap,
         shoot,
@@ -265,11 +273,11 @@ public class Auto extends OpMode {
             double postPickX1 = isBlue ? 0 : 142;
             double postPickEx = isBlue ? 10 : 132;
             double postPickX2 = isBlue ? 5 : 137;
-            double farShootX = isBlue ? 50 : 94;
+            double farShootX = isBlue ? 45 : 94;
             double closeAim = isBlue ? 130 : 50;
             double seeObelisk = isBlue ? 70 : 110;
             double pickUp = isBlue ? 180 : 0;
-            double farAim = isBlue ? 100 : 80;
+            double farAim = isBlue ? 108 : 80;
             Path1 = new Pose(shootX, 105.500, Math.toRadians(closeAim));
             Path1Ex = new Pose(shootX, 105.500, Math.toRadians(seeObelisk));
             Path2 = new Pose(prePickX, 71.000, Math.toRadians(pickUp));
@@ -301,11 +309,11 @@ public class Auto extends OpMode {
 
             Path7 = new Pose(postPickX2, 92.000, Math.toRadians(pickUp));
 
-            Path9 = new Pose(prePickX, 39.500, Math.toRadians(pickUp));
+            Path9 = new Pose(prePickX, 50.000, Math.toRadians(pickUp));
 
-            Path10 = new Pose(postPickX1, 44.500, Math.toRadians(pickUp));
+            Path10 = new Pose(postPickX1, 50.000, Math.toRadians(pickUp));
 
-            Path11 = new Pose(farShootX, 14, Math.toRadians(farAim));
+            Path11 = new Pose(farShootX, 27, Math.toRadians(farAim));
 //            Path13 = follower
 //                    .pathBuilder()
 //                    .addPath(
