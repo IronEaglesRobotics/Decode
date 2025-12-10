@@ -43,7 +43,7 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
     public static int closeSpeed = 870;
-    public static int farSpeed = 970;
+    public static int farSpeed = 1050;
     public static int autoSpeed = 850;
     public static double power = .43;
 
@@ -71,10 +71,10 @@ public class Launcher extends SubsystemBase {
         controller.setTolerance(40);
     }
     public Color getColor(RevColorSensorV3 cs){
-        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < .8) {
+        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1) {
             return Color.Green;
         }
-        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < .8) {
+        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < 1) {
             return Color.Purple;
         }
         return Color.Nothing;
@@ -332,12 +332,6 @@ public class Launcher extends SubsystemBase {
             launcher = temp;
             order = Torder;
         }
-        @Override
-        public Set<Subsystem> getRequirements() {
-            Set<Subsystem> set = new HashSet<>();
-            set.add(launcher);
-            return set;
-        }
 
         @Override
         public void initialize() {
@@ -350,7 +344,7 @@ public class Launcher extends SubsystemBase {
 
         @Override
         public void execute() {
-            if (launcher.controller.atSetPoint() && !isFinished()){
+            if (launcher.controller.atSetPoint()){
                 color1 = launcher.getColor(launcher.cs1);
                 color2 = launcher.getColor(launcher.cs2);
                 Color color = color1 != Color.Nothing ? color1 : color2;
@@ -361,32 +355,29 @@ public class Launcher extends SubsystemBase {
                     launcher.pidTarget += fullDelta;
                 }
             }
-            else if(!launcher.chambers.contains(Color.Nothing) && !launcher.atShootPos()){
-                launcher.pidTarget = halfDelta;
-                if (launcher.chambers.get(0) == Color.Green){
-                    launcher.pidTarget += fullDelta;
-                }
-                else if (launcher.chambers.get(1) == Color.Green) {
-                    launcher.pidTarget += fullDelta*2;
-                }
-                else if(launcher.chambers.get(2) == Color.Green){
-                    launcher.pidTarget += fullDelta*3;
-                }
-                else {
-                    launcher.pidTarget += fullDelta;
-                }
-                launcher.pidTarget -= fullDelta * (order - 1);
-            }
         }
 
         @Override
         public boolean isFinished() {
-            return !launcher.chambers.contains(Color.Nothing) && launcher.atShootPos();
+            return !launcher.chambers.contains(Color.Nothing);
         }
 
         @Override
         public void end(boolean interrupted) {
-            if(interrupted){
+            if (!interrupted) {
+                launcher.pidTarget = halfDelta;
+                if (launcher.chambers.get(0) == Color.Green) {
+                    launcher.pidTarget += fullDelta;
+                } else if (launcher.chambers.get(1) == Color.Green) {
+                    launcher.pidTarget += fullDelta * 2;
+                } else if (launcher.chambers.get(2) == Color.Green) {
+                    launcher.pidTarget += fullDelta * 3;
+                } else {
+                    launcher.pidTarget += fullDelta;
+                }
+//                launcher.current -= fullDelta * (order - 1);
+
+            } else {
                 launcher.pidTarget = CHAMBER1;
             }
         }
