@@ -16,6 +16,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
+import org.firstinspires.ftc.teamcode.hardware.Launcher;
 import org.firstinspires.ftc.teamcode.hardware.Storage;
 
 @Autonomous(name = "Auto")
@@ -94,8 +95,8 @@ public class Auto extends OpMode {
     public void start() {
         robot.getDrive().getFollower().setStartingPose(
                 new Pose(!isFar ? color == Alliance.Blue ? 14 : 129 : color == Alliance.Blue ? 45 : 88,
-                        isFar ? 23 : 135,
-                        isFar ? Math.toRadians(90) : Math.toRadians(color == Alliance.Blue ? 135 : 45)));
+                        isFar ? 22 : 135,
+                        isFar ? Math.toRadians(90) : Math.toRadians(color == Alliance.Blue ? 45 : 135)));
         paths = new Paths(color == Alliance.Blue);
         nextState = !isFar ? States.pick1 : States.pickFar;
         robot.getLauncher().flywheelAuto(!isFar).schedule();
@@ -133,20 +134,25 @@ public class Auto extends OpMode {
     public void run() {
         switch (state) {
             case motifDetect:
-                robot.getCamera().getMotif()
-                        .raceWith(new ConditionalCommand(
-                                new WaitCommand(1000),
-                                robot.getDrive().cancelablePath(paths.Path1Ex),
-                                ()->isFar))
+                new ConditionalCommand(
+                        new WaitCommand(20),
+                        robot.getDrive().cancelablePath(paths.Path1Ex),
+                        ()->isFar)
+                        .andThen(robot.getCamera().getMotif())
                         .andThen(new WaitCommand(700))
                         .whenFinished(()-> state = States.settingLaunch)
                         .schedule();
                 state = States.idle;
                 break;
             case settingLaunch:
-                robot.getLauncher().setlaunch(0, robot.getCamera().getOrder())
-                        .andThen(new WaitCommand(delay))
-                        .whenFinished(() -> state = States.shoot)
+                new WaitCommand(delay)
+                        .whenFinished(() -> {
+                            robot.getLauncher().setOrder(robot.getCamera().getOrder());
+                            robot.getLauncher().setChambers(new Launcher.Color[]
+                                    {Launcher.Color.Green, Launcher.Color.Purple, Launcher.Color.Green}
+                            );
+                            state = States.shoot;
+                        })
                         .schedule();
                 state = States.idle;
                 break;
@@ -157,21 +163,14 @@ public class Auto extends OpMode {
             case shoot:
                 lastState = States.shoot;
                 new SequentialCommandGroup(
-                        (!isFar ? paths.PathShoot() : paths.farPathShoot())
-                                .andThen(new ParallelCommandGroup(
-                                        new InstantCommand(()->wantsShoot = true),
-                                        robot.getLauncher().setlaunch(robot.getCamera().getOrder())
-                                )),
+                        (!isFar ? paths.PathShoot() : paths.farPathShoot()),
+                        new InstantCommand(()->wantsShoot = true),
+                        robot.getLauncher().setLaunch(),
                         new WaitUntilCommand(() -> !robot.getDrive().getFollower().isBusy()),
-                        new WaitCommand(700),
-//                        new ConditionalCommand(robot.getLauncher().toShoot(),
-//                                new WaitUntilCommand(() -> robot.getLauncher().atTarget()),
-//                                () -> !robot.getLauncher().atShootPos()),
-                        new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
                         robot.aim(),
-                        new WaitCommand(100),
+                        new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
-                        new WaitCommand(250),
+                        new WaitCommand(100),
                         new InstantCommand(() -> state = States.swap)
                 )
                         .schedule();
@@ -315,7 +314,7 @@ public class Auto extends OpMode {
 
             Path10 = new Pose(postPickX1, 50.000, Math.toRadians(pickUp));
 
-            Path11 = new Pose(farShootX, 27, Math.toRadians(farAim));
+            Path11 = new Pose(farShootX, 32, Math.toRadians(farAim));
 //            Path13 = follower
 //                    .pathBuilder()
 //                    .addPath(

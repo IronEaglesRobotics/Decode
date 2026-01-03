@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
-import com.acmerobotics.dashboard.FtcDashboard;
+import com.bylazar.panels.Panels;
+import com.bylazar.telemetry.PanelsTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
@@ -38,24 +39,21 @@ public class aimTest extends OpMode {
                         new InstantCommand(() -> aprilCentric = true),
                         new InstantCommand(() -> aprilCentric = false)
                 );
-        robot.getCamera().getMotif().schedule();
 
     }
 
     @Override
     public void loop() {
         controller1.readButtons();
-        if (manualDrive) {
-            double driveY = controller1.getLeftY();
-            double driveX = -controller1.getLeftX();
-            double manualTurn = -controller1.getRightX();
-            double turnOutput = manualTurn;// default
+        double driveY = controller1.getLeftY();
+        double driveX  = -controller1.getLeftX();;
+        double manualTurn  = -controller1.getRightX();;
+        double turnOutput;
+        if (aprilCentric) {
+            double tx = robot.getCamera().getFiducialAngle(); // Limelight horizontal offset
 
-            if (aprilCentric) {
-                double tx = robot.getCamera().getFiducialAngle(); // Limelight horizontal offset
-
-                // If Limelight sees a tag:
-                if (!Double.isNaN(tx)) {
+            // If Limelight sees a tag:
+            if (!Double.isNaN(tx)) {
 
                     // PID compute
                     double error = tx;
@@ -69,24 +67,27 @@ public class aimTest extends OpMode {
                     pid = Math.max(-0.3, Math.min(0.3, pid));
 
                     turnOutput = -pid;
-                } else {
-                    turnOutput = manualTurn;
-                }
-
             }
-            robot.getDrive().getFollower().setTeleOpDrive(
-                    driveY,
-                    driveX,
-                    turnOutput,
-                    true
-            );
-        }
-            telemetry.addData("count", count);
-            telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
-            telemetry.addData("Target Area", robot.getCamera().getTargetArea());
-        FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(),20);
-            CommandScheduler.getInstance().run();
-            telemetry.update();
+            else {
+                turnOutput = manualTurn;
+            }
 
+        }
+        else {
+            turnOutput = manualTurn;
+        }
+
+        robot.getDrive().getFollower().setTeleOpDrive(
+                driveY,
+                driveX,
+                turnOutput,
+                true
+        );
+        telemetry.addData("count", count);
+        telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
+        telemetry.addData("Target Area", robot.getCamera().getTargetArea());
+        CommandScheduler.getInstance().run();
+        PanelsTelemetry.INSTANCE.getTelemetry().update(telemetry);
+        telemetry.update();
     }
 }

@@ -38,6 +38,13 @@ public class Cam extends SubsystemBase {
 //        }
 //        return 99.9;
     }
+    public void startLL(){
+        limelight.start();
+    }
+    public void stopLL(){
+        limelight.close();
+    }
+
 
     public double getTargetArea(){
         return limelight.getLatestResult().getTa();
@@ -60,15 +67,15 @@ public class Cam extends SubsystemBase {
         return new Pose(pose.getPosition().x, pose.getPosition().y, pose.getPosition().z);
     }
 
-    public void scanFor(int millies, Pose currentPose) {
-        long start = System.currentTimeMillis();
-        limelight.pipelineSwitch(4);
-        while (start + millies > System.currentTimeMillis()) {
-            for (LLResultTypes.ColorResult ball : limelight.getLatestResult().getColorResults()) {
-                foundBalls.add(new Ball("green", ball.getCameraPoseTargetSpace()));
-            }
-        }
-    }
+//    public void scanFor(int millies, Pose currentPose) {
+//        long start = System.currentTimeMillis();
+//        limelight.pipelineSwitch(4);
+//        while (start + millies > System.currentTimeMillis()) {
+//            for (LLResultTypes.ColorResult ball : limelight.getLatestResult().getColorResults()) {
+//                foundBalls.add(new Ball("green", ball.getCameraPoseTargetSpace()));
+//            }
+//        }
+//    }
 
     public getMotif getMotif() {
         return new getMotif(this);
@@ -85,6 +92,7 @@ public class Cam extends SubsystemBase {
 
         public void initialize() {
             camera.limelight.pipelineSwitch(3);
+            camera.limelight.start();
         }
 
         public void execute() {
@@ -109,6 +117,7 @@ public class Cam extends SubsystemBase {
         public void end(boolean i) {
             camera.setOrder(order);
             camera.limelight.pipelineSwitch(1);
+            camera.limelight.close();
         }
     }
 

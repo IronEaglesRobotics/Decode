@@ -44,12 +44,13 @@ public class Launcher extends SubsystemBase {
     List<Color> chambers;
     public static int closeSpeed = 870;
     public static int farSpeed = 1050;
-    public static int autoSpeed = 850;
+    public static int autoSpeed = 800;
     public static double power = .43;
 
     public static int safePose = 0;
     double speed1 = 0;
     double speed2 = 0;
+    private int order;
 
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
@@ -83,12 +84,10 @@ public class Launcher extends SubsystemBase {
 
 
     public Command plusVelo(){
-        return new InstantCommand(()-> speed1 = speed1 + 100)
-        ;
+        return new InstantCommand(()-> speed1 = speed1 + 100);
     }
     public Command minusVelo(){
-        return new InstantCommand(()-> speed1 = speed1 - 100)
-                ;
+        return new InstantCommand(()-> speed1 = speed1 - 100);
     }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
@@ -144,12 +143,23 @@ public class Launcher extends SubsystemBase {
             }
         };
     }
-    public Command setlaunch(int order) {
+    public void setOrder(int tOrder){
+        order = tOrder;
+    }
+    public Command setLaunch(int order) {
         int i = chambers.indexOf(Color.Green);
-        return setlaunch(i,order);
+        return setLaunch(i,order);
+    }
+    public Command setLaunch(){
+        return setLaunch(order);
+    }
+    public void setChambers(Color[] colors){
+        chambers.set(0,colors[0]);
+        chambers.set(1,colors[1]);
+        chambers.set(2,colors[2]);
     }
 
-    public Command setlaunch(int greenLoc,int order) {
+    public Command setLaunch(int greenLoc, int order) {
         return new Command() {
             @Override
             public Set<Subsystem> getRequirements() {
