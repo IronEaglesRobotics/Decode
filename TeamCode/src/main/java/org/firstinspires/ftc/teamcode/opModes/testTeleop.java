@@ -39,7 +39,7 @@ public class testTeleop extends OpMode {
         controller1 = new GamepadEx(gamepad1);
         robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
-        robot.getDrive().getFollower().setStartingPose(Storage.instance.pose);
+        robot.getDrive().getFollower().setStartingPose(Storage.getInstance().pose);
         robot.getDrive().getFollower().update();
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
@@ -156,6 +156,7 @@ public class testTeleop extends OpMode {
         telemetry.addData("order", robot.getCamera().getOrder());
         telemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
         telemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
+        telemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
         telemetry.addData("can Shoot", robot.getLauncher().canShoot());
         telemetry.addData("is field centric",!isBot);
         telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());

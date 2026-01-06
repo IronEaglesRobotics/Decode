@@ -30,9 +30,9 @@ public class Launcher extends SubsystemBase {
     public MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
-    public static double kp = 10;
-    public static double ki = 0;
-    public static double kd = 0.125;
+    public static double kp = 6.1;
+    public static double ki = 0.06;
+    public static double kd = 0.005;
     public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
     public static final int halfDelta = -238;
@@ -43,9 +43,11 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
     public static int closeSpeed = 870;
-    public static int farSpeed = 1050;
-    public static int autoSpeed = 800;
+    public static int farSpeed = 990;
+    public static int autoSpeed = 750;
     public static double power = .43;
+    public static double[] veloCoeffecient = new double[] {11,0,0};
+    public static double[] feedforward = new double[] {11,0,0};
 
     public static int safePose = 0;
     double speed1 = 0;
@@ -265,6 +267,7 @@ public class Launcher extends SubsystemBase {
             }
         };
     }
+
     public Command backShoot(){
         return new Command() {
             @Override
@@ -312,6 +315,9 @@ public class Launcher extends SubsystemBase {
         return Math.abs(speed1 + calculateVelo(flyWheel1)) < 110 &&
                 Math.abs(speed1 + calculateVelo(flyWheel2)) < 110;
     }
+    public double getSpeed1() {
+        return speed1;
+    }
 
     public String getTelemetry(){
         return "slot 0: " + chambers.get(0) + " slot 1: " + chambers.get(1) +" slot 2: " + chambers.get(2);
@@ -321,15 +327,16 @@ public class Launcher extends SubsystemBase {
     public void periodic(){
         controller.setPID(kp,ki,kd);
         controller.setSetPoint(pidTarget);
+        flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+        flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+        flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+        flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
         spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(), pidTarget));
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
         if(controller.atSetPoint()){
             safePose = pidTarget;
         }
-    }
-    public class Shooter extends SubsystemBase{
-
     }
 
     public static class Loading extends CommandBase{

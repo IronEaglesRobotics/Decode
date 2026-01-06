@@ -14,6 +14,7 @@ import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
+import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.teamcode.hardware.Launcher;
@@ -94,7 +95,7 @@ public class Auto extends OpMode {
     @Override
     public void start() {
         robot.getDrive().getFollower().setStartingPose(
-                new Pose(!isFar ? color == Alliance.Blue ? 14 : 129 : color == Alliance.Blue ? 45 : 88,
+                new Pose(!isFar ? color == Alliance.Blue ? 14 : 129 : color == Alliance.Blue ? 45 : 99,
                         isFar ? 22 : 135,
                         isFar ? Math.toRadians(90) : Math.toRadians(color == Alliance.Blue ? 45 : 135)));
         paths = new Paths(color == Alliance.Blue);
@@ -136,7 +137,7 @@ public class Auto extends OpMode {
             case motifDetect:
                 new ConditionalCommand(
                         new WaitCommand(20),
-                        robot.getDrive().cancelablePath(paths.Path1Ex),
+                        paths.PathShootEx(),
                         ()->isFar)
                         .andThen(robot.getCamera().getMotif())
                         .andThen(new WaitCommand(700))
@@ -153,6 +154,7 @@ public class Auto extends OpMode {
                             );
                             state = States.shoot;
                         })
+                        .andThen(robot.getLauncher().toShoot())
                         .schedule();
                 state = States.idle;
                 break;
@@ -164,10 +166,10 @@ public class Auto extends OpMode {
                 lastState = States.shoot;
                 new SequentialCommandGroup(
                         (!isFar ? paths.PathShoot() : paths.farPathShoot()),
-                        new InstantCommand(()->wantsShoot = true),
                         robot.getLauncher().setLaunch(),
+                        new InstantCommand(()->wantsShoot = true),
                         new WaitUntilCommand(() -> !robot.getDrive().getFollower().isBusy()),
-                        robot.aim(),
+//                        (isFar ? robot.aim():new WaitCommand(20)),
                         new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
                         new WaitCommand(100),
@@ -188,6 +190,25 @@ public class Auto extends OpMode {
                         .schedule();
                 new SequentialCommandGroup(
                         paths.Pick3Start()
+                                .whenFinished(() -> {
+                                    state = States.shoot;
+                                })
+                )
+                        .schedule();
+                state = States.idle;
+                break;
+            case pickCorner:
+                finished = false;
+                lastState = States.pickFar;
+                nextState = States.finish;
+                wantsShoot = false;
+                robot.loading()
+                        .raceWith(new WaitUntilCommand(() -> wantsShoot))
+                        .andThen(robot.getIntake().stop())
+                        .whenFinished(() -> finished = true)
+                        .schedule();
+                new SequentialCommandGroup(
+                        paths.PickCorner()
                                 .whenFinished(() -> {
                                     state = States.shoot;
                                 })
@@ -252,6 +273,7 @@ public class Auto extends OpMode {
         pick1,
         pick2,
         pickFar,
+        pickCorner,
         finish
     }
 
@@ -267,6 +289,8 @@ public class Auto extends OpMode {
         public Pose Path9;
         public Pose Path10;
         public Pose Path11;
+        public Pose Path12;
+        public Pose Path13;
 
         public Paths(boolean isBlue) {
             double shootX = isBlue ? 32 : 106;
@@ -274,11 +298,13 @@ public class Auto extends OpMode {
             double postPickX1 = isBlue ? 0 : 142;
             double postPickEx = isBlue ? 10 : 132;
             double postPickX2 = isBlue ? 5 : 137;
-            double farShootX = isBlue ? 45 : 94;
+            double farShootX = isBlue ? 45 : 99;
+            double cornerPickX = isBlue ? -3 : 137;
             double closeAim = isBlue ? 130 : 50;
             double seeObelisk = isBlue ? 70 : 110;
             double pickUp = isBlue ? 180 : 0;
-            double farAim = isBlue ? 108 : 80;
+            double farAim = isBlue ? 115 : 68;
+            double cornerZ = isBlue ? 245 : 335;
             Path1 = new Pose(shootX, 105.500, Math.toRadians(closeAim));
             Path1Ex = new Pose(shootX, 105.500, Math.toRadians(seeObelisk));
             Path2 = new Pose(prePickX, 71.000, Math.toRadians(pickUp));
@@ -315,13 +341,8 @@ public class Auto extends OpMode {
             Path10 = new Pose(postPickX1, 50.000, Math.toRadians(pickUp));
 
             Path11 = new Pose(farShootX, 32, Math.toRadians(farAim));
-//            Path13 = follower
-//                    .pathBuilder()
-//                    .addPath(
-//                            new BezierLine(new Pose(postPickX2, 35.500), new Pose(shootX, 95.000))
-//                    )
-//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(135,isBlue))
-//                    .build();
+            Path12 = new Pose(cornerPickX, 40, Math.toRadians(cornerZ));
+            Path13 = new Pose(cornerPickX, 20, Math.toRadians(cornerZ));
         }
 
         public Command PathShoot() {
@@ -378,11 +399,23 @@ public class Auto extends OpMode {
                     )
             );
         }
+        public Command PickCorner() {
+            return new SequentialCommandGroup(
+                    robot.getDrive().moveTo(Path12),
+                    new SequentialCommandGroup(
+                            robot.getIntake().start()
+                                    .alongWith(robot.getLauncher().toZero()),
+                            robot.getDrive().moveTo(Path12, Path13,
+                                    Math.toRadians(270)),
+                            new WaitCommand(200)
+                    )
+            );
+        }
 
         public Command finish() {
             return robot.getDrive().moveTo(!isFar ?
                     new Pose(paths.Path1.getX(), 130, Math.toRadians(90)) :
-                    new Pose(paths.Path11.getX(), 30, Math.toRadians(90)));
+                    new Pose(paths.Path11.getX(), 40, Math.toRadians(90)));
         }
 
         public double flipAng(double degrees, boolean ifFlip) {
