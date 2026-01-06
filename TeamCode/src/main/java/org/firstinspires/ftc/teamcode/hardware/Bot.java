@@ -75,7 +75,7 @@ public class Bot extends Robot {
 
         @Override
         public void execute() {
-            if (!bot.getDrive().getFollower().isTurning()){
+            if (!bot.getDrive().getFollower().isTurning() && bot.camera.getLimelight().getLatestResult().isValid()){
                 angleError = bot.camera.getFiducialAngle();
                 double turnAngle = angleError * kP;
                 bot.drive.turn(turnAngle).schedule();

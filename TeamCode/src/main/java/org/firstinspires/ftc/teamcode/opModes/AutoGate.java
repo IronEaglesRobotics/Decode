@@ -137,7 +137,7 @@ public class AutoGate extends OpMode {
                                 robot.getDrive().cancelablePath(paths.Path1Ex)
                                         .andThen(new WaitCommand(700)),
                                 ()->isFar))
-                        .andThen(robot.getLauncher().setlaunch(0, robot.getCamera().getOrder()))
+                        .andThen(robot.getLauncher().setLaunch(0, robot.getCamera().getOrder()))
                         .andThen(new WaitCommand(delay))
                         .whenFinished(() -> state = States.shoot)
                         .schedule();

@@ -12,7 +12,6 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
-import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
@@ -32,16 +31,9 @@ public class Launcher extends SubsystemBase {
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
     public static double kp = 6.1;
-
     public static double ki = 0.06;
     public static double kd = 0.005;
-    public static double P = 0.0008;
-    public static double I = 0.0001;
-    public static double D = 0;
-    public static double F = 0.00021;
     public PIDController controller = new PIDController(kp,ki,kd);
-
-    public PIDFController pidfController = new PIDFController(P,I,D,F);
     Servo pusher;
     public static final int halfDelta = -238;
     public static final int fullDelta = -475;
@@ -50,14 +42,17 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = 800;
-    public static int farSpeed = 1050;
-    public static int autoSpeed = 775;
+    public static int closeSpeed = 870;
+    public static int farSpeed = 990;
+    public static int autoSpeed = 750;
     public static double power = .43;
+    public static double[] veloCoeffecient = new double[] {11,0,0};
+    public static double[] feedforward = new double[] {11,0,0};
 
     public static int safePose = 0;
     double speed1 = 0;
     double speed2 = 0;
+    private int order;
 
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
@@ -66,9 +61,8 @@ public class Launcher extends SubsystemBase {
         spinner.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
-        //changed flywheels to rawpower instead of velocitycontrol
-        flyWheel1.setRunMode(Motor.RunMode.RawPower);
-        flyWheel2.setRunMode(Motor.RunMode.RawPower);
+        flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+        flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
         pusher.setPosition(0.0000001);
@@ -77,7 +71,7 @@ public class Launcher extends SubsystemBase {
         chambers.add(Color.Nothing);
         chambers.add(Color.Nothing);
         chambers.add(Color.Nothing);
-        controller.setTolerance(35);
+        controller.setTolerance(40);
     }
     public Color getColor(RevColorSensorV3 cs){
         if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1) {
@@ -92,17 +86,15 @@ public class Launcher extends SubsystemBase {
 
 
     public Command plusVelo(){
-        return new InstantCommand(()-> speed1 = speed1 + 100)
-        ;
+        return new InstantCommand(()-> speed1 = speed1 + 100);
     }
     public Command minusVelo(){
-        return new InstantCommand(()-> speed1 = speed1 - 100)
-                ;
+        return new InstantCommand(()-> speed1 = speed1 - 100);
     }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = -(isClose? closeSpeed:farSpeed);
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -111,8 +103,8 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelAuto(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setRunMode(Motor.RunMode.RawPower);
-            flyWheel1.setRunMode(Motor.RunMode.RawPower);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = -(isClose? autoSpeed:farSpeed);
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -153,12 +145,23 @@ public class Launcher extends SubsystemBase {
             }
         };
     }
-    public Command setlaunch(int order) {
+    public void setOrder(int tOrder){
+        order = tOrder;
+    }
+    public Command setLaunch(int order) {
         int i = chambers.indexOf(Color.Green);
-        return setlaunch(i,order);
+        return setLaunch(i,order);
+    }
+    public Command setLaunch(){
+        return setLaunch(order);
+    }
+    public void setChambers(Color[] colors){
+        chambers.set(0,colors[0]);
+        chambers.set(1,colors[1]);
+        chambers.set(2,colors[2]);
     }
 
-    public Command setlaunch(int greenLoc,int order) {
+    public Command setLaunch(int greenLoc, int order) {
         return new Command() {
             @Override
             public Set<Subsystem> getRequirements() {
@@ -264,6 +267,7 @@ public class Launcher extends SubsystemBase {
             }
         };
     }
+
     public Command backShoot(){
         return new Command() {
             @Override
@@ -311,6 +315,9 @@ public class Launcher extends SubsystemBase {
         return Math.abs(speed1 + calculateVelo(flyWheel1)) < 110 &&
                 Math.abs(speed1 + calculateVelo(flyWheel2)) < 110;
     }
+    public double getSpeed1() {
+        return speed1;
+    }
 
     public String getTelemetry(){
         return "slot 0: " + chambers.get(0) + " slot 1: " + chambers.get(1) +" slot 2: " + chambers.get(2);
@@ -319,22 +326,17 @@ public class Launcher extends SubsystemBase {
     @Override
     public void periodic(){
         controller.setPID(kp,ki,kd);
-        pidfController.setPIDF(P, I, D, F);
         controller.setSetPoint(pidTarget);
-        double spinnerPower = controller.calculate(spinner.getCurrentPosition(), pidTarget);
-        spinner.setVelocity(spinnerPower);
-        double power1 = pidfController.calculate(flyWheel1.getVelocity(), speed1);
-        double power2 = pidfController.calculate(flyWheel2.getVelocity(), -speed1);
-        flyWheel1.set(power1);
-        flyWheel2.set(power2);
-//        flyWheel1.setVelocity(speed1);
-//        flyWheel2.setVelocity(-speed1);
+        flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+        flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+        flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+        flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+        spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(), pidTarget));
+        flyWheel1.setVelocity(speed1);
+        flyWheel2.setVelocity(-speed1);
         if(controller.atSetPoint()){
             safePose = pidTarget;
         }
-    }
-    public class Shooter extends SubsystemBase{
-
     }
 
     public static class Loading extends CommandBase{
@@ -374,8 +376,7 @@ public class Launcher extends SubsystemBase {
 
         @Override
         public boolean isFinished() {
-            return currentChamber >= 3 || !launcher.chambers.contains(Color.Nothing);
-            //return !launcher.chambers.contains(Color.Nothing);
+            return !launcher.chambers.contains(Color.Nothing);
         }
 
         @Override
@@ -391,7 +392,7 @@ public class Launcher extends SubsystemBase {
                 } else {
                     launcher.pidTarget += fullDelta;
                 }
-                launcher.pidTarget -= fullDelta * (order - 1);
+//                launcher.current -= fullDelta * (order - 1);
 
             } else {
                 launcher.pidTarget = CHAMBER1;
