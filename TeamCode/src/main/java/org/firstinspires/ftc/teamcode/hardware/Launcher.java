@@ -12,6 +12,7 @@ import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
+import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
@@ -30,10 +31,17 @@ public class Launcher extends SubsystemBase {
     public MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
-    public static double kp = 10;
-    public static double ki = 0;
-    public static double kd = 0.125;
+    public static double kp = 6.1;
+
+    public static double ki = 0.06;
+    public static double kd = 0.005;
+    public static double P = 0.0008;
+    public static double I = 0.0001;
+    public static double D = 0;
+    public static double F = 0.00021;
     public PIDController controller = new PIDController(kp,ki,kd);
+
+    public PIDFController pidfController = new PIDFController(P,I,D,F);
     Servo pusher;
     public static final int halfDelta = -238;
     public static final int fullDelta = -475;
@@ -42,9 +50,9 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = 870;
+    public static int closeSpeed = 800;
     public static int farSpeed = 1050;
-    public static int autoSpeed = 850;
+    public static int autoSpeed = 775;
     public static double power = .43;
 
     public static int safePose = 0;
@@ -58,8 +66,9 @@ public class Launcher extends SubsystemBase {
         spinner.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
-        flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-        flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
+        //changed flywheels to rawpower instead of velocitycontrol
+        flyWheel1.setRunMode(Motor.RunMode.RawPower);
+        flyWheel2.setRunMode(Motor.RunMode.RawPower);
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
         pusher.setPosition(0.0000001);
@@ -68,7 +77,7 @@ public class Launcher extends SubsystemBase {
         chambers.add(Color.Nothing);
         chambers.add(Color.Nothing);
         chambers.add(Color.Nothing);
-        controller.setTolerance(40);
+        controller.setTolerance(35);
     }
     public Color getColor(RevColorSensorV3 cs){
         if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1) {
@@ -92,8 +101,8 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = -(isClose? closeSpeed:farSpeed);
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -102,8 +111,8 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelAuto(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.RawPower);
+            flyWheel1.setRunMode(Motor.RunMode.RawPower);
             speed1 = -(isClose? autoSpeed:farSpeed);
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -310,10 +319,16 @@ public class Launcher extends SubsystemBase {
     @Override
     public void periodic(){
         controller.setPID(kp,ki,kd);
+        pidfController.setPIDF(P, I, D, F);
         controller.setSetPoint(pidTarget);
-        spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(), pidTarget));
-        flyWheel1.setVelocity(speed1);
-        flyWheel2.setVelocity(-speed1);
+        double spinnerPower = controller.calculate(spinner.getCurrentPosition(), pidTarget);
+        spinner.setVelocity(spinnerPower);
+        double power1 = pidfController.calculate(flyWheel1.getVelocity(), speed1);
+        double power2 = pidfController.calculate(flyWheel2.getVelocity(), -speed1);
+        flyWheel1.set(power1);
+        flyWheel2.set(power2);
+//        flyWheel1.setVelocity(speed1);
+//        flyWheel2.setVelocity(-speed1);
         if(controller.atSetPoint()){
             safePose = pidTarget;
         }
@@ -359,7 +374,8 @@ public class Launcher extends SubsystemBase {
 
         @Override
         public boolean isFinished() {
-            return !launcher.chambers.contains(Color.Nothing);
+            return currentChamber >= 3 || !launcher.chambers.contains(Color.Nothing);
+            //return !launcher.chambers.contains(Color.Nothing);
         }
 
         @Override
@@ -375,7 +391,7 @@ public class Launcher extends SubsystemBase {
                 } else {
                     launcher.pidTarget += fullDelta;
                 }
-//                launcher.current -= fullDelta * (order - 1);
+                launcher.pidTarget -= fullDelta * (order - 1);
 
             } else {
                 launcher.pidTarget = CHAMBER1;

@@ -6,14 +6,18 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
+import com.seattlesolvers.solverslib.command.DeferredCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
+import org.firstinspires.ftc.teamcode.hardware.Launcher;
 import org.firstinspires.ftc.teamcode.hardware.Storage;
 
+import java.util.List;
 import java.util.function.Supplier;
+
 @Configurable
 @TeleOp(name = "test teleop")
 public class testTeleop extends OpMode {
@@ -37,23 +41,26 @@ public class testTeleop extends OpMode {
     @Override
     public void init() {
         controller1 = new GamepadEx(gamepad1);
-        robot = new Bot().init(hardwareMap,controller1);
+        robot = new Bot().init(hardwareMap, controller1);
         controller2 = new GamepadEx(gamepad2);
-        robot.getDrive().getFollower().setStartingPose(Storage.instance.pose);
+//        robot.getDrive().getFollower().setStartingPose(Storage.instance.pose);
         robot.getDrive().getFollower().update();
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
-        toShoot = ()-> robot.getDrive().moveTo(56,95.5,135);
+        toShoot = () -> robot.getDrive().moveTo(56, 95.5, 135);
 
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
                                 .andThen(robot.getIntake().start()
-                                .alongWith(robot.loading()))
-                                .andThen(robot.getIntake().stop())
-                        ,robot.getIntake().stop()
-                );
+                                                .alongWith(new DeferredCommand(
+                                                        () -> new Launcher.Loading(robot.getLauncher(),
+                                                                robot.getCamera().getOrder()),
+                                                        List.of(robot.getLauncher())))
+                                                .andThen(robot.getIntake().stop()))
+                                        , robot.getIntake().stop()
+                                );
         controller1.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getIntake().stop());
         controller1.getGamepadButton(GamepadKeys.Button.X)
@@ -93,17 +100,19 @@ public class testTeleop extends OpMode {
                 );
         robot.getCamera().getMotif().schedule();
     }
+
     @Override
-    public void loop(){
+    public void loop() {
         controller1.readButtons();
         controller2.readButtons();
-        if (manualDrive){
+        if (manualDrive) {
             double driveY = controller1.getLeftY();
             double driveX = -controller1.getLeftX();
             double manualTurn = -controller1.getRightX();
             double turnOutput = manualTurn;// default
 
-            if(aprilCentric) {
+            if (aprilCentric) {
+                robot.getCamera().setPipeline(1);
                 double tx = robot.getCamera().getFiducialAngle(); // Limelight horizontal offset
 
                 // If Limelight sees a tag:
@@ -118,11 +127,10 @@ public class testTeleop extends OpMode {
                     double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
 
                     // limit
-                    pid = Math.max(-0.3, Math.min(0.3, pid));
+                    pid = Math.max(-0.4, Math.min(0.4, pid));
 
                     turnOutput = -pid;
-                }
-                else{
+                } else {
                     turnOutput = manualTurn;
                 }
             }
@@ -135,37 +143,36 @@ public class testTeleop extends OpMode {
                     true
             );
         }
-        if (controller2.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
+        if (controller2.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             manualDrive = false;
-            robot.getDrive().moveTo(56,95,135)
-                    .whenFinished(()->manualDrive = true)
+            robot.getDrive().moveTo(56, 95, 135)
+                    .whenFinished(() -> manualDrive = true)
                     .schedule();
         }
 
-        if(controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
+        if (controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
             robot.getLauncher().fixPose();
         }
 
 
-
         CommandScheduler.getInstance().run();
-        telemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
-        telemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
+        telemetry.addData("color1", robot.getLauncher().getColor(robot.getLauncher().cs1));
+        telemetry.addData("color2", robot.getLauncher().getColor(robot.getLauncher().cs2));
         telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
         telemetry.addData("target", robot.getLauncher().pidTarget);
         telemetry.addData("order", robot.getCamera().getOrder());
         telemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
         telemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
         telemetry.addData("can Shoot", robot.getLauncher().canShoot());
-        telemetry.addData("is field centric",!isBot);
+        telemetry.addData("is field centric", !isBot);
         telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
         telemetry.addLine(robot.getLauncher().getTelemetry());
-        FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(),20);
+        FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(), 20);
         telemetry.update();
     }
 
     @Override
-    public void stop(){
+    public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         super.stop();
