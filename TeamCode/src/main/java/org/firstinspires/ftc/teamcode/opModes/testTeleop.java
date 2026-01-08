@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
@@ -24,9 +25,9 @@ public class testTeleop extends OpMode {
     boolean manualDrive = true;
     public Supplier<Command> toShoot;
 
-    public static double kP = 0.0199;
-    public static double kI = 0;
-    public static double kD = 0.01;
+    public static double kP = 0.0169;
+    public static double kI = 0.002;
+    public static double kD = 0.02;
 
     double headingIntegral = 0;
     double lastHeadingError = 0;
@@ -51,6 +52,9 @@ public class testTeleop extends OpMode {
                         robot.getLauncher().toZero()
                                 .andThen(robot.getIntake().start()
                                 .alongWith(robot.loading()))
+                                .andThen(robot.getIntake().stop())
+                                .andThen(robot.getIntake().reverse()
+                                        .raceWith(new WaitCommand(1000)))
                                 .andThen(robot.getIntake().stop())
                         ,robot.getIntake().stop()
                 );
@@ -135,12 +139,12 @@ public class testTeleop extends OpMode {
                     true
             );
         }
-        if (controller2.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
-            manualDrive = false;
-            robot.getDrive().moveTo(56,95,135)
-                    .whenFinished(()->manualDrive = true)
-                    .schedule();
-        }
+//        if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
+//            manualDrive = false;
+//            toShoot.get()
+//                    .whenFinished(()->manualDrive = true)
+//                    .schedule();
+//        }
 
         if(controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
             robot.getLauncher().fixPose();
@@ -158,10 +162,10 @@ public class testTeleop extends OpMode {
         telemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
         telemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
         telemetry.addData("can Shoot", robot.getLauncher().canShoot());
-        telemetry.addData("is field centric",!isBot);
+        telemetry.addData("auto driving",!isBot);
         telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
         telemetry.addLine(robot.getLauncher().getTelemetry());
-        FtcDashboard.getInstance().startCameraStream(robot.getCamera().getLimelight(),20);
+        telemetry.addData("pose",robot.getDrive().getPose());
         telemetry.update();
     }
 
