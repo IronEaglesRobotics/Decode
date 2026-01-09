@@ -11,10 +11,11 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
-
+@Disabled
 @Autonomous(name = "9 ball auto")
 public class Auton9Ball extends OpMode {
     private Robot robot;
@@ -33,7 +34,7 @@ public class Auton9Ball extends OpMode {
     }
 
 
-    private AutoConfig config;
+    private Config config;
 
     private Follower follower() {
         return robot.getFollower();
@@ -192,9 +193,9 @@ public class Auton9Ball extends OpMode {
     @Override
     public void init_loop() {
         if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            this.config = AutoConfig.blue;
+            this.config = Config.blue;
         } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-            this.config = AutoConfig.red;
+            this.config = Config.red;
         }
         telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
         controller1.readButtons();

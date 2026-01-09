@@ -5,19 +5,20 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
-import com.pedropathing.paths.PathChain;
-import com.pedropathing.paths.Path;
 
 import java.util.function.Supplier;
 
-
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp")
-public class TeleOP extends OpMode {
+@Disabled
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp Red")
+public class TeleOPRed extends OpMode {
     private Robot robot;
-    private AutoConfig config;
+    private final Config config = Config.redTeleOp;
     private shotTier tier = shotTier.REST;
 
     private enum shotTier {
@@ -40,7 +41,6 @@ public class TeleOP extends OpMode {
     @Override
     public void init() {
         robot = new Robot().init(hardwareMap);
-        robot.getFollower().setStartingPose(this.config.getStartPose());
         robot.getFollower().update();
         controller1 = new GamepadEx(gamepad1);
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -55,20 +55,21 @@ public class TeleOP extends OpMode {
                 .build();
     }
 
-    @Override
-    public void init_loop(){
-        if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            this.config = AutoConfig.blueTeleOp;
-        } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-            this.config = AutoConfig.redTeleOp;
-        }
-        telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
-        controller1.readButtons();
-    }
+//    @Override
+//    public void init_loop(){
+////        if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
+////            this.config = AutoConfig.blueTeleOp;
+////        } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
+////            this.config = AutoConfig.redTeleOp;
+////        }
+////        telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
+////        controller1.readButtons();
+//    }
 
     @Override
     public void start() {
         robot.getFollower().startTeleopDrive();
+
     }
 
     @Override

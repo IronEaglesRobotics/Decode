@@ -24,3 +24,7 @@ allprojects {
         google()
     }
 }
+
+repositories {
+    mavenCentral()
+}

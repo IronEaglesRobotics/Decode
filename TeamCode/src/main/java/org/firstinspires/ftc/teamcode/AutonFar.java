@@ -11,10 +11,11 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
-
+@Disabled
 @Autonomous(name = "Far 9")
 public class AutonFar extends OpMode {
     private Robot robot;
@@ -32,7 +33,7 @@ public class AutonFar extends OpMode {
     }
 
 
-    private AutoConfig config;
+    private Config config;
 
     private Follower follower() {
         return robot.getFollower();
@@ -72,7 +73,7 @@ public class AutonFar extends OpMode {
 
         getBalls2 = robot.getFollower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup2Transition(),this.config.getPickup2Pose()))
-                .setLinearHeadingInterpolation(Math.toRadians(210),this.config.getPickup2Pose().getHeading())
+                .setLinearHeadingInterpolation(this.config.getPickup2Transition().getHeading(),this.config.getPickup2Pose().getHeading())
                 .addParametricCallback(.99, (() -> timer = getRuntime() + 2.5))
                 .build();
 //
@@ -112,16 +113,17 @@ public class AutonFar extends OpMode {
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 robot.autoSwitch = false;
                 if (!follower().isBusy()  || robot.robotstate == Robot.robotStates.HAS3) {
-                    follower().breakFollowing();
                     if (getRuntime() > timer  || robot.robotstate == Robot.robotStates.HAS3) {
 //                        follower().breakFollowing();
                         //follow next path
+                        follower().breakFollowing();
                         follower().followPath(launchBatch1,.7, true);
                         setPathState(4);
+                        timer = getRuntime() + 1;
                     }
                 }
             case 4: //if at launch pos and shooter fast enough, then shoot
-                if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
+                if (!follower().isBusy() && robot.getShooter().atTargetVelocity() && getRuntime() > timer ) {
                         robot.autoSwitch = true;
                         setPathState(5);
 //                        timer = getRuntime() + 3;
@@ -185,9 +187,9 @@ public class AutonFar extends OpMode {
     @Override
     public void init_loop() {
         if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            this.config = AutoConfig.blueFar;
+            this.config = Config.blueFar;
         } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-            this.config = AutoConfig.redFar;
+            this.config = Config.redFar;
         }
         telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
         controller1.readButtons();
