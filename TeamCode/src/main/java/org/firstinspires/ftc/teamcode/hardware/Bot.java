@@ -53,14 +53,15 @@ public class Bot extends Robot {
     public static class Aim extends CommandBase{
         Bot bot;
 
-        double sensitivity = 2;
-        double correctionFactor = 0.5;
-        Pose holdPoint;
-
         private boolean turning = false;
 
         double angleError;
-        public static double kP = 1;
+        public static double kP = 0.0169;
+        public static double kI = 0.002;
+        public static double kD = 0.02;
+
+        double headingIntegral = 0;
+        double lastHeadingError = 0;
         public Aim(Bot robot){
             bot = robot;
             addRequirements(bot.camera, bot.drive);
@@ -68,17 +69,30 @@ public class Bot extends Robot {
 
         @Override
         public void initialize() {
-//            bot.getDrive().getFollower().holdPoint(
-//                    new Pose(holdPoint.getX(),holdPoint.getY(),bot.camera.getFiducialAngle())
-//            );
+            bot.getDrive().getFollower().holdPoint(
+                    bot.drive.getPose()
+            );
         }
 
         @Override
         public void execute() {
-            if (!bot.getDrive().getFollower().isTurning() && bot.camera.getLimelight().getLatestResult().isValid()){
-                angleError = bot.camera.getFiducialAngle();
-                double turnAngle = angleError * kP;
-                bot.drive.turn(turnAngle).schedule();
+            double tx = bot.getCamera().getFiducialAngle(); // Limelight horizontal offset
+
+            // If Limelight sees a tag:
+            if (!Double.isNaN(tx)) {
+
+                // PID compute
+                double error = tx;
+                headingIntegral += error;
+                double derivative = error - lastHeadingError;
+                lastHeadingError = error;
+
+                double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
+
+                // limit
+                pid = Math.max(-0.3, Math.min(0.3, pid));
+
+                bot.getDrive().turn(-pid);
             }
         }
 
@@ -89,7 +103,7 @@ public class Bot extends Robot {
 
         @Override
         public void end(boolean interrupted) {
-            bot.getDrive().getFollower().startTeleOpDrive(true);
+            bot.getDrive().getFollower().breakFollowing();
         }
     }
 }
