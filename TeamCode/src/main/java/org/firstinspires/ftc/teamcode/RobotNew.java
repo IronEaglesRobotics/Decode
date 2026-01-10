@@ -93,9 +93,9 @@ public class RobotNew {
         public static double D = 0;
 
         public static double powerFar = .55;
-        public static double powerNear = .375;
+        public static double powerNear = .44;
         public static double hoodFar = 1;
-        public static double hoodNear = .6;
+        public static double hoodNear = .9;
 
 
         public Shooter init(HardwareMap hardwareMap) {
@@ -151,6 +151,7 @@ public class RobotNew {
     @Configurable
     public static class Turret {
         public DcMotorEx turret;
+        @Getter
         private int ticks = 0;
 
         public static double P = 1;
@@ -207,10 +208,13 @@ public class RobotNew {
         }
 
         private void setRelitiveTurretPose(double angle) {
+//            while (angle > 180) angle -= 360;
+//            while (angle < -180) angle += 360;
             ticks = degreeToTicks(angle - TURRETSTARTINGOFFSET);
         }
 
         public void setCorrectedTurretPose(double angle,double heading) {
+
             setRelitiveTurretPose(angle - Math.toDegrees(heading));
 
         }

@@ -101,9 +101,16 @@ public class TeleOPBlue extends OpMode {
                 robot.getTurret().turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.getFollower().setPose(new Pose(resetPose.getX(), resetPose.getY(), Math.toRadians(90)));
             }
-
-        } else {
+        } else if (controller1.isDown(GamepadKeys.Button.LEFT_STICK_BUTTON)) {
+                robot.getTurret().calibrate();
+                if (robot.getTurret().turret.getCurrent(CurrentUnit.AMPS) > 3) {
+                    robot.getTurret().turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    robot.getTurret().turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    robot.getFollower().setPose(new Pose(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), Math.toRadians(90)));
+                }
+        }else {
             if (robot.getFollower().getHeading() < Math.toRadians(63) && robot.getFollower().getHeading() > Math.toRadians(-165)) {
+//            if (robot.getTurret().getTicks() > 0 && robot.getTurret().getTicks() < 918){
                 robot.getTurret().aim(robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), (robot.getFollower().getHeading()));
             } else {
                 robot.getTurret().off();
@@ -127,7 +134,7 @@ public class TeleOPBlue extends OpMode {
         telemetryM.debug("y:" + robot.getFollower().getPose().getY());
         telemetryM.debug("heading:" + Math.toDegrees(robot.getFollower().getPose().getHeading()));
         telemetryM.addData("at target velocty", robot.shooter.atTargetVelocity());
-
+        telemetryM.debug("target:" + robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), (robot.getFollower().getHeading()));
         telemetryM.update(telemetry);
 
     }

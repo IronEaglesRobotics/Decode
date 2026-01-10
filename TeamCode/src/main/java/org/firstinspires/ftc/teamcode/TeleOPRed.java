@@ -6,24 +6,20 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathChain;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
+import com.pedropathing.paths.PathChain;
+
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import java.util.function.Supplier;
 
-@Disabled
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp Red")
 public class TeleOPRed extends OpMode {
-    private Robot robot;
+    private RobotNew robot;
     private final Config config = Config.redTeleOp;
-    private shotTier tier = shotTier.REST;
-
-    private enum shotTier {
-        REST, NEAR, FAR
-    }
 
     GamepadEx controller1;
     public TelemetryManager telemetryM;
@@ -34,36 +30,29 @@ public class TeleOPRed extends OpMode {
 
 
     private final PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
-    private final Pose shootPose = this.config.getShootPose();
+
+    private boolean far = true;
+
     private final Pose shootPoseFar = this.config.getShootPoseFar();
+    private final Pose resetPose = this.config.getResetPose();
+    private final Pose aimPose = this.config.getGoalPose();
 
 
     @Override
     public void init() {
-        robot = new Robot().init(hardwareMap);
+        robot = new RobotNew().init(hardwareMap);
         robot.getFollower().update();
         controller1 = new GamepadEx(gamepad1);
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        pathChain = () -> robot.getFollower().pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(robot.getFollower()::getPose, shootPose)))
-                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(robot.getFollower()::getHeading, shootPose.getHeading(), 0.8))
-                .build();
 
         pathChainFar = () -> robot.getFollower().pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(robot.getFollower()::getPose, shootPoseFar)))
-                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(robot.getFollower()::getHeading, shootPoseFar.getHeading(), 0.8))
+                .setHeadingInterpolation(HeadingInterpolator.facingPoint(shootPoseFar))
                 .build();
     }
 
 //    @Override
 //    public void init_loop(){
-////        if(this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-////            this.config = AutoConfig.blueTeleOp;
-////        } else if(this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-////            this.config = AutoConfig.redTeleOp;
-////        }
-////        telemetry.addData("Team:", this.config==null? null: this.config.getTeam());
-////        controller1.readButtons();
 //    }
 
     @Override
@@ -77,6 +66,25 @@ public class TeleOPRed extends OpMode {
         controller1.readButtons();
         telemetryM.update();
 
+        if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
+            far = !far;
+        }
+
+        if (far) {
+            robot.getShooter().farShot();
+        } else {
+            robot.getShooter().nearShot();
+        }
+
+        if (controller1.isDown(GamepadKeys.Button.DPAD_DOWN)) {
+            robot.getIntake().open();
+            robot.getIntake().transfer();
+        } else {
+            robot.getIntake().close();
+            robot.getIntake().transfer();
+        }
+
+
         robot.getFollower().update();
         if (!automatedDrive) {
             robot.getFollower().setTeleOpDrive(
@@ -86,62 +94,61 @@ public class TeleOPRed extends OpMode {
             );
         }
 
-
-        if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            tier = shotTier.FAR;
-        } else if (controller1.wasJustPressed((GamepadKeys.Button.RIGHT_BUMPER))) {
-            tier = shotTier.NEAR;
-        } else if (controller1.wasJustPressed((GamepadKeys.Button.Y))) {
-            tier = shotTier.REST;
+        if (controller1.isDown(GamepadKeys.Button.RIGHT_BUMPER)) {
+            robot.getTurret().calibrate();
+            if (robot.getTurret().turret.getCurrent(CurrentUnit.AMPS) > 3) {
+                robot.getTurret().turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.getTurret().turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.getFollower().setPose(new Pose(resetPose.getX(), resetPose.getY(), Math.toRadians(90)));
+            }
+        } else if (controller1.isDown(GamepadKeys.Button.LEFT_STICK_BUTTON)) {
+            robot.getTurret().calibrate();
+            if (robot.getTurret().turret.getCurrent(CurrentUnit.AMPS) > 3) {
+                robot.getTurret().turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.getTurret().turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.getFollower().setPose(new Pose(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), Math.toRadians(90)));
+            }
+        }else {
+//            if (correctedRobotHeading(Math.toDegrees(robot.getFollower().getHeading())) < 329 && correctedRobotHeading(Math.toDegrees(robot.getFollower().getHeading())) > 121) {
+//            if (robot.getTurret().getTicks() > 0 && robot.getTurret().getTicks() < 918){
+                robot.getTurret().aim(robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), (robot.getFollower().getHeading()));
+//            } else {
+//                robot.getTurret().off();
+//            }
         }
 
         //Auto Drive turning
-        if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_UP)) {
-            robot.getFollower().followPath(pathChain.get(), true);
-            automatedDrive = true;
-        }
-
         if (controller1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
             robot.getFollower().followPath(pathChainFar.get(), true);
             automatedDrive = true;
         }
 
-        //Stop automated following if the follower is done
+//        Stop automated following if the follower is done
         if (automatedDrive && (controller1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > .5 || !robot.getFollower().isBusy())) {
             robot.getFollower().startTeleopDrive();
             automatedDrive = false;
         }
 
-        if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)) {
-            robot.getFollower().setPose(this.config.getResetPose());
-        }
-
-        switch (tier) {
-            case FAR:
-                robot.getShooter().farShot();
-                break;
-            case NEAR:
-                robot.getShooter().nearShot();
-                break;
-            case REST:
-                robot.getShooter().rest();
-                break;
-        }
-
-
-        robot.robotMacro(controller1, getRuntime(), false);
-
-//        telemetryM.debug("Shooter PID", String.join(",", Arrays.stream(this.robot.getShooter().getPIDValues()).mapToObj(Double::toString).collect(Collectors.joining(","))));
         telemetryM.addData("shooter_velo ", robot.getShooter().calculatedVelocity());
-        telemetryM.debug("state", robot.robotstate);
         telemetryM.debug("x:" + robot.getFollower().getPose().getX());
         telemetryM.debug("y:" + robot.getFollower().getPose().getY());
-        telemetryM.debug("heading:" + robot.getFollower().getPose().getHeading());
+        telemetryM.debug("heading:" + Math.toDegrees(robot.getFollower().getPose().getHeading()));
+        telemetryM.debug("Corrected:" + correctedRobotHeading(Math.toDegrees(robot.getFollower().getHeading())));
+        telemetryM.debug("ticks:" + robot.getTurret().getTicks());
+        telemetryM.debug("target:" + robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), (robot.getFollower().getHeading()));
+
+
         telemetryM.addData("at target velocty", robot.shooter.atTargetVelocity());
-        telemetryM.addData("target velocity", robot.shooter.targetVelocity);
-        telemetryM.addData("balls", robot.balls);
 
         telemetryM.update(telemetry);
 
+    }
+
+    public double correctedRobotHeading(double heading) {
+        if (heading > 0) {
+            return heading;
+        } else {
+            return 360 + heading;
+        }
     }
 }

@@ -22,11 +22,15 @@ public class Config {
     private Pose pickup2Transition; // Middle (Second Set) of Artifacts from the Spike Mark.
     private Pose pickup2Pose; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Pose pickup2Control; // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private Pose pickup2Control2; // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Pose pickup3Pose;
     private Pose pickup3Control;
     private Pose pickup3Control2;
     private Pose pickup3Transition;
     private Pose parkPose; // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private Pose pickup4Pose;
+    private Pose pickup4Control;
+    private Pose pickup4End;
     private Pose shootPose;
     private Pose shootPoseFar;
     private Pose resetPose;
@@ -82,18 +86,21 @@ public class Config {
             .team("blue")
             .goalPose(new Pose(5, 136, 0))
 
-            .startPose(new Pose(26.313, 130.410, Math.toRadians(53)))
-            .scorePose(new Pose(50, 96, Math.toRadians(0)))
-            .pickup1Pose(new Pose(12, 84, Math.toRadians(180)))
-            .pickup1Control(new Pose(41, 82, Math.toRadians(0)))
+            .startPose(new Pose(27.5, 130.410, Math.toRadians(53)))
+            .scorePose(new Pose(60, 86, Math.toRadians(0)))
+            .pickup1Pose(new Pose(19, 80, Math.toRadians(180)))
+            .pickup1Control(new Pose(41, 78, Math.toRadians(0)))
 //            .pickup2Transition(new Pose(48, 75, Math.toRadians(210)))
-            .pickup2Pose(new Pose(10, 60, Math.toRadians(180)))
+            .pickup2Pose(new Pose(14, 60, Math.toRadians(180)))
             .pickup2Control(new Pose(57, 57, Math.toRadians(0)))
-            .openGate(new Pose(12, 70, Math.toRadians(90)))
-            .gateControl(new Pose(12, 56, Math.toRadians(90)))
-            .pickup3Pose(new Pose(10, 36, Math.toRadians(180)))
-            .pickup3Control(new Pose(50, 47, Math.toRadians(0)))
-            .pickup3Control2(new Pose(46, 32, Math.toRadians(0)))
+//            .pickup2Control2(new Pose(43, 100, Math.toRadians(0)))
+            .pickup3Pose(new Pose(13, 61.2, Math.toRadians(180)))
+            .pickup3Control(new Pose(36, 50, Math.toRadians(0)))
+            .pickup3Control2(new Pose(42, 58, Math.toRadians(0)))
+            .pickup4Pose(new Pose(20, 35.5, Math.toRadians(180)))
+            .pickup4Control(new Pose(51, 36, Math.toRadians(0)))
+            .pickup4End(new Pose(12, 35, Math.toRadians(0)))
+//            .pickup3Control2(new Pose(46, 32, Math.toRadians(0)))
             .build();
 
     public static final Config blueFar = Config.builder()
@@ -111,21 +118,18 @@ public class Config {
             .team("blue")
 //            .startPose(new Pose(55, 115, Math.toRadians(145)))
 //            .shootPose(new Pose(62, 94, Math.toRadians(140)))
-            .shootPoseFar(new Pose(72, 25, Math.toRadians(118)))
+            .shootPoseFar(new Pose(72, 17.5, Math.toRadians(118)))
             .resetPose(new Pose(135, 8, Math.toRadians(90)))
-            .goalPose(new Pose(5, 136, 0))
+            .goalPose(new Pose(3, 136, 0))
             .build();
 
     public static final Config redTeleOp = Config.builder()
             .team("red")
             // Original: (55, 115, 145) -> New: (89, 115, 35)
-            .startPose(new Pose(81, 115, Math.toRadians(35)))
-            // Original: (62, 94, 140) -> New: (82, 94, 40)
-            .shootPose(new Pose(74, 94, Math.toRadians(40)))
-            // Original: (75, 18, 117) -> New: (69, 18, 63)
-            .shootPoseFar(new Pose(61, 18, Math.toRadians(63)))
-            // Original: (72, 84, 135) -> New: (72, 84, 45)
-            .resetPose(new Pose(64, 84, Math.toRadians(45)))
+            .shootPoseFar(new Pose(72, 17.5, Math.toRadians(118)))
+//            .resetPose(new Pose(9, 8, Math.toRadians(90)))
+            .resetPose(new Pose(135, 8, Math.toRadians(90)))
+            .goalPose(new Pose(141, 143, 0))
             .build();
 
 
