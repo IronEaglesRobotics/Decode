@@ -10,7 +10,7 @@ import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.command.WaitCommand;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
@@ -35,17 +35,18 @@ public class Launcher extends SubsystemBase {
     public static double kd = 0.005;
     public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
-    public static final int halfDelta = -238;
-    public static final int fullDelta = -475;
-    public int pidTarget = 0;
+    public static int halfDelta = -238;
+    public static int fullDelta = -475;
+    public static int pidTarget = 0;
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = 775;
-    public static int farSpeed = 990;
-    public static int autoSpeed = 750;
+    public static int closeSpeed = -775;
+    public static int farSpeed = -990;
+    public static int autoSpeed = -750;
     public static double power = .43;
+    public static double servoPos = 0;
     public static double[] veloCoeffecient = new double[] {11,0,0};
     public static double[] feedforward = new double[] {11,0,0};
 
@@ -66,6 +67,7 @@ public class Launcher extends SubsystemBase {
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
         pusher.setPosition(0.0000001);
+        pusher.setDirection(Servo.Direction.REVERSE);
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers.add(Color.Nothing);
@@ -95,7 +97,7 @@ public class Launcher extends SubsystemBase {
         return new InstantCommand(()->{
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            speed1 = -(isClose? closeSpeed:farSpeed);
+            speed1 = isClose? closeSpeed:farSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
@@ -105,7 +107,7 @@ public class Launcher extends SubsystemBase {
         return new InstantCommand(()->{
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            speed1 = -(isClose? autoSpeed:farSpeed);
+            speed1 = isClose? autoSpeed:farSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
@@ -125,7 +127,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                pusher.setPosition(0.06);
+                servoPos = 0.4;
                 time = System.currentTimeMillis();
             }
 
@@ -141,7 +143,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                pusher.setPosition(0);
+                servoPos = 0;
             }
         };
     }
@@ -192,7 +194,7 @@ public class Launcher extends SubsystemBase {
         };
     }
     public boolean canShoot(){
-        return atShootPos() && atTarget();
+        return atShootPos() && atTarget() && atSpeed();
     }
     public boolean atShootPos(){
         return ((pidTarget - halfDelta)%fullDelta) == 0;
@@ -202,12 +204,13 @@ public class Launcher extends SubsystemBase {
     }
     public Command fire(){
         return new SequentialCommandGroup(
+            new WaitUntilCommand(this::atSpeed),
             shoot(),
             toNext(),
-            new WaitCommand(400),
+            new WaitUntilCommand(this::atSpeed),
             shoot(),
             toNext(),
-            new WaitCommand(400),
+            new WaitUntilCommand(this::atSpeed),
             shoot());
     }
 
@@ -312,8 +315,9 @@ public class Launcher extends SubsystemBase {
         return (int) (Math.abs(flywheel.getCorrectedVelocity())/.83);
     }
     public boolean atSpeed(){
-        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 110 &&
-                Math.abs(speed1 + calculateVelo(flyWheel2)) < 110;
+        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 20 &&
+                Math.abs(speed1 + calculateVelo(flyWheel2)) < 20 &&
+                speed1 <= autoSpeed;
     }
     public double getSpeed1() {
         return speed1;
@@ -321,6 +325,10 @@ public class Launcher extends SubsystemBase {
 
     public String getTelemetry(){
         return "slot 0: " + chambers.get(0) + " slot 1: " + chambers.get(1) +" slot 2: " + chambers.get(2);
+    }
+    public void reverseSpin(){
+        halfDelta *= -1;
+        fullDelta *= -1;
     }
 
     @Override
@@ -334,6 +342,7 @@ public class Launcher extends SubsystemBase {
         spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(), pidTarget));
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
+        pusher.setPosition(servoPos);
         if(controller.atSetPoint()){
             safePose = pidTarget;
         }
@@ -353,7 +362,7 @@ public class Launcher extends SubsystemBase {
         @Override
         public void initialize() {
             currentChamber = 0;
-            launcher.pidTarget = 0;
+            pidTarget = 0;
             launcher.chambers.set(0,Color.Nothing);
             launcher.chambers.set(1,Color.Nothing);
             launcher.chambers.set(2,Color.Nothing);
@@ -369,7 +378,7 @@ public class Launcher extends SubsystemBase {
                 if (color != Color.Nothing ) {
                     launcher.chambers.set(currentChamber,color);
                     currentChamber += 1;
-                    launcher.pidTarget += fullDelta;
+                    pidTarget += fullDelta;
                 }
             }
         }
