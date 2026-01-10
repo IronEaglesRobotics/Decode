@@ -15,7 +15,7 @@ import java.util.List;
 
 public class Cam extends SubsystemBase {
     Limelight3A limelight;
-    int order;
+    int order = 4;
     String teamColor;
     Pose lastPose;
     List<Ball> foundBalls = new ArrayList<>();
@@ -36,11 +36,13 @@ public class Cam extends SubsystemBase {
     }
 
     public double getFiducialAngle() {
-//        if (limelight.getLatestResult().isValid() && order != null)
-//        {
-        return limelight.getLatestResult().getTx();
-//        }
-//        return 99.9;
+        LLResult result = limelight.getLatestResult();
+        for (LLResultTypes.FiducialResult fiducial : result.getFiducialResults()){
+            if (fiducial.getFiducialId() == 20 || fiducial.getFiducialId() == 24) {
+                return limelight.getLatestResult().getTx();
+            }
+        }
+       return 0.0;
     }
     public void startLL(){
         limelight.start();
@@ -92,6 +94,7 @@ public class Cam extends SubsystemBase {
     public static class getMotif extends CommandBase {
         Cam camera;
         int order = 0;
+        double time = 0;
 
         public getMotif(Cam temp) {
             camera = temp;
@@ -101,6 +104,7 @@ public class Cam extends SubsystemBase {
         public void initialize() {
             camera.limelight.pipelineSwitch(3);
             camera.limelight.start();
+            time = System.currentTimeMillis();
         }
 
         public void execute() {
@@ -119,13 +123,13 @@ public class Cam extends SubsystemBase {
         }
 
         public boolean isFinished() {
-            return camera.limelight.getLatestResult() != null && order != 0;
+            return (camera.limelight.getLatestResult() != null && order != 0)
+                    || time + 1000 < System.currentTimeMillis();
         }
 
         public void end(boolean i) {
             camera.setOrder(order);
             camera.limelight.pipelineSwitch(1);
-            camera.limelight.close();
         }
     }
 

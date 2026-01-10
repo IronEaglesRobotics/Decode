@@ -42,7 +42,7 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = 870;
+    public static int closeSpeed = 775;
     public static int farSpeed = 990;
     public static int autoSpeed = 750;
     public static double power = .43;
