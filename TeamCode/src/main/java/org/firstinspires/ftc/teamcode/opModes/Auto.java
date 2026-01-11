@@ -329,10 +329,10 @@ public class Auto extends OpMode {
             double cornerZ = !isBlue ? 245 : 335;
             Path1 = new Pose(shootX, 105.500, Math.toRadians(closeAim));
             Path1Ex = new Pose(shootX, 105.500, Math.toRadians(seeObelisk));
-            Path2 = new Pose(prePickX, 69.000, Math.toRadians(pickUp));
+            Path2 = new Pose(prePickX, 70.000, Math.toRadians(pickUp));
 
-            Path3 = new Pose(postPickX1, 69.000, Math.toRadians(pickUp));
-            Path3Ex = new Pose(postPickEx, 69.000, Math.toRadians(pickUp));
+            Path3 = new Pose(postPickX1, 70.000, Math.toRadians(pickUp));
+            Path3Ex = new Pose(postPickEx, 70.000, Math.toRadians(pickUp));
 
 //            Path4 = follower
 //                    .pathBuilder()

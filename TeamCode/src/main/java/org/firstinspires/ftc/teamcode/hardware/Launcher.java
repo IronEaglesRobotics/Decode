@@ -10,6 +10,7 @@ import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
@@ -194,7 +195,7 @@ public class Launcher extends SubsystemBase {
         };
     }
     public boolean canShoot(){
-        return atShootPos() && atTarget() && atSpeed();
+        return atShootPos() && atTarget();
     }
     public boolean atShootPos(){
         return ((pidTarget - halfDelta)%fullDelta) == 0;
@@ -204,13 +205,12 @@ public class Launcher extends SubsystemBase {
     }
     public Command fire(){
         return new SequentialCommandGroup(
-            new WaitUntilCommand(this::atSpeed),
             shoot(),
             toNext(),
-            new WaitUntilCommand(this::atSpeed),
+            new WaitCommand(400),
             shoot(),
             toNext(),
-            new WaitUntilCommand(this::atSpeed),
+            new WaitCommand(400),
             shoot());
     }
 
@@ -315,8 +315,8 @@ public class Launcher extends SubsystemBase {
         return (int) (Math.abs(flywheel.getCorrectedVelocity())/.83);
     }
     public boolean atSpeed(){
-        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 20 &&
-                Math.abs(speed1 + calculateVelo(flyWheel2)) < 20 &&
+        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 30 &&
+                Math.abs(speed1 + calculateVelo(flyWheel2)) < 30 &&
                 speed1 <= autoSpeed;
     }
     public double getSpeed1() {
