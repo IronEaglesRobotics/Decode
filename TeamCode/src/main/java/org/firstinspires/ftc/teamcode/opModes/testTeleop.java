@@ -28,7 +28,7 @@ public class testTeleop extends OpMode {
     boolean manualDrive = true;
     public Supplier<Command> toShoot;
 
-    public static double kP = 0.0169;
+    public static double kP = 0.0135;
     public static double kI = 0.002;
     public static double kD = 0.02;
 
@@ -132,7 +132,7 @@ public class testTeleop extends OpMode {
                     double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
 
                     // limit
-                    pid = Math.max(-0.3, Math.min(0.3, pid));
+                    pid = Math.max(-0.6, Math.min(0.6, pid));
 
                     turnOutput = -pid;
                 }
