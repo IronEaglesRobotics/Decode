@@ -206,11 +206,13 @@ public class Launcher extends SubsystemBase {
     public Command fire(){
         return new SequentialCommandGroup(
             shoot(),
+            new WaitCommand(200),
             toNext(),
-            new WaitCommand(400),
+            new WaitCommand(200),
             shoot(),
+            new WaitCommand(200),
             toNext(),
-            new WaitCommand(400),
+            new WaitCommand(200),
             shoot());
     }
 
@@ -234,9 +236,9 @@ public class Launcher extends SubsystemBase {
         return new Command() {
             @Override
             public Set<Subsystem> getRequirements() {
-                Set<Subsystem> set = new HashSet<>();
-                set.add(Launcher.this);
-                return set;
+                //Set<Subsystem> set = new HashSet<>();
+                //set.add(Launcher.this);
+                return new HashSet<>();
             }
 
             @Override
@@ -310,6 +312,13 @@ public class Launcher extends SubsystemBase {
                 return controller.atSetPoint();
             }
         };
+    }
+    public Command toFull(){
+        return new SequentialCommandGroup(
+                toNext(),
+                toNext(),
+                toNext()
+        );
     }
     public int calculateVelo(MotorEx flywheel){
         return (int) (Math.abs(flywheel.getCorrectedVelocity())/.83);
