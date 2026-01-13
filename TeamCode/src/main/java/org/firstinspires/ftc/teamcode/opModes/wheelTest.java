@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "wheel test")
+@TeleOp(name = "wheel test",group = "Tests")
 public class wheelTest extends OpMode {
     DcMotor lf;
     DcMotor rf;

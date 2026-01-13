@@ -2,10 +2,11 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Configurable
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TestSrevo")
+@TeleOp(name = "TestServo",group = "Tests")
 public class testServo extends OpMode {
 
     Servo pusher;

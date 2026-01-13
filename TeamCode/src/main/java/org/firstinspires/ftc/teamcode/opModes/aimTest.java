@@ -10,7 +10,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
-@TeleOp(name = "aimTest")
+@TeleOp(name = "aimTest",group = "Tests")
 public class aimTest extends OpMode {
     Bot robot;
     GamepadEx controller1;

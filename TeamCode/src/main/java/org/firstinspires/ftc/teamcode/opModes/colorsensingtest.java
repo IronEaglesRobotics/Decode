@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.hardware.Launcher;
 
 
-@TeleOp(name="ColorSensor", group = "sensor")
+@TeleOp(name="ColorSensor", group = "Tests")
 public class colorsensingtest extends OpMode {
 
 

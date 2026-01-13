@@ -8,7 +8,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 
 
-@TeleOp(name="ll test")
+@TeleOp(name="ll test",group = "Tests")
 @Config
 public class limeLightTests extends CommandOpMode {
     Bot robot;

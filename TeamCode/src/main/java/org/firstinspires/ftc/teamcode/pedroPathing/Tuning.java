@@ -9,7 +9,6 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.PanelsConfigurables;
-import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.bylazar.field.FieldManager;
 import com.bylazar.field.PanelsField;
@@ -80,7 +79,7 @@ public class Tuning extends SelectableOpMode {
     public void onSelect() {
         if (follower == null) {
             follower = Constants.createFollower(hardwareMap);
-            PanelsConfigurables.INSTANCE.refreshClass(this);
+            PanelsConfigurables.refreshClass(this);
         } else {
             follower = Constants.createFollower(hardwareMap);
         }

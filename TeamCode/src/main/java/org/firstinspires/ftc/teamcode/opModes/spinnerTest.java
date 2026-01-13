@@ -8,7 +8,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 
-@TeleOp(name = "spinnerTest")
+@TeleOp(name = "spinnerTest",group = "Tests")
 public class spinnerTest extends OpMode {
     Bot robot;
     GamepadEx controller1;
