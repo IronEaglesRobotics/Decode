@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @Configurable
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TestSrevo")
-public class testsrevo extends OpMode {
+public class testServo extends OpMode {
 
     Servo pusher;
 
