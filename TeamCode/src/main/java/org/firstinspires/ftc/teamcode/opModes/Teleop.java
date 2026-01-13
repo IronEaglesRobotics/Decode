@@ -28,7 +28,7 @@ public class Teleop extends OpMode {
     boolean manualDrive = true;
     public Supplier<Command> toShoot;
 
-    public static double kP = 0.0169;
+    public static double kP = 0.0135;
     public static double kI = 0.002;
     public static double kD = 0.02;
 
@@ -53,13 +53,13 @@ public class Teleop extends OpMode {
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
-                                .andThen(robot.getIntake().start()
-                                .alongWith(robot.loading()))
-                                .andThen(robot.getIntake().stop())
-                                .andThen(robot.getIntake().reverse()
-                                        .raceWith(new WaitCommand(1000)))
-                                .andThen(robot.getIntake().stop())
-                        ,robot.getIntake().stop()
+                                .andThen(robot.getIntake().start())
+                        ,robot.loading()
+                                        .andThen(robot.getIntake().stop())
+                                                .alongWith(robot.getLauncher().setLaunch())
+                                        .andThen(robot.getIntake().reverse())
+                                        .raceWith(new WaitCommand(1000))
+                                        .andThen(robot.getIntake().stop())
                 );
         controller1.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getIntake().stop());
@@ -132,7 +132,7 @@ public class Teleop extends OpMode {
                     double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
 
                     // limit
-                    pid = Math.max(-0.3, Math.min(0.3, pid));
+                    pid = Math.max(-0.6, Math.min(0.6, pid));
 
                     turnOutput = -pid;
                 }

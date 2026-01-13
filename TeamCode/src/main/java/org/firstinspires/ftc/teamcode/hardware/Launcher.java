@@ -122,6 +122,8 @@ public class Launcher extends SubsystemBase {
 //            flyWheel2.setPower(0);
         });
     }
+
+
     public Command shoot() {
         return new Command() {
             double time;
@@ -134,7 +136,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return time + 200 < System.currentTimeMillis();
+                return time + 125 < System.currentTimeMillis();
             }
 
             @Override
@@ -206,13 +208,13 @@ public class Launcher extends SubsystemBase {
     public Command fire(){
         return new SequentialCommandGroup(
             shoot(),
-            new WaitCommand(200),
+            new WaitCommand(150),
             toNext(),
-            new WaitCommand(200),
+            new WaitCommand(100),
             shoot(),
-            new WaitCommand(200),
+            new WaitCommand(150),
             toNext(),
-            new WaitCommand(200),
+            new WaitCommand(100),
             shoot());
     }
 
@@ -313,8 +315,18 @@ public class Launcher extends SubsystemBase {
             }
         };
     }
+    public Command toFullw(){
+        return new SequentialCommandGroup(
+        new WaitCommand(200),
+                toNext(),
+                new WaitCommand(200),
+                toNext(),
+                toNext()
+        );
+    }
     public Command toFull(){
         return new SequentialCommandGroup(
+                new WaitCommand(100),
                 toNext(),
                 toNext(),
                 toNext()
@@ -356,7 +368,6 @@ public class Launcher extends SubsystemBase {
             safePose = pidTarget;
         }
     }
-
     public static class Loading extends CommandBase{
         Launcher launcher;
         int order;

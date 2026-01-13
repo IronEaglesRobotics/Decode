@@ -27,6 +27,10 @@ public class Cam extends SubsystemBase {
         limelight.start();
     }
 
+    public void setPipeline(int i){
+        limelight.pipelineSwitch(i);
+    }
+
     public void setOrder(int order1) {
         order = order1;
     }
@@ -47,6 +51,10 @@ public class Cam extends SubsystemBase {
         limelight.close();
     }
 
+
+    public boolean seestag(){
+        return limelight.getLatestResult().isValid();
+    }
 
     public double getTargetArea(){
         return limelight.getLatestResult().getTa();
