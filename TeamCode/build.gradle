@@ -22,6 +22,17 @@ android {
         jniLibs.useLegacyPackaging true
     }
 }
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://repo.dairy.foundation/releases"
+        }
+    }
+    dependencies {
+        classpath "dev.frozenmilk:Load:0.2.4"
+    }
+}
 repositories {
     maven {
         url = 'https://maven.brott.dev/'
@@ -39,8 +50,9 @@ repositories {
     maven {
         url "https://repo.dairy.foundation/snapshots"
     }
-
 }
+
+apply plugin: 'dev.frozenmilk.sinister.sloth.load'
 
 dependencies {
     implementation project(':FtcRobotController')
@@ -57,5 +69,8 @@ dependencies {
     implementation 'com.pedropathing:telemetry:1.0.0'
 
     // Panels Dashboard
-    implementation "com.bylazar:fullpanels:1.0.9"
+    //implementation "com.bylazar:fullpanels:1.0.9"
+    implementation 'dev.frozenmilk.dairy:Core:2.2.4'
+    implementation("com.bylazar.sloth:fullpanels:0.2.4+1.0.12")
+    implementation "com.bylazar.sloth:limelightproxy:0.2.4+1.0.4"
 }

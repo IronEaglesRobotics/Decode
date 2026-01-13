@@ -19,8 +19,8 @@ import org.firstinspires.ftc.teamcode.hardware.Storage;
 
 import java.util.function.Supplier;
 @Configurable
-@TeleOp(name = "test teleop")
-public class testTeleop extends OpMode {
+@TeleOp(name = "Main Teleop")
+public class Teleop extends OpMode {
     Bot robot;
     GamepadEx controller1;
     GamepadEx controller2;
