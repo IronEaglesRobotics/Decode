@@ -53,13 +53,13 @@ public class testTeleop extends OpMode {
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
-                                .andThen(robot.getIntake().start()
-                                .alongWith(robot.loading()))
-                                .andThen(robot.getIntake().stop())
-                                .andThen(robot.getIntake().reverse()
-                                        .raceWith(new WaitCommand(1000)))
-                                .andThen(robot.getIntake().stop())
-                        ,robot.getIntake().stop()
+                                .andThen(robot.getIntake().start())
+                        ,robot.loading()
+                                        .andThen(robot.getIntake().stop())
+                                                .alongWith(robot.getLauncher().setLaunch())
+                                        .andThen(robot.getIntake().reverse())
+                                        .raceWith(new WaitCommand(1000))
+                                        .andThen(robot.getIntake().stop())
                 );
         controller1.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getIntake().stop());
