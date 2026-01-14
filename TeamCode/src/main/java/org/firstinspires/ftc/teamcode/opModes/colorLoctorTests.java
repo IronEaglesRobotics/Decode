@@ -23,7 +23,6 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import android.util.Size;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -207,7 +206,6 @@ public class colorLoctorTests extends LinearOpMode
                 telemetry.addLine(String.format("%5d  %4.2f  %5.2f %3d %5.3f (%3d,%3d)",
                           b.getContourArea(), b.getDensity(), b.getAspectRatio(), (int) b.getArcLength(), b.getCircularity(), (int) boxFit.center.x, (int) boxFit.center.y));
             }
-            FtcDashboard.getInstance().startCameraStream(portal,30);
 
             telemetry.update();
             sleep(50);

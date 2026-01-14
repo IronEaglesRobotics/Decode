@@ -160,9 +160,9 @@ public class Auto extends OpMode {
                             new WaitCommand(20),
                             paths.PathShootEx(),
                             ()->isFar),
-                    isFar ? new WaitCommand(20) : new WaitCommand(500),
+                    isFar ? new WaitCommand(20) : new WaitCommand(300),
                     robot.getCamera().getMotif(),
-                    new WaitCommand(100),
+                    new WaitCommand(50),
                     new InstantCommand(()-> state = States.settingLaunch))
                         .schedule();
                 state = States.idle;
@@ -184,9 +184,15 @@ public class Auto extends OpMode {
             case idle:
                 break;
             case shoot:
+                boolean ifWas2 = lastState == States.pick2;
+                PathChain specialReturn = robot.getDrive().getFollower().pathBuilder()
+                        .addPath(new BezierCurve(robot.getDrive().getPose(), paths.Path3Ex, paths.Path1))
+                        .setLinearHeadingInterpolation(robot.getDrive().getZ(),paths.Path1.getHeading())
+                        .build();
                 lastState = States.shoot;
                 new SequentialCommandGroup(
-                        (!isFar ? paths.PathShoot() : paths.farPathShoot()),
+                        (!isFar ? (!ifWas2 ? paths.PathShoot() : robot.getDrive().pathCommand(specialReturn))
+                                : paths.farPathShoot()),
                         robot.getLauncher().setLaunch(green,robot.getCamera().getOrder()),
                         new InstantCommand(()->wantsShoot = true),
                         new WaitUntilCommand(() -> !robot.getDrive().getFollower().isBusy()),
@@ -265,16 +271,17 @@ public class Auto extends OpMode {
 
                 )
                 .alongWith(new WaitUntilCommand(
-                    ()->robot.getLauncher().getColor(robot.getLauncher().cs1) != Launcher.Color.Nothing)
-                    .andThen(robot.getLauncher().toFull()))
+                    ()->robot.getLauncher().getColor(robot.getLauncher().cs1) != Launcher.Color.Nothing || Bot.hasBeen(3000))
+                    .andThen(robot.getLauncher().toFull())
+                    .andThen(robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())))
                         .schedule();
                 state = States.idle;
                 break;
             case pick2:
                 finished = false;
                 lastState = States.pick2;
-                nextState = hitGate ? States.pick2 : States.finish;
-//                nextState = isFar ? (hitGate ? States.pickFar : States.finish) : nextState;
+                nextState = hitGate ? States.pick1 : States.pickFar;
+                nextState = isFar ? (hitGate ? States.pickFar : States.finish) : nextState;
                 wantsShoot = false;
                 green = 1;
 //                robot.loading()
@@ -283,16 +290,16 @@ public class Auto extends OpMode {
 //                        .whenFinished(() -> finished = true)
 //                        .schedule();
                 new SequentialCommandGroup(
-                        paths.Pick2()
-                                .whenFinished(() -> {
-                                    state = States.shoot;
-                                })
-
+                        paths.Pick2(),
+                        new InstantCommand(() -> {
+                            state = States.shoot;
+                        })
                 )
                 .alongWith(new WaitUntilCommand(
                     ()->robot.getLauncher().getColor(robot.getLauncher().cs1) != Launcher.Color.Nothing)
-                    .andThen(robot.getLauncher().toFullw()))
-                            .schedule();
+                    .andThen(robot.getLauncher().toFull())
+                    .andThen(robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())))
+                        .schedule();
                 state = States.idle;
                 break;
         }
@@ -327,7 +334,7 @@ public class Auto extends OpMode {
 
         public Paths(boolean isBlue) {
             double shootX = isBlue ? 32 : 106;
-            double prePickX = isBlue ? 39.5 : 107.5;
+            double prePickX = isBlue ? 42 : 109;
             double postPickX1 = isBlue ? 4 : 142;
             double postPickEx = isBlue ? 25 : 117;
             double postPickX2 = isBlue ? 9 : 137;
@@ -343,14 +350,14 @@ public class Auto extends OpMode {
 
             Path2 = new Pose(prePickX, 71.000, Math.toRadians(pickUp));
 
-            Path3 = new Pose((postPickX1+1.5), 70.000, Math.toRadians(pickUp));
+            Path3 = new Pose(postPickX1, 70.000, Math.toRadians(pickUp));
             Path3Ex = new Pose(postPickEx, 70.000, Math.toRadians(pickUp));
 
             Path6 = new Pose(prePickX, 93.000, Math.toRadians(pickUp));
 
             Path7 = new Pose(postPickX2, 93.000, Math.toRadians(pickUp));
 
-            Path9 = new Pose(prePickX, 49.000, Math.toRadians(pickUp));
+            Path9 = new Pose(prePickX, 44.000, Math.toRadians(pickUp));
 
             Path10 = new Pose(postPickX1, 49.000, Math.toRadians(pickUp));
 
@@ -394,31 +401,26 @@ public class Auto extends OpMode {
                     .addPath(new BezierCurve(robot.getDrive().getPose(),Path2,Path3))
                     .setLinearHeadingInterpolation(robot.getDrive().getZ(),Path3.getHeading())
                     .build();
-//            return new SequentialCommandGroup(
-//                new ParallelCommandGroup(
-//                    robot.getIntake().start(),
-//                    robot.getLauncher().toZero(),
-//                    robot.getDrive().pathCommand(path)
-//                            .alongWith(new WaitUntilCommand(
-//                            ()->robot.getLauncher().getColor(robot.getLauncher().cs1) != Launcher.Color.Nothing)
-//                            .andThen(robot.getLauncher().toFull()))
-//                ),
-            return new ParallelCommandGroup(
+            return new SequentialCommandGroup(
+                new ParallelCommandGroup(
                     robot.getIntake().start(),
                     robot.getLauncher().toZero(),
                     robot.getDrive().pathCommand(path)
-            );
+//                            .alongWith(new WaitUntilCommand(
+//                            ()->robot.getLauncher().getColor(robot.getLauncher().cs1) != Launcher.Color.Nothing)
+//                            .andThen(robot.getLauncher().toFull()))
+                )
 //                new WaitCommand(200),
 //                hitGate ? robot.getDrive().moveTo(Path3,gateHitPos)
 //                        : new WaitCommand(20)
 //                        .andThen(robot.getDrive().moveTo(hitGate ? gateHitPos : Path3, Path3Ex))
-//            );
+            );
         }
 
         public Command Pick3Start() {
             PathChain path = robot.getDrive().getFollower().pathBuilder()
                     .addPath(new BezierCurve(robot.getDrive().getPose(),Path9,Path10))
-                    .setTangentHeadingInterpolation()
+                    .setLinearHeadingInterpolation(robot.getDrive().getZ(), Path10.getHeading())
                     .build();
             return new ParallelCommandGroup(
                 robot.getIntake().start(),

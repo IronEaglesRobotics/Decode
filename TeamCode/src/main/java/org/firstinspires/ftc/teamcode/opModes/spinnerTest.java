@@ -31,6 +31,7 @@ public class spinnerTest extends OpMode {
         else {
             robot.getLauncher().spinner.set(0);
         }
+        controller1.readButtons();
         telemetry.addData("spinner",robot.getLauncher().spinner.getCurrentPosition());
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .whenPressed(()->{
@@ -39,6 +40,6 @@ public class spinnerTest extends OpMode {
                 );
         CommandScheduler.getInstance().run();
         telemetry.addData("saved locations",locations);
-
+        robot.getLauncher().quickLaunch.set(-1);
     }
 }

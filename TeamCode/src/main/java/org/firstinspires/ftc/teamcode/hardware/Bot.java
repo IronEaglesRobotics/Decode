@@ -14,6 +14,8 @@ public class Bot extends Robot {
     Drive drive;
     Launcher launcher;
     Intake intake;
+    static boolean started = false;
+    static long time = 0;
     public Bot init(HardwareMap hardwareMap, GamepadEx gamepad){
         camera = new Cam(hardwareMap);
         intake = new Intake(hardwareMap);
@@ -47,6 +49,18 @@ public class Bot extends Robot {
     }
     public Command loading(){
         return new Launcher.Loading(launcher,camera.order);
+    }
+    public static boolean hasBeen(int millis){
+        if (!started){
+            time = System.currentTimeMillis();
+            started = true;
+        }
+        boolean done = started && time + millis < System.currentTimeMillis();
+        if (done){
+            started = false;
+            time = 0;
+        }
+        return done;
     }
 
     @Configurable
