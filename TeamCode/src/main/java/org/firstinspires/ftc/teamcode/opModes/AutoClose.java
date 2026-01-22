@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
+import com.seattlesolvers.solverslib.command.DeferredCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
@@ -21,7 +22,9 @@ import org.firstinspires.ftc.teamcode.hardware.Paths;
 import org.firstinspires.ftc.teamcode.hardware.Storage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Autonomous(name = "AutoClose")
 public class AutoClose extends OpMode {
@@ -67,6 +70,9 @@ public class AutoClose extends OpMode {
         if (controller.wasJustPressed(GamepadKeys.Button.Y)) {
             lines = 1;
         }
+        if (controller.wasJustPressed(GamepadKeys.Button.RIGHT_STICK_BUTTON)){
+            lines = 0;
+        }
         if (controller.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             color = Alliance.Red;
         }
@@ -85,7 +91,7 @@ public class AutoClose extends OpMode {
         if (controller.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)){
             hitGate = false;
         }
-        telemetry.addData("lines", lines - 1);
+        telemetry.addData("shots", lines - 1);
         telemetry.addData("color", color);
         telemetry.addData("delay", ((double) delay) / 1000);
         telemetry.addData("hit gate",hitGate);
@@ -107,10 +113,6 @@ public class AutoClose extends OpMode {
         state = lines == 1 ? States.finish : state;
         nextState = hitGate ? States.pick2 : nextState;
         robot.getLauncher().flywheelAuto(true).schedule();
-//        robot.getCamera().getMotif()
-//                .andThen(robot.getLauncher().setlaunch(0,robot.getCamera().getOrder())
-//                        .raceWith(new WaitUntilCommand(()->wantsShoot)))
-//                .schedule();
     }
 
     @Override
@@ -142,22 +144,24 @@ public class AutoClose extends OpMode {
     public void run() {
         switch (state) {
             case motifDetect:
+                nextState = lines > 0 ? States.settingLaunch : States.finish;
                 new SequentialCommandGroup(
                     robot.getLauncher().toShoot(),
                             PathShootEx(),
                     new WaitCommand(300),
                     robot.getCamera().getMotif(),
                     new WaitCommand(50),
-                    new InstantCommand(()-> state = States.settingLaunch))
+                    new InstantCommand(()-> state = nextState))
                         .schedule();
                 state = States.idle;
                 break;
             case settingLaunch:
+                nextState = lines > 1 ? States.pick1 : States.finish;
                 new WaitCommand(delay)
                         .andThen(
                             new SequentialCommandGroup(
                                 robot.getLauncher().setLaunch(0,robot.getCamera().getOrder()),
-                                PathShoot(),
+                                new DeferredCommand(PathShoot(), Collections.emptyList()),
                                 new WaitUntilCommand(robot.getLauncher()::canShoot),
                                 robot.getLauncher().fire(),
                                 new InstantCommand(()->state = nextState)
@@ -173,7 +177,7 @@ public class AutoClose extends OpMode {
             case pick1:
                 finished = false;
                 lastState = States.pick1;
-                nextState = lines > 2 ? States.finish : States.pick2;
+                nextState = lines > 2 ? States.pick2 : States.finish;
                 wantsShoot = false;
                 Pose pose = new Pose(paths.Path1.getX(),paths.Path1.getY() + 10,
                         color == Alliance.Blue ? Math.toRadians(141) : Math.toRadians(62));
@@ -199,7 +203,7 @@ public class AutoClose extends OpMode {
             case pick2:
                 finished = false;
                 lastState = States.pick2;
-                nextState = lines > 3 ? States.pickFar : States.pick1;
+                nextState = lines > 3 ? States.pickFar : States.finish;
                 wantsShoot = false;
                 green = 1;
                 PathChain toShoot = robot.getDrive().getFollower().pathBuilder()
@@ -233,7 +237,7 @@ public class AutoClose extends OpMode {
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
                         Pick3(),
-                        PathShoot(),
+                        new DeferredCommand(PathShoot(), Collections.emptyList()),
                         new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
                         new InstantCommand(() -> state = nextState)
@@ -268,8 +272,8 @@ public class AutoClose extends OpMode {
         pickFar,
         finish
     }
-        public Command PathShoot() {
-        return robot.getDrive().moveTo(paths.Path1Ex);
+        public Supplier<Command> PathShoot() {
+        return ()->robot.getDrive().moveTo(paths.Path1Ex);
     }
         public Command PathShootEx() {
             return robot.getDrive().moveTo(paths.Path1Ex);

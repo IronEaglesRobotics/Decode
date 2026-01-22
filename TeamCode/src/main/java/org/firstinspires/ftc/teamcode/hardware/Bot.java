@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 
@@ -14,8 +15,11 @@ public class Bot extends Robot {
     Drive drive;
     Launcher launcher;
     Intake intake;
+    Servo lift1;
+    Servo lift2;
     static boolean started = false;
     static long time = 0;
+
     public Bot init(HardwareMap hardwareMap, GamepadEx gamepad){
         camera = new Cam(hardwareMap);
         intake = new Intake(hardwareMap);
@@ -25,6 +29,9 @@ public class Bot extends Robot {
         } else {
             drive = new Drive(hardwareMap,gamepad);
         }
+        lift1 = hardwareMap.get(Servo.class,"lift1");
+        lift2 = hardwareMap.get(Servo.class,"lift2");
+        lift2.setDirection(Servo.Direction.REVERSE);
         return this;
     }
 
@@ -50,12 +57,26 @@ public class Bot extends Robot {
     public Command loading(){
         return new Launcher.Loading(launcher,camera.order);
     }
+    public Command Lift(){
+        return new InstantCommand(()-> {
+            lift1.setPosition(1);
+            lift2.setPosition(1);
+            }
+        );
+    }
+    public Command Drop(){
+        return new InstantCommand(()-> {
+            lift1.setPosition(0);
+            lift2.setPosition(0);
+        }
+        );
+    }
     public static boolean hasBeen(int millis){
         if (!started){
             time = System.currentTimeMillis();
             started = true;
         }
-        boolean done = started && time + millis < System.currentTimeMillis();
+        boolean done = time + millis < System.currentTimeMillis();
         if (done){
             started = false;
             time = 0;
@@ -67,9 +88,6 @@ public class Bot extends Robot {
     public static class Aim extends CommandBase{
         Bot bot;
 
-        private boolean turning = false;
-
-        double angleError;
         public static double kP = 0.0169;
         public static double kI = 0.002;
         public static double kD = 0.02;
@@ -96,12 +114,11 @@ public class Bot extends Robot {
             if (!Double.isNaN(tx)) {
 
                 // PID compute
-                double error = tx;
-                headingIntegral += error;
-                double derivative = error - lastHeadingError;
-                lastHeadingError = error;
+                headingIntegral += tx;
+                double derivative = tx - lastHeadingError;
+                lastHeadingError = tx;
 
-                double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
+                double pid = (kP * tx) + (kI * headingIntegral) + (kD * derivative);
 
                 // limit
                 pid = Math.max(-0.3, Math.min(0.3, pid));

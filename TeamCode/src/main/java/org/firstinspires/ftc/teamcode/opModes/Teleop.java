@@ -140,7 +140,7 @@ public class Teleop extends OpMode {
                 }
             }
 
-// Send controls (translation from driver, rotation from PID or manual)
+            // Send controls (translation from driver, rotation from PID or manual)
             robot.getDrive().getFollower().setTeleOpDrive(
                     driveY,
                     driveX,
@@ -158,9 +158,6 @@ public class Teleop extends OpMode {
         if(controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
             robot.getLauncher().fixPose();
         }
-
-
-
 
         CommandScheduler.getInstance().run();
         telemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));

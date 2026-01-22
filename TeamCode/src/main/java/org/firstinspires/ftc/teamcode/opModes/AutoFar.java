@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.ConditionalCommand;
+import com.seattlesolvers.solverslib.command.DeferredCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
@@ -22,7 +23,10 @@ import org.firstinspires.ftc.teamcode.hardware.Paths;
 import org.firstinspires.ftc.teamcode.hardware.Storage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
 
 @Autonomous(name = "AutoFar")
 public class AutoFar extends OpMode {
@@ -42,10 +46,6 @@ public class AutoFar extends OpMode {
     boolean finished;
     int green = 0;
 
-//    public FollowPathCommand closeshoot(){
-//        return robot.getDrive().pathCommand(
-//                !isFar ? paths.shootPaths[shot++] : paths.farShootPaths[shot++]);
-//    }
 
     @Override
     public void init() {
@@ -175,7 +175,7 @@ public class AutoFar extends OpMode {
                 new ParallelCommandGroup(
                         new SequentialCommandGroup(
                             Pick3(),
-                            farPathShoot(),
+                            new DeferredCommand(farPathShoot(), Collections.emptyList()),
                             new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                             robot.getLauncher().fire(),
                             new InstantCommand(() -> state = nextState)
@@ -199,7 +199,7 @@ public class AutoFar extends OpMode {
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
                         Pick2(),
-                        farPathShoot(),
+                        new DeferredCommand(farPathShoot(), Collections.emptyList()),
                         new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
                         new InstantCommand(() -> state = nextState)
@@ -223,7 +223,7 @@ public class AutoFar extends OpMode {
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
                         Pick1(),
-                        farPathShoot(),
+                        new DeferredCommand(farPathShoot(), Collections.emptyList()),
                         new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
                         new InstantCommand(() -> state = nextState)
@@ -247,7 +247,7 @@ public class AutoFar extends OpMode {
                 new ParallelCommandGroup(
                         new SequentialCommandGroup(
                                 PickCorner(),
-                                farPathShoot(),
+                                new DeferredCommand(farPathShoot(), Collections.emptyList()),
                                 new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                                 robot.getLauncher().fire(),
                                 new InstantCommand(() -> state = nextState)
@@ -285,8 +285,8 @@ public class AutoFar extends OpMode {
         finish
     }
 
-    public Command farPathShoot() {
-        return robot.getDrive().moveTo(paths.Path11);
+    public Supplier<Command> farPathShoot() {
+        return ()->robot.getDrive().moveTo(paths.Path11);
     }
 
     public Command Pick1() {
@@ -314,15 +314,11 @@ public class AutoFar extends OpMode {
             new ParallelCommandGroup(
                 robot.getIntake().start(),
                 robot.getLauncher().toZero(),
-                robot.getDrive().pathCommand(path)
-//                            .alongWith(new WaitUntilCommand(
-//                            ()->robot.getLauncher().getColor(robot.getLauncher().cs1) != Launcher.Color.Nothing)
-//                            .andThen(robot.getLauncher().toFull()))
+                robot.getDrive().pathCommand(path),
+                new WaitCommand(200),
+                hitGate ? robot.getDrive().moveTo(paths.Path3,gateHitPos)
+                        : new WaitCommand(20)
             )
-//                new WaitCommand(200),
-//                hitGate ? robot.getDrive().moveTo(Path3,gateHitPos)
-//                        : new WaitCommand(20)
-//                        .andThen(robot.getDrive().moveTo(hitGate ? gateHitPos : Path3, Path3Ex))
         );
     }
 
