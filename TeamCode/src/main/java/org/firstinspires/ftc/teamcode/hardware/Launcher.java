@@ -38,6 +38,8 @@ public class Launcher extends SubsystemBase {
     public static double kd = 0.005;
     public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
+    Servo lift1;
+    Servo lift2;
     public static int halfDelta = -238;
     public static int fullDelta = -475;
     public static int pidTarget = 0;
@@ -50,6 +52,8 @@ public class Launcher extends SubsystemBase {
     public static int autoSpeed = -750;
     public static double power = .43;
     public static double servoPos = 0;
+    public static double liftpos = 1;
+
     public static double[] veloCoeffecient = new double[] {11,0,0};
     public static double[] feedforward = new double[] {11,0,0};
 
@@ -67,9 +71,16 @@ public class Launcher extends SubsystemBase {
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
         flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
+
         pusher = hardwareMap.get(Servo.class,"pusher");
-        pusher.setDirection(Servo.Direction.REVERSE);
+        pusher.setDirection(Servo.Direction.FORWARD);
         pusher.setPosition(0.0000001);
+
+        lift1 = hardwareMap.get(Servo.class,"lift1");
+        lift1.setPosition(0);
+        lift2 = hardwareMap.get(Servo.class, "lift2");
+        lift2.setPosition(0);
+
         quickLaunch = new CRServo(hardwareMap,"quickLaunch");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
@@ -79,10 +90,10 @@ public class Launcher extends SubsystemBase {
         controller.setTolerance(40);
     }
     public Color getColor(RevColorSensorV3 cs){
-        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1) {
+        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1.1) {
             return Color.Green;
         }
-        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < 1) {
+        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < 1.1) {
             return Color.Purple;
         }
         return Color.Nothing;
@@ -127,13 +138,26 @@ public class Launcher extends SubsystemBase {
 //            flyWheel2.setPower(0);
         });
     }
+
+    public Command Park(){
+        return new InstantCommand(() ->{
+            lift1.setPosition(liftpos);
+            lift2.setPosition(liftpos);
+        });
+    }
+    public Command UnPark(){
+        return new InstantCommand(() ->{
+            lift1.setPosition(0);
+            lift2.setPosition(0);
+        });
+    }
     public Command shoot() {
         return new Command() {
             double time;
 
             @Override
             public void initialize() {
-                servoPos = 0.4;
+                servoPos = 0.15;
                 time = System.currentTimeMillis();
             }
 

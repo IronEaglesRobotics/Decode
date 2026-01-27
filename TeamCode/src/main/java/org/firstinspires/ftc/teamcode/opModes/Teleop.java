@@ -85,7 +85,7 @@ public class Teleop extends OpMode {
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
                 .whenPressed(robot.getLauncher().minusVelo());
         controller1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
-                .whenPressed(robot.aim());
+                .toggleWhenPressed(robot.getLauncher().Park(),robot.getLauncher().UnPark());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_UP)
                 .whenPressed(robot.getLauncher().flywheelAuto(true));
         controller2.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
@@ -177,10 +177,9 @@ public class Teleop extends OpMode {
     }
 
     @Override
-    public void stop(){
+    public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         super.stop();
     }
 }
-
