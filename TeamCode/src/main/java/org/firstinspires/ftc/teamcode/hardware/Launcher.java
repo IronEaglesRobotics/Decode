@@ -77,9 +77,9 @@ public class Launcher extends SubsystemBase {
         pusher.setPosition(0.0000001);
 
         lift1 = hardwareMap.get(Servo.class,"lift1");
-        lift1.setPosition(0);
         lift2 = hardwareMap.get(Servo.class, "lift2");
-        lift2.setPosition(0);
+        liftpos=0;
+
 
         quickLaunch = new CRServo(hardwareMap,"quickLaunch");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
@@ -140,16 +140,14 @@ public class Launcher extends SubsystemBase {
     }
 
     public Command Park(){
-        return new InstantCommand(() ->{
-            lift1.setPosition(liftpos);
-            lift2.setPosition(liftpos);
-        });
+        return new InstantCommand(() ->
+            liftpos=1
+        );
     }
     public Command UnPark(){
-        return new InstantCommand(() ->{
-            lift1.setPosition(0);
-            lift2.setPosition(0);
-        });
+        return new InstantCommand(() ->
+            liftpos=0
+        );
     }
     public Command shoot() {
         return new Command() {
@@ -380,6 +378,8 @@ public class Launcher extends SubsystemBase {
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
         pusher.setPosition(servoPos);
+        lift1.setPosition(liftpos);
+        lift2.setPosition(liftpos);
         if(controller.atSetPoint()){
             safePose = pidTarget;
         }
