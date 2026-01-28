@@ -40,6 +40,6 @@ public class spinnerTest extends OpMode {
                 );
         CommandScheduler.getInstance().run();
         telemetry.addData("saved locations",locations);
-        robot.getLauncher().quickLaunch.set(-1);
+//        robot.getLauncher().quickLaunch.set(-1);
     }
 }

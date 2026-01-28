@@ -32,7 +32,7 @@ public class Launcher extends SubsystemBase {
     public MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
-    public CRServo quickLaunch;
+    //public CRServo quickLaunch;
     public static double kp = 6.1;
     public static double ki = 0.06;
     public static double kd = 0.005;
@@ -68,9 +68,9 @@ public class Launcher extends SubsystemBase {
         flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
         pusher = hardwareMap.get(Servo.class,"pusher");
-        pusher.setDirection(Servo.Direction.REVERSE);
+        pusher.setDirection(Servo.Direction.FORWARD);
         pusher.setPosition(0.0000001);
-        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
+      //  quickLaunch = new CRServo(hardwareMap,"quickLaunch");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers.add(Color.Nothing);
@@ -87,12 +87,12 @@ public class Launcher extends SubsystemBase {
         }
         return Color.Nothing;
     }
-    public void startQuickLaunch(){
-        quickLaunch.set(1);
-    }
-    public void stopQuickLaunch(){
-        quickLaunch.set(0);
-    }
+//    public Command startQuickLaunch(){
+//        return new InstantCommand(()->quickLaunch.set(-1));
+//    }
+//    public Command stopQuickLaunch(){
+//        return new InstantCommand(()->quickLaunch.set(0));
+//    }
     public Command plusVelo(){
         return new InstantCommand(()-> speed1 = speed1 + 100);
     }
@@ -139,7 +139,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return time + 200 < System.currentTimeMillis();
+                return time + 400 < System.currentTimeMillis();
             }
 
             @Override
@@ -355,7 +355,7 @@ public class Launcher extends SubsystemBase {
         spinner.setVelocity(controller.calculate(spinner.getCurrentPosition(), pidTarget));
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
-        pusher.setPosition(servoPos);
+//        pusher.setPosition(servoPos);
         if(controller.atSetPoint()){
             safePose = pidTarget;
         }
