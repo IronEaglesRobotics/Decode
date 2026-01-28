@@ -48,7 +48,6 @@ public class Teleop extends OpMode {
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
         toShoot = ()-> robot.getDrive().moveTo(56,95.5,135);
-
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
