@@ -73,7 +73,7 @@ public class Launcher extends SubsystemBase {
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
 
         pusher = hardwareMap.get(Servo.class,"pusher");
-        pusher.setDirection(Servo.Direction.FORWARD);
+        pusher.setDirection(Servo.Direction.REVERSE);
         pusher.setPosition(0.0000001);
 
         lift1 = hardwareMap.get(Servo.class,"lift1");
@@ -81,7 +81,7 @@ public class Launcher extends SubsystemBase {
         liftpos=0;
 
 
-        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
+//        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers.add(Color.Nothing);
@@ -98,12 +98,12 @@ public class Launcher extends SubsystemBase {
         }
         return Color.Nothing;
     }
-    public void startQuickLaunch(){
-        quickLaunch.set(1);
-    }
-    public void stopQuickLaunch(){
-        quickLaunch.set(0);
-    }
+//    public void startQuickLaunch(){
+//        quickLaunch.set(1);
+//    }
+//    public void stopQuickLaunch(){
+//        quickLaunch.set(0);
+//    }
     public Command plusVelo(){
         return new InstantCommand(()-> speed1 = speed1 + 100);
     }
@@ -155,7 +155,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                servoPos = 0.15;
+                servoPos = 0.4;
                 time = System.currentTimeMillis();
             }
 
