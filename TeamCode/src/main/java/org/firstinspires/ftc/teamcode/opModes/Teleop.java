@@ -52,9 +52,10 @@ public class Teleop extends OpMode {
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
                                 .andThen(robot.getIntake().start())
-                        ,robot.loading()
-                                        .andThen(robot.getIntake().stop())
-                                                .alongWith(robot.getLauncher().setLaunch())
+                                .andThen(robot.loading())
+                                .andThen(robot.getIntake().stop())
+                        ,robot.getIntake().stop()
+                                        .alongWith(robot.getLauncher().setLaunch())
                                         .andThen(robot.getIntake().reverse())
                                         .raceWith(new WaitCommand(1000))
                                         .andThen(robot.getIntake().stop())
@@ -94,7 +95,6 @@ public class Teleop extends OpMode {
                         new InstantCommand(() -> aprilCentric = true),
                         new InstantCommand(() -> aprilCentric = false)
                 );
-        robot.getCamera().getMotif().schedule();
     }
     @Override
     public void start(){
@@ -122,12 +122,11 @@ public class Teleop extends OpMode {
                 if (!Double.isNaN(tx)) {
 
                     // PID compute
-                    double error = tx;
-                    headingIntegral += error;
-                    double derivative = error - lastHeadingError;
-                    lastHeadingError = error;
+                    headingIntegral += tx;
+                    double derivative = tx - lastHeadingError;
+                    lastHeadingError = tx;
 
-                    double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
+                    double pid = (kP * tx) + (kI * headingIntegral) + (kD * derivative);
 
                     // limit
                     pid = Math.max(-0.6, Math.min(0.6, pid));
@@ -179,6 +178,7 @@ public class Teleop extends OpMode {
     public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
+        Storage.getInstance().spindexerPos = robot.getLauncher().spinner.getCurrentPosition();
         super.stop();
     }
 }

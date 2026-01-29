@@ -221,7 +221,7 @@ public class AutoClose extends OpMode {
                         new SequentialCommandGroup (
                                 new WaitUntilCommand(
                                         ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                                != Launcher.Color.Nothing || Bot.hasBeen(3000)) ,
+                                                != Launcher.Color.Nothing) ,
                                 robot.getLauncher().toFull(),
                                 robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
                         )
@@ -245,7 +245,7 @@ public class AutoClose extends OpMode {
                     new SequentialCommandGroup (
                         new WaitUntilCommand(
                                 ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                        != Launcher.Color.Nothing || Bot.hasBeen(3000)),
+                                        != Launcher.Color.Nothing),
                         robot.getLauncher().toFull(),
                         robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
                     )
@@ -273,7 +273,7 @@ public class AutoClose extends OpMode {
         finish
     }
         public Supplier<Command> PathShoot() {
-        return ()->robot.getDrive().moveTo(paths.Path1Ex);
+        return ()->robot.getDrive().moveTo(paths.Path1);
     }
         public Command PathShootEx() {
             return robot.getDrive().moveTo(paths.Path1Ex);
