@@ -6,7 +6,6 @@ public final class Storage {
     public Pose pose = new Pose(0,0,0);
     public int order = 0;
     public Pose shootPose = new Pose(0,0,0);
-    public int spindexerPos = 0;
     private static Storage instance;
     public static synchronized Storage getInstance(){
         if (instance == null){

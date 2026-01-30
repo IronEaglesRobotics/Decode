@@ -137,7 +137,6 @@ public class AutoClose extends OpMode {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         Storage.getInstance().setPose(robot.getDrive().getPose(),paths.Path1);
-        Storage.getInstance().spindexerPos = Launcher.pidTarget;
         super.stop();
     }
 

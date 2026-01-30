@@ -97,15 +97,6 @@ public class Teleop extends OpMode {
                 );
     }
     @Override
-    public void start(){
-        if (Storage.getInstance().spindexerPos != 0){
-            Launcher.pidTarget = -Storage.getInstance().spindexerPos;
-            new WaitUntilCommand(()->robot.getLauncher().atTarget())
-                    .whenFinished(()->robot.getLauncher().spinner.stopAndResetEncoder())
-                    .schedule();
-        }
-    }
-    @Override
     public void loop(){
         controller1.readButtons();
         controller2.readButtons();
@@ -178,7 +169,6 @@ public class Teleop extends OpMode {
     public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
-        Storage.getInstance().spindexerPos = robot.getLauncher().spinner.getCurrentPosition();
         super.stop();
     }
 }

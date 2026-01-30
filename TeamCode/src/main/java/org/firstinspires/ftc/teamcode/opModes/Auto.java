@@ -42,10 +42,6 @@ public class Auto extends OpMode {
     boolean finished;
     int green = 0;
 
-//    public FollowPathCommand closeshoot(){
-//        return robot.getDrive().pathCommand(
-//                !isFar ? paths.shootPaths[shot++] : paths.farShootPaths[shot++]);
-//    }
 
     @Override
     public void init() {
@@ -118,10 +114,6 @@ public class Auto extends OpMode {
             robot.getLauncher().reverseSpin();
         }
         robot.getLauncher().flywheelAuto(!isFar).schedule();
-//        robot.getCamera().getMotif()
-//                .andThen(robot.getLauncher().setlaunch(0,robot.getCamera().getOrder())
-//                        .raceWith(new WaitUntilCommand(()->wantsShoot)))
-//                .schedule();
     }
 
     @Override
@@ -146,7 +138,6 @@ public class Auto extends OpMode {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         Storage.getInstance().setPose(robot.getDrive().getPose(),paths.Path1);
-        Storage.getInstance().spindexerPos = Launcher.pidTarget;
         super.stop();
     }
 
@@ -155,10 +146,11 @@ public class Auto extends OpMode {
             case motifDetect:
                 new SequentialCommandGroup(
                     robot.getLauncher().toShoot(),
-                    new ConditionalCommand(
-                            new WaitCommand(20),
-                            paths.PathShootEx(),
-                            ()->isFar),
+//                    new ConditionalCommand(
+//                            new WaitCommand(20),
+//                            paths.PathShootEx(),
+//                            ()->isFar),
+                    paths.PathShootEx(),
                     isFar ? new WaitCommand(20) : new WaitCommand(1000),
                     robot.getCamera().getMotif(),
                     new WaitCommand(400),
@@ -190,7 +182,7 @@ public class Auto extends OpMode {
                         new InstantCommand(()->wantsShoot = true),
                         new WaitUntilCommand(() -> !robot.getDrive().getFollower().isBusy()),
 //                        (isFar ? robot.aim():new WaitCommand(20)),
-                        new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
+                        //new WaitUntilCommand(() -> robot.getLauncher().canShoot()),
                         robot.getLauncher().fire(),
                         new WaitCommand(100),
                         new InstantCommand(() -> state = States.swap)
@@ -248,7 +240,7 @@ public class Auto extends OpMode {
             case pick1:
                 finished = false;
                 lastState = States.pick1;
-                nextState = States.finish;
+                nextState = States.pick2;
                 wantsShoot = false;
                 green = 2;
                 robot.loading()
@@ -258,7 +250,11 @@ public class Auto extends OpMode {
                         .schedule();
                 new SequentialCommandGroup(
                         paths.Pick1()
-                                .andThen(new ConditionalCommand(robot.getDrive().turnTo(90)
+                                .andThen(new ConditionalCommand(
+                                        robot.getDrive().moveTo(
+                                                new Pose(color == Alliance.Blue ? 2 : 140,
+                                                        88,
+                                                        Math.toRadians(90)))
                                         .andThen(new WaitCommand(1000)),
                                                 new WaitCommand(20),
                                         ()->hitGate))
@@ -272,7 +268,7 @@ public class Auto extends OpMode {
             case pick2:
                 finished = false;
                 lastState = States.pick2;
-                nextState = States.pick1;
+                nextState = States.finish;
                 nextState = isFar ? (hitGate ? States.pickFar : States.finish) : nextState;
                 wantsShoot = false;
                 green = 1;
@@ -334,31 +330,12 @@ public class Auto extends OpMode {
             double farAim = isBlue ? 115 : 72;
             double cornerZ = !isBlue ? 245 : 335;
             Path1 = new Pose(shootX, 105.500, Math.toRadians(closeAim));
-            Path1Ex = new Pose(shootX, 105.500, Math.toRadians(seeObelisk));
+            Path1Ex = !isFar ? new Pose(shootX, 105.500, Math.toRadians(seeObelisk)) :
+                    new Pose(farShootX, 50, Math.toRadians(90));
             Path2 = new Pose(prePickX, 70.000, Math.toRadians(pickUp));
 
             Path3 = new Pose(postPickX1, 70.000, Math.toRadians(pickUp));
             Path3Ex = new Pose(postPickEx, 70.000, Math.toRadians(pickUp));
-
-//            Path4 = follower
-//                    .pathBuilder()
-//                    .addPath(
-//                            new BezierLine(new Pose(flip(19.000,isBlue), 69.000), new Pose(flip(5.000,isBlue), 75.000))
-//                    )
-//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(270,isBlue))
-//                    .build();
-
-//            Path5 = follower
-//                    .pathBuilder()
-//                    .addPath(
-//                            new BezierCurve(
-//                                    new Pose(postPickX1, 71.000),
-//                                    new Pose(isBlue ? 43 : 101, 52.500),
-//                                    new Pose(shootX, 95.500)
-//                            )
-//                    )
-//                    .setLinearHeadingInterpolation(flipAng(180,isBlue), flipAng(127,isBlue))
-//                    .build();
 
             Path6 = new Pose(prePickX, 93.000, Math.toRadians(pickUp));
 

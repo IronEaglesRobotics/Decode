@@ -33,8 +33,8 @@ public class Launcher extends SubsystemBase {
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
     //public CRServo quickLaunch;
-    public static double kp = 6.1;
-    public static double ki = 0.06;
+    public static double kp = 7;
+    public static double ki = 0;
     public static double kd = 0.005;
     public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
@@ -49,7 +49,7 @@ public class Launcher extends SubsystemBase {
     List<Color> chambers;
     public static int closeSpeed = -775;
     public static int farSpeed = -990;
-    public static int autoSpeed = -750;
+    public static int autoSpeed = -775;
     public static double power = .43;
     public static double servoPos = 0;
     public static double liftpos = 1;
