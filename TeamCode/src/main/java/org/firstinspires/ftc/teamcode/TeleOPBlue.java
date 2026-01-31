@@ -37,6 +37,11 @@ public class TeleOPBlue extends OpMode {
     private final Pose resetPose = this.config.getResetPose();
     private final Pose aimPose = this.config.getGoalPose();
 
+    private double power = .3;
+    private double hood = .7;
+    private double distance = 50;
+    private double offset = 0;
+
 
     @Override
     public void init() {
@@ -51,10 +56,6 @@ public class TeleOPBlue extends OpMode {
                 .build();
     }
 
-//    @Override
-//    public void init_loop(){
-//    }
-
     @Override
     public void start() {
         robot.getFollower().startTeleopDrive();
@@ -66,15 +67,17 @@ public class TeleOPBlue extends OpMode {
         controller1.readButtons();
         telemetryM.update();
 
+        distance = robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), aimPose.getX(), aimPose.getY());
+
         if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             far = !far;
         }
 
-        if (far) {
-            robot.getShooter().farShot();
-        } else {
-            robot.getShooter().nearShot();
-        }
+        power = robot.getShooter().calculateShooterPower(distance);
+        hood = robot.getShooter().calculateHoodPose(distance);
+
+
+        robot.getShooter().setShot(power, hood);
 
         if (controller1.isDown(GamepadKeys.Button.DPAD_DOWN)) {
             robot.getIntake().open();
@@ -83,6 +86,11 @@ public class TeleOPBlue extends OpMode {
             robot.getIntake().close();
             robot.getIntake().transfer();
         }
+
+        robot.getLights().blinker(getRuntime());
+
+
+        robot.getLights().shooterCheck(robot.getShooter().atTargetVelocity());
 
 
         robot.getFollower().update();
@@ -96,25 +104,26 @@ public class TeleOPBlue extends OpMode {
 
         if (controller1.isDown(GamepadKeys.Button.RIGHT_BUMPER)) {
             robot.getTurret().calibrate();
-            if (robot.getTurret().turret.getCurrent(CurrentUnit.AMPS) > 3) {
+            if (robot.getTurret().turret.getCurrent(CurrentUnit.AMPS) > 2) {
                 robot.getTurret().turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 robot.getTurret().turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.getFollower().setPose(new Pose(resetPose.getX(), resetPose.getY(), Math.toRadians(90)));
             }
         } else if (controller1.isDown(GamepadKeys.Button.LEFT_STICK_BUTTON)) {
-                robot.getTurret().calibrate();
-                if (robot.getTurret().turret.getCurrent(CurrentUnit.AMPS) > 3) {
-                    robot.getTurret().turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    robot.getTurret().turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    robot.getFollower().setPose(new Pose(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), Math.toRadians(90)));
-                }
-        }else {
-            if (robot.getFollower().getHeading() < Math.toRadians(63) && robot.getFollower().getHeading() > Math.toRadians(-165)) {
-//            if (robot.getTurret().getTicks() > 0 && robot.getTurret().getTicks() < 918){
-                robot.getTurret().aim(robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), (robot.getFollower().getHeading()));
-            } else {
-                robot.getTurret().off();
+            robot.getTurret().calibrate();
+            if (robot.getTurret().turret.getCurrent(CurrentUnit.AMPS) > 3) {
+                robot.getTurret().turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.getTurret().turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.getFollower().setPose(new Pose(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), Math.toRadians(90)));
             }
+        } else {
+            robot.getTurret().aim(offset + robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), Math.toDegrees(robot.getFollower().getHeading()));
+        }
+
+        if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)) {
+            offset++;
+        } else if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)) {
+            offset--;
         }
 
         //Auto Drive turning
@@ -134,7 +143,11 @@ public class TeleOPBlue extends OpMode {
         telemetryM.debug("y:" + robot.getFollower().getPose().getY());
         telemetryM.debug("heading:" + Math.toDegrees(robot.getFollower().getPose().getHeading()));
         telemetryM.addData("at target velocty", robot.shooter.atTargetVelocity());
+        telemetryM.addData("amps", robot.turret.getCurrent());
         telemetryM.debug("target:" + robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), (robot.getFollower().getHeading()));
+        telemetryM.addData("distance from Goal", distance);
+        telemetryM.addData("shooter Power", power);
+        telemetryM.addData("hood", hood);
         telemetryM.update(telemetry);
 
     }

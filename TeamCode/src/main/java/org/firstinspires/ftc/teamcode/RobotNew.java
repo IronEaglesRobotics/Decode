@@ -4,7 +4,9 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.controller.PIDController;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
@@ -29,6 +31,8 @@ public class RobotNew {
     public Turret turret;
     @Getter
     private Follower follower;
+    @Getter
+    private Lights lights;
 
     public RobotNew init(HardwareMap hardwareMap) {
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
@@ -39,7 +43,60 @@ public class RobotNew {
         this.shooter = new Shooter().init(hardwareMap);
         this.turret = new Turret().init(hardwareMap);
         this.follower = Constants.createFollower(hardwareMap);
+        this.lights = new Lights().init(hardwareMap);
         return this;
+    }
+
+    @Configurable
+    public static class Lights {
+        private Servo indicator, shooterIndicator;
+
+        private boolean ledOn = false;
+        private double blinkTimer = .2;
+        public static double indicatorReady = 0.475;
+        public static double indicatorNotReady = 0.28;
+
+
+        public Lights init(HardwareMap hardwareMap) {
+            this.indicator = hardwareMap.get(Servo.class, "side");
+            this.shooterIndicator = hardwareMap.get(Servo.class, "back");
+            return this;
+        }
+
+        public void blinker(double runtime) {
+            if (runtime > blinkTimer) {
+                ledOn = !ledOn;
+                if (ledOn) {
+                    indicator.setPosition(.28);
+                } else {
+                    indicator.setPosition(0);
+
+                }
+                blinkTimer = runtime + .2;
+
+            }
+        }
+
+        public void closeIndication() {
+            indicator.setPosition(.28);
+        }
+
+        public void readyColor() {
+            shooterIndicator.setPosition(indicatorReady);
+        }
+
+        public void notReadyColor() {
+            shooterIndicator.setPosition(indicatorNotReady);
+        }
+
+        public void shooterCheck(boolean atTargetVelocity) {
+            if (atTargetVelocity) {
+                readyColor();
+            } else {
+                notReadyColor();
+            }
+        }
+
     }
 
     @Configurable
@@ -50,7 +107,7 @@ public class RobotNew {
         public static double rampOpen = .59;
         public static double rampClose = .79;
         public static double intakeFast = -1;
-        public static double intakeTransfer = -0.5;
+        public static double intakeTransfer = -1;
 
 
         public Intake init(HardwareMap hardwareMap) {
@@ -58,7 +115,7 @@ public class RobotNew {
             this.intake.setCachingTolerance(0.0001);
             this.intake.setRunMode(Motor.RunMode.VelocityControl);
             this.intake.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-            this.ramp =  new ServoEx(hardwareMap, "ramp");
+            this.ramp = new ServoEx(hardwareMap, "ramp");
             return this;
         }
 
@@ -112,7 +169,7 @@ public class RobotNew {
             this.shooter.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
             updateTargetVelocity(0);
 
-            this.hood =  new ServoEx(hardwareMap, "hood");
+            this.hood = new ServoEx(hardwareMap, "hood");
             return this;
         }
 
@@ -133,18 +190,46 @@ public class RobotNew {
             updateTargetVelocity(power);
         }
 
-        public void farShot(){
+        public void farShot() {
             setPower(powerFar);
             hoodSet(hoodFar);
         }
 
-        public void nearShot(){
+
+        public void nearShot() {
             setPower(powerNear);
             hoodSet(hoodNear);
         }
 
-        public void hoodSet(double pos){
-            hood.set(pos - (((double) (targetVelocity - calculatedVelocity()) /targetVelocity) * 1.35));
+        public void setShot(double power, double hood) {
+            setPower(power);
+            hoodSet(hood);
+        }
+
+        public void hoodSet(double pos) {
+            hood.set(pos - (((double) (targetVelocity - calculatedVelocity()) / targetVelocity) * 1.35));
+        }
+
+        public double calculateShooterPower(double distance) {
+//            double x = distance;
+            if (distance > 160) {
+                return .605;
+            } else if (distance > 30) {
+//                return 0.00244811 * distance + 0.220092;
+                return 0.00239396 * distance + 0.224175; //Desmos Regression
+            } else {
+                return .45;
+            }
+        }
+
+        public double calculateHoodPose(double distance) {
+            if (distance > 50 && distance< 135) {
+                return Math.min(0.00462719 * distance + 0.269066, 1); //desmos regression
+            } else if (distance > 134){
+                return 1;
+            } else {
+                return .15;
+            }
         }
     }
 
@@ -153,6 +238,7 @@ public class RobotNew {
         public DcMotorEx turret;
         @Getter
         private int ticks = 0;
+        public int targetTicks;
 
         public static double P = 1;
         public static double I = 0;
@@ -174,19 +260,27 @@ public class RobotNew {
             this.turret.setTargetPosition(0);
             this.turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             this.turret.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+//            this.turret.setDirection(DcMotorSimple.Direction.REVERSE);
             this.pid = new PIDController(p, i, d);
             return this;
         }
 
         public void aim(double targetAngle, double heading) {
-            double delta = pid.calculate(getCorrectedTurretPose(heading), targetAngle);
+            double correctedTarget = targetAngle - TURRETSTARTINGOFFSET - heading;
+            correctedTarget = correctedTarget % 360;
+            if (correctedTarget < 0) correctedTarget += 360;
+//            double delta = pid.calculate(ticksToDegree(turret.getCurrentPosition()), correctedTarget);
+//
+//            setCorrectedTurretPose(targetAngle + delta, heading);
 
-            setCorrectedTurretPose(targetAngle + delta, heading);
-            turret.setTargetPosition(ticks);
+            double finalTarget = Math.max(0, Math.min(correctedTarget, 292 - 70));
+            targetTicks = degreeToTicks(finalTarget);
+            turret.setTargetPosition(degreeToTicks(finalTarget));
             turret.setPower(.8);
+
         }
 
-        public void off(){
+        public void off() {
             turret.setPower(0);
         }
 
@@ -204,16 +298,20 @@ public class RobotNew {
         }
 
         public double getCorrectedTurretPose(double heading) {
-            return getRelativeTurretPose() + Math.toDegrees(heading);
+            return getRelativeTurretPose() + (heading);
         }
 
         private void setRelitiveTurretPose(double angle) {
 //            while (angle > 180) angle -= 360;
-//            while (angle < -180) angle += 360;
-            ticks = degreeToTicks(angle - TURRETSTARTINGOFFSET);
+//            if (angle < 0 ) {angle = 180 + 180 + angle;}
+            angle = angle % 360;
+//            if (angle < 0) angle += 360;
+            if (angle - TURRETSTARTINGOFFSET >= 180) angle -= 360;
+            if (angle - TURRETSTARTINGOFFSET < -180) angle += 360;
+            ticks = degreeToTicks(angle);
         }
 
-        public void setCorrectedTurretPose(double angle,double heading) {
+        public void setCorrectedTurretPose(double angle, double heading) {
 
             setRelitiveTurretPose(angle - Math.toDegrees(heading));
 
@@ -231,19 +329,25 @@ public class RobotNew {
             return Math.toDegrees(Math.atan2(targetY - robotY, targetX - robotX));
         }
 
-        public double getCurrent(){
+        public double getCurrent() {
             return turret.getCurrent(CurrentUnit.AMPS);
         }
 
-        public void resetTurret(){
+        public void resetTurret() {
             turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         }
 
-        public void calibrate(){
-            turret.setTargetPosition(turret.getCurrentPosition() - 50);
-            turret.setPower(.8);
+        public void calibrate() {
+            turret.setTargetPosition(turret.getCurrentPosition() - 100);
+            turret.setPower(1);
         }
 
     }
+
+    public double getGoalDistance(double x, double y, double gx, double gy) {
+        return Math.sqrt(Math.pow(Math.abs(gx - x), 2) + Math.pow(Math.abs(gy - y), 2));
+    }
+
+
 }
