@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.JoinedTelemetry;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.qualcomm.hardware.lynx.LynxController;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.Command;
@@ -12,10 +16,16 @@ import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
+import org.firstinspires.ftc.robotcore.internal.files.DataLogger;
 import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.teamcode.hardware.Launcher;
 import org.firstinspires.ftc.teamcode.hardware.Storage;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 @Configurable
 @TeleOp(name = "Main Teleop")
@@ -35,10 +45,26 @@ public class Teleop extends OpMode {
     double lastHeadingError = 0;
 
     boolean aprilCentric = false;
+    // 1. Create Logger
+    DataLogger logger = new DataLogger("MyLogFile");
+    List<LynxModule> lynxController;
 
+    JoinedTelemetry panelsTelemetry;
+
+    public Teleop() throws IOException {
+    }
 
     @Override
     public void init() {
+        // 2. Define Headers
+//        logger.initializeLogging("Time", "Voltage", "Position");
+
+        lynxController = hardwareMap.getAll(LynxModule.class);
+        try {
+            logger.addHeaderLine("Time", "Voltage");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         controller1 = new GamepadEx(gamepad1);
         robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
@@ -95,11 +121,30 @@ public class Teleop extends OpMode {
                         new InstantCommand(() -> aprilCentric = true),
                         new InstantCommand(() -> aprilCentric = false)
                 );
+        panelsTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(),telemetry);
     }
     @Override
     public void loop(){
         controller1.readButtons();
         controller2.readButtons();
+        List<Double> voltages = new ArrayList<>();
+        List<Double> current = new ArrayList<>();
+
+        for (int i = 0; i < lynxController.size(); i++){
+            voltages.add(lynxController.get(i).getInputVoltage(VoltageUnit.VOLTS));
+            current.add(lynxController.get(i).getCurrent(CurrentUnit.AMPS));
+        }
+        try {
+            logger.addDataLine(System.currentTimeMillis(),voltages,current);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if(gamepad1.right_bumper){
+            robot.getLauncher().resetEncoder();
+        }
+        if(gamepad1.dpad_left){
+            robot.getLauncher().resetSpindexer();
+        }
         if (manualDrive){
             double driveY = controller1.getLeftY();
             double driveX = -controller1.getLeftX();
@@ -149,26 +194,29 @@ public class Teleop extends OpMode {
         }
 
         CommandScheduler.getInstance().run();
-        telemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
-        telemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
-        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
-        telemetry.addData("target", Launcher.pidTarget);
-        telemetry.addData("order", robot.getCamera().getOrder());
-        telemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
-        telemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
-        telemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
-        telemetry.addData("can Shoot", robot.getLauncher().canShoot());
-        telemetry.addData("auto driving",!isBot);
-        telemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
-        telemetry.addLine(robot.getLauncher().getTelemetry());
-        telemetry.addData("pose",robot.getDrive().getPose());
-        telemetry.update();
+        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
+        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
+        panelsTelemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
+        panelsTelemetry.addData("target", Launcher.pidTarget);
+        panelsTelemetry.addData("order", robot.getCamera().getOrder());
+        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
+        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
+        panelsTelemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
+        panelsTelemetry.addData("can Shoot", robot.getLauncher().canShoot());
+        panelsTelemetry.addData("auto driving",!isBot);
+        panelsTelemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
+        panelsTelemetry.addLine(robot.getLauncher().getTelemetry());
+        panelsTelemetry.addData("pose",robot.getDrive().getPose());
+        panelsTelemetry.addData("voltage",voltages);
+        panelsTelemetry.addData("current", current);
+        panelsTelemetry.update();
     }
 
     @Override
     public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
+        logger.close();
         super.stop();
     }
 }

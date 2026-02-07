@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -20,9 +21,9 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.function.BooleanSupplier;
 
+@Configurable
 public class Drive extends SubsystemBase {
-    private Telemetry telemetry;
-    Follower follower;
+    public static Follower follower;
     GamepadEx controller;
 
     public Drive(HardwareMap hardwareMap) {
@@ -35,11 +36,6 @@ public class Drive extends SubsystemBase {
         follower.update();
         controller = gamepadEx;
         follower.startTeleopDrive(true);
-    }
-
-    public Drive(HardwareMap hardwareMap, Telemetry telemetry) {
-        this(hardwareMap);
-        this.telemetry = telemetry;
     }
 
     public FollowPathCommand pathCommand(PathChain paths) {

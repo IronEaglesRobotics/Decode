@@ -44,5 +44,13 @@ public class wheelTest extends OpMode {
         else {
             rb.setPower(0);
         }
+        float drive = -gamepad1.left_stick_y;
+        float strafe = gamepad1.left_stick_x;
+        float turn = gamepad1.right_stick_x;
+
+        rb.setPower(drive - strafe + turn);
+        rf.setPower(drive + strafe + turn);
+        lb.setPower(drive - strafe - turn);
+        lf.setPower(drive + strafe + turn);
     }
 }
