@@ -17,8 +17,8 @@ public class Paths {
     public Pose Path13;
 
     public Paths(boolean isBlue) {
-        double shootX = isBlue ? 32 : 106;
-        double prePickX = isBlue ? 42 : 109;
+        double shootX = isBlue ? 42 : 106;
+        double prePickX = isBlue ? 52 : 109;
         double postPickX1 = isBlue ? 4 : 142;
         double postPickEx = isBlue ? 25 : 117;
         double postPickX2 = isBlue ? 9 : 137;
@@ -30,7 +30,7 @@ public class Paths {
         double pickUp = isBlue ? 180 : 0;
         double farAim = isBlue ? 115 : 72;
         double cornerZ = !isBlue ? 245 : 335;
-        Path1 = new Pose(shootX, 105.500, Math.toRadians(closeAim));
+        Path1 = new Pose(shootX, 95.500, Math.toRadians(closeAim));
         Path1Ex = new Pose(shootX, 105.500, Math.toRadians(seeObelisk));
 
         Path2 = new Pose(prePickX, 71.000, Math.toRadians(pickUp));

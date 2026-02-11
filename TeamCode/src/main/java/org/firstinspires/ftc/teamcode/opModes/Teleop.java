@@ -48,14 +48,14 @@ public class Teleop extends OpMode {
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
         toShoot = ()-> robot.getDrive().moveTo(56,95.5,135);
-
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
                                 .andThen(robot.getIntake().start())
-                        ,robot.loading()
-                                        .andThen(robot.getIntake().stop())
-                                                .alongWith(robot.getLauncher().setLaunch())
+                                .andThen(robot.loading())
+                                .andThen(robot.getIntake().stop())
+                        ,robot.getIntake().stop()
+                                        .alongWith(robot.getLauncher().setLaunch())
                                         .andThen(robot.getIntake().reverse())
                                         .raceWith(new WaitCommand(1000))
                                         .andThen(robot.getIntake().stop())
@@ -85,7 +85,7 @@ public class Teleop extends OpMode {
         controller1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
                 .whenPressed(robot.getLauncher().minusVelo());
         controller1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
-                .whenPressed(robot.aim());
+                .toggleWhenPressed(robot.getLauncher().Park(),robot.getLauncher().UnPark());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_UP)
                 .whenPressed(robot.getLauncher().flywheelAuto(true));
         controller2.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
@@ -95,16 +95,6 @@ public class Teleop extends OpMode {
                         new InstantCommand(() -> aprilCentric = true),
                         new InstantCommand(() -> aprilCentric = false)
                 );
-        robot.getCamera().getMotif().schedule();
-    }
-    @Override
-    public void start(){
-        if (Storage.getInstance().spindexerPos != 0){
-            Launcher.pidTarget = -Storage.getInstance().spindexerPos;
-            new WaitUntilCommand(()->robot.getLauncher().atTarget())
-                    .whenFinished(()->robot.getLauncher().spinner.stopAndResetEncoder())
-                    .schedule();
-        }
     }
     @Override
     public void loop(){
@@ -123,12 +113,11 @@ public class Teleop extends OpMode {
                 if (!Double.isNaN(tx)) {
 
                     // PID compute
-                    double error = tx;
-                    headingIntegral += error;
-                    double derivative = error - lastHeadingError;
-                    lastHeadingError = error;
+                    headingIntegral += tx;
+                    double derivative = tx - lastHeadingError;
+                    lastHeadingError = tx;
 
-                    double pid = (kP * error) + (kI * headingIntegral) + (kD * derivative);
+                    double pid = (kP * tx) + (kI * headingIntegral) + (kD * derivative);
 
                     // limit
                     pid = Math.max(-0.6, Math.min(0.6, pid));
@@ -177,10 +166,9 @@ public class Teleop extends OpMode {
     }
 
     @Override
-    public void stop(){
+    public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         super.stop();
     }
 }
-

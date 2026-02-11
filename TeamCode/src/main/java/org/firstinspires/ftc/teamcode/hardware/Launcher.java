@@ -32,12 +32,14 @@ public class Launcher extends SubsystemBase {
     public MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
-    public CRServo quickLaunch;
-    public static double kp = 6.1;
-    public static double ki = 0.06;
+    //public CRServo quickLaunch;
+    public static double kp = 7;
+    public static double ki = 0;
     public static double kd = 0.005;
     public PIDController controller = new PIDController(kp,ki,kd);
     Servo pusher;
+    Servo lift1;
+    Servo lift2;
     public static int halfDelta = -238;
     public static int fullDelta = -475;
     public static int pidTarget = 0;
@@ -47,9 +49,11 @@ public class Launcher extends SubsystemBase {
     List<Color> chambers;
     public static int closeSpeed = -775;
     public static int farSpeed = -990;
-    public static int autoSpeed = -750;
+    public static int autoSpeed = -775;
     public static double power = .43;
     public static double servoPos = 0;
+    public static double liftpos = 1;
+
     public static double[] veloCoeffecient = new double[] {11,0,0};
     public static double[] feedforward = new double[] {11,0,0};
 
@@ -67,10 +71,17 @@ public class Launcher extends SubsystemBase {
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
         flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
+
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
         pusher.setPosition(0.0000001);
-        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
+
+        lift1 = hardwareMap.get(Servo.class,"lift1");
+        lift2 = hardwareMap.get(Servo.class, "lift2");
+        liftpos=0;
+
+
+//        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
         cs2 = hardwareMap.get(RevColorSensorV3.class,"cs2");
         chambers.add(Color.Nothing);
@@ -79,20 +90,20 @@ public class Launcher extends SubsystemBase {
         controller.setTolerance(40);
     }
     public Color getColor(RevColorSensorV3 cs){
-        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1) {
+        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1.1) {
             return Color.Green;
         }
-        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < 1) {
+        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < 1.1) {
             return Color.Purple;
         }
         return Color.Nothing;
     }
-    public void startQuickLaunch(){
-        quickLaunch.set(1);
-    }
-    public void stopQuickLaunch(){
-        quickLaunch.set(0);
-    }
+//    public void startQuickLaunch(){
+//        quickLaunch.set(1);
+//    }
+//    public void stopQuickLaunch(){
+//        quickLaunch.set(0);
+//    }
     public Command plusVelo(){
         return new InstantCommand(()-> speed1 = speed1 + 100);
     }
@@ -126,6 +137,17 @@ public class Launcher extends SubsystemBase {
 //            flyWheel1.setPower(0);
 //            flyWheel2.setPower(0);
         });
+    }
+
+    public Command Park(){
+        return new InstantCommand(() ->
+            liftpos=1
+        );
+    }
+    public Command UnPark(){
+        return new InstantCommand(() ->
+            liftpos=0
+        );
     }
     public Command shoot() {
         return new Command() {
@@ -356,6 +378,8 @@ public class Launcher extends SubsystemBase {
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
         pusher.setPosition(servoPos);
+        lift1.setPosition(liftpos);
+        lift2.setPosition(liftpos);
         if(controller.atSetPoint()){
             safePose = pidTarget;
         }
