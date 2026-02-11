@@ -18,34 +18,39 @@ public class spinnerTest extends OpMode {
     public DcMotor spinner;
     Gamepad gamepad1;
 
-    public static int chamber1;
-    public static int chamber2;
-    public static int chamber3;
+    public static int halfDelta = 238;
+    public static int fullDelta = 475;
 
     @Override
     public void init() {
       spinner = hardwareMap.get(DcMotorEx.class, "spinner");
       spinner.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-      spinner.setMode(DcMotor.RunMode.RUN_TO_POSITION);
       spinner.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     @Override
     public void loop() {
-
-        final int[] index = {0};
         if(gamepad1.a) {
-            spinner.setTargetPosition(chamber1);
-            spinner.setPower(1);
+            while(spinner.getCurrentPosition() < fullDelta){
+                spinner.setPower(1);
+            }
+
 
         }
         else if(gamepad1.b){
-            spinner.setTargetPosition(chamber2);
-            spinner.setPower(1);
+            while(spinner.getCurrentPosition() < (fullDelta*2)){
+                spinner.setPower(1);
+            }
         }
-        else if(gamepad1.b){
-            spinner.setTargetPosition(chamber3);
-            spinner.setPower(1);
+        else if(gamepad1.b) {
+            while (spinner.getCurrentPosition() < (fullDelta * 3)) {
+                spinner.setPower(1);
+            }
+        }
+        else if(gamepad1.dpad_down){
+                while(spinner.getCurrentPosition() > 0) {
+                    spinner.setPower(-1);
+                }
         }
         else {
             spinner.setPower(0);
