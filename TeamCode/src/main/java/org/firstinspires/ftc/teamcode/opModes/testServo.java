@@ -35,12 +35,7 @@ public class testServo extends OpMode {
 
     @Override
     public void loop() {
-        if(gamepad1.a){
-            pusher.setPosition(target);
-        }
-        if(gamepad1.b){
-            pusher.setPosition(target);
-        }
+        pusher.setPosition(target);
 
         panelsTelemetry.addData("port1", input1.getVoltage());
         panelsTelemetry.addData("port2", input2.getVoltage());

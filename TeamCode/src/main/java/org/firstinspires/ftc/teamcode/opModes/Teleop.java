@@ -56,9 +56,6 @@ public class Teleop extends OpMode {
 
     @Override
     public void init() {
-        // 2. Define Headers
-//        logger.initializeLogging("Time", "Voltage", "Position");
-
         lynxController = hardwareMap.getAll(LynxModule.class);
         try {
             logger.addHeaderLine("Time", "Voltage");
@@ -125,20 +122,26 @@ public class Teleop extends OpMode {
     }
     @Override
     public void loop(){
+        lynxController.get(0).clearBulkCache();
+        lynxController.get(1).clearBulkCache();
         controller1.readButtons();
         controller2.readButtons();
-        List<Double> voltages = new ArrayList<>();
-        List<Double> current = new ArrayList<>();
-
-        for (int i = 0; i < lynxController.size(); i++){
-            voltages.add(lynxController.get(i).getInputVoltage(VoltageUnit.VOLTS));
-            current.add(lynxController.get(i).getCurrent(CurrentUnit.AMPS));
-        }
+        robot.getDrive().getFollower().update();
+//        List<Double> voltages = new ArrayList<>();
+//        List<Double> current = new ArrayList<>();
+//
+//        for (int i = 0; i < lynxController.size(); i++){
+//            voltages.add(lynxController.get(i).getInputVoltage(VoltageUnit.VOLTS));
+//            current.add(lynxController.get(i).getCurrent(CurrentUnit.AMPS));
+//        }
         try {
-            logger.addDataLine(System.currentTimeMillis(),voltages,current);
+            logger.addDataLine(System.currentTimeMillis());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        robot.getLauncher().updateSpindexer();
+
         if(gamepad1.right_bumper){
             robot.getLauncher().resetEncoder();
         }
@@ -194,21 +197,13 @@ public class Teleop extends OpMode {
         }
 
         CommandScheduler.getInstance().run();
-        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
-        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
+//        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
+//        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
         panelsTelemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
-        panelsTelemetry.addData("target", Launcher.pidTarget);
-        panelsTelemetry.addData("order", robot.getCamera().getOrder());
-        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
-        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
-        panelsTelemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
-        panelsTelemetry.addData("can Shoot", robot.getLauncher().canShoot());
-        panelsTelemetry.addData("auto driving",!isBot);
-        panelsTelemetry.addData("Tx: ", robot.getCamera().getFiducialAngle());
-        panelsTelemetry.addLine(robot.getLauncher().getTelemetry());
-        panelsTelemetry.addData("pose",robot.getDrive().getPose());
-        panelsTelemetry.addData("voltage",voltages);
-        panelsTelemetry.addData("current", current);
+//        panelsTelemetry.addData("target", Launcher.pidTarget);
+//        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
+//        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
+//        panelsTelemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
         panelsTelemetry.update();
     }
 

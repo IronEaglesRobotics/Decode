@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -120,17 +121,17 @@ public class AutoFar extends OpMode {
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
-        telemetry.addData("order", robot.getCamera().getOrder());
-        telemetry.addData("last state", lastState);
-        telemetry.addData("wantsShoot", wantsShoot);
-        telemetry.addData("target", Launcher.pidTarget);
-        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
-        telemetry.addData("can shoot", robot.getLauncher().canShoot());
-        telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
-        telemetry.addData("loading finished", finished);
-        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
-        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
-        telemetry.update();
+//        telemetry.addData("order", robot.getCamera().getOrder());
+//        telemetry.addData("last state", lastState);
+//        telemetry.addData("wantsShoot", wantsShoot);
+//        telemetry.addData("target", Launcher.pidTarget);
+//        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
+//        telemetry.addData("can shoot", robot.getLauncher().canShoot());
+//        telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
+//        telemetry.addData("loading finished", finished);
+//        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
+//        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
+//        telemetry.update();
     }
 
     public void stop() {
@@ -238,26 +239,53 @@ public class AutoFar extends OpMode {
                 state = States.idle;
                 break;
             case pickCorner:
-                finished = false;
                 lastState = States.pickCorner;
                 nextState = States.finish;
-                wantsShoot = false;
-                green = 1;
-                new ParallelCommandGroup(
-                        new SequentialCommandGroup(
-                                PickCorner(),
+                green = 0;
+                PathChain path2 = robot.getDrive().getFollower().pathBuilder()
+                        .addPath(new BezierLine(robot.getDrive().getPose(),
+                                new Pose(
+                                        color == Alliance.Blue ? 0 : 144,
+                                        31)))
+                        .setLinearHeadingInterpolation(robot.getDrive().getZ(),
+                                Math.toRadians(color == Alliance.Blue ? 135 : 45))
+                        .build();
+                PathChain path3 = robot.getDrive().getFollower().pathBuilder()
+                        .addPath(new BezierLine(new Pose(
+                                color == Alliance.Blue ? 0 : 144,
+                                31),
+                                new Pose(color == Alliance.Blue ? 0 : 144,
+                                        33)))
+                        .setConstantHeadingInterpolation(Math.toRadians(color == Alliance.Blue ? 135 : 45))
+                        .build();
+                PathChain path4 = robot.getDrive().getFollower().pathBuilder()
+                        .addPath(new BezierLine(new Pose(color == Alliance.Blue ? 0 : 144,
+                                33),
+                                new Pose(
+                                        color == Alliance.Blue ? 0 : 144,
+                                        31)
+                        ))
+                        .setConstantHeadingInterpolation(Math.toRadians(color == Alliance.Blue ? 135 : 45))
+                        .build();
+                robot.getDrive().pathCommand(path2)
+                        .andThen(new WaitCommand(lines == 4 ? 2500 : 5000))
+                        .andThen(robot.getDrive().pathCommand(path3))
+                        .andThen(robot.getDrive().pathCommand(path4))
+                        .andThen(new SequentialCommandGroup(
                                 new DeferredCommand(farPathShoot(), Collections.emptyList()),
                                 new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                                 robot.getLauncher().fire(),
-                                new InstantCommand(() -> state = nextState)
-                        ),
-                        new SequentialCommandGroup (
-                                new WaitUntilCommand(
-                                        ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                                != Launcher.Color.Nothing || Bot.hasBeen(3000)),
-                                robot.getLauncher().toFull(),
-                                robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
-                        )
+                                new InstantCommand(() -> state = nextState)))
+                        .schedule();
+                new SequentialCommandGroup (
+                        robot.getLauncher().toZero(),
+                        robot.getIntake().start(),
+                        new WaitCommand(1500),
+                        new WaitUntilCommand(()->robot.getDrive().getFollower().isBusy()),
+                        robot.getLauncher().toFull(),
+                        robot.getIntake().reverse(),
+                        robot.getLauncher().setLaunch(robot.getCamera().getOrder()),
+                        robot.getIntake().stop()
                 ).schedule();
                 state = States.idle;
                 break;

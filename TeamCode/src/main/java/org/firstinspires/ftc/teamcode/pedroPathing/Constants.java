@@ -15,7 +15,17 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
-    public static FollowerConstants followerConstants = new FollowerConstants();
+    public static FollowerConstants followerConstants = new FollowerConstants()
+//            .forwardZeroPowerAcceleration(-33)
+//            .lateralZeroPowerAcceleration(-58)
+            .useSecondaryTranslationalPIDF(true)
+            .useSecondaryHeadingPIDF(true)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.075, 0, 0.0068, 0.03))
+            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.15,0,.02,0.03))
+            .headingPIDFCoefficients(new PIDFCoefficients(.7, 0, 0.02, 0.0325))
+            .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(1.2,0,0.03,0.02))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.006,0,0.0001,0.6,0.06));
+//            .centripetalScaling(.0008);
     public static PathConstraints pathConstraints = new PathConstraints(0.99,.1,.1,.007,100,1, 10, 1);
     public static FilteredPIDFCoefficients driveCoefficients = new FilteredPIDFCoefficients(0.003,0,0.000002,0,0.09);
     public static PIDFCoefficients headingCoefficients = new PIDFCoefficients(.5,0.005,0.001,0.03);
@@ -27,7 +37,6 @@ public class Constants {
         followerConstants.setCoefficientsDrivePIDF(driveCoefficients);
         followerConstants.setCoefficientsHeadingPIDF(headingCoefficients);
         followerConstants.setCoefficientsTranslationalPIDF(translationalCoefficients);
-        followerConstants.setCentripetalScaling(centripetalScaling);
         followerConstants.forwardZeroPowerAcceleration(-47.75);
         followerConstants.lateralZeroPowerAcceleration(-90.17);
         followerConstants.setCentripetalScaling(0.0002);

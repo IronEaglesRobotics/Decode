@@ -125,17 +125,17 @@ public class Auto extends OpMode {
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
-        telemetry.addData("order", robot.getCamera().getOrder());
-        telemetry.addData("last state", lastState);
-        telemetry.addData("wantsShoot", wantsShoot);
-        telemetry.addData("target", Launcher.pidTarget);
-        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
-        telemetry.addData("can shoot", robot.getLauncher().canShoot());
-        telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
-        telemetry.addData("loading finished", finished);
-        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
-        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
-        telemetry.update();
+//        telemetry.addData("order", robot.getCamera().getOrder());
+//        telemetry.addData("last state", lastState);
+//        telemetry.addData("wantsShoot", wantsShoot);
+//        telemetry.addData("target", Launcher.pidTarget);
+//        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
+//        telemetry.addData("can shoot", robot.getLauncher().canShoot());
+//        telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
+//        telemetry.addData("loading finished", finished);
+//        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
+//        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
+//        telemetry.update();
     }
 
     public void stop() {
@@ -149,15 +149,12 @@ public class Auto extends OpMode {
         switch (state) {
             case motifDetect:
                 new SequentialCommandGroup(
-                    robot.getLauncher().toShoot(),
-//                    new ConditionalCommand(
-//                            new WaitCommand(20),
-//                            paths.PathShootEx(),
-//                            ()->isFar),
-                    paths.PathShootEx(),
+                    new ParallelCommandGroup(
+                            robot.getLauncher().toShoot(),
+                            paths.PathShootEx()),
                     isFar ? new WaitCommand(20) : new WaitCommand(1000),
                     robot.getCamera().getMotif(),
-                    new WaitCommand(400),
+                    new WaitCommand(200),
                     new InstantCommand(()-> state = States.settingLaunch)
                 ).schedule();
                 state = States.idle;
@@ -188,7 +185,7 @@ public class Auto extends OpMode {
 //                        (isFar ? robot.aim():new WaitCommand(20)),
                         new WaitUntilCommand(() -> robot.getLauncher().canShoot() || isFar),
                         robot.getLauncher().fire(),
-                        new WaitCommand(100),
+                        new WaitCommand(400),
                         new InstantCommand(() -> state = States.swap)
                 )
                         .schedule();
@@ -215,24 +212,6 @@ public class Auto extends OpMode {
                         .schedule();
                 state = States.idle;
                 break;
-//            case pickCorner:
-//                finished = false;
-//                lastState = States.pickFar;
-//                nextState = States.finish;
-//                wantsShoot = false;
-//                green = 1;
-//                robot.loading()
-//                        .raceWith(new WaitUntilCommand(() -> wantsShoot))
-//                        .andThen(robot.getIntake().stop())
-//                        .whenFinished(() -> finished = true)
-//                        .schedule();
-//                new SequentialCommandGroup(
-//                        paths.PickCorner()
-//                                .whenFinished(() -> state = States.shoot)
-//                )
-//                        .schedule();
-//                state = States.idle;
-//                break;
             case pickCorner:
                 lastState = States.pickCorner;
                 nextState = States.finish;

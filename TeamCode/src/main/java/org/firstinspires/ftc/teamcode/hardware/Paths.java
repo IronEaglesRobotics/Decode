@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.hardware;
 
 import com.pedropathing.geometry.Pose;
 
+import org.firstinspires.ftc.teamcode.opModes.Auto;
+
 public class Paths {
     public Pose Path1;
     public Pose Path1Ex;
@@ -10,6 +12,7 @@ public class Paths {
     public Pose Path3Ex;
     public Pose Path6;
     public Pose Path7;
+    public Pose Path7Ex;
     public Pose Path9;
     public Pose Path10;
     public Pose Path11;
@@ -18,7 +21,7 @@ public class Paths {
 
     public Paths(boolean isBlue) {
         double shootX = isBlue ? 42 : 106;
-        double prePickX = isBlue ? 52 : 109;
+        double prePickX = isBlue ? 65 : 109;
         double postPickX1 = isBlue ? 4 : 142;
         double postPickEx = isBlue ? 25 : 117;
         double postPickX2 = isBlue ? 9 : 137;
@@ -27,9 +30,10 @@ public class Paths {
 
         double closeAim = isBlue ? 131 : 52;
         double seeObelisk = isBlue ? 70 : 110;
-        double pickUp = isBlue ? 180 : 0;
+        double pickUp = isBlue ? 187 : 0;
         double farAim = isBlue ? 115 : 72;
         double cornerZ = !isBlue ? 245 : 335;
+
         Path1 = new Pose(shootX, 95.500, Math.toRadians(closeAim));
         Path1Ex = new Pose(shootX, 105.500, Math.toRadians(seeObelisk));
 
@@ -40,7 +44,8 @@ public class Paths {
 
         Path6 = new Pose(prePickX, 93.000, Math.toRadians(pickUp));
 
-        Path7 = new Pose(postPickX2, 93.000, Math.toRadians(pickUp));
+        Path7 = new Pose(postPickX2, 93.500, Math.toRadians(pickUp));
+        Path7Ex = new Pose(isBlue ? 4.5 : 137, 86, Math.toRadians(90));
 
         Path9 = new Pose(prePickX, 44.000, Math.toRadians(pickUp));
 

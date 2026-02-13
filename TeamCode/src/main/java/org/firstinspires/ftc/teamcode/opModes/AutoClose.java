@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -30,7 +32,7 @@ import java.util.function.Supplier;
 public class AutoClose extends OpMode {
 
     private Alliance color = Alliance.Blue;
-    private int lines = 4;
+    private int lines = 3;
     private boolean hitGate = false;
     Bot robot;
     GamepadEx controller; // plz DO NOT feed into Bot
@@ -38,16 +40,10 @@ public class AutoClose extends OpMode {
     States state = States.motifDetect;
     States lastState = States.idle;
     States nextState;
-    List<States> toDo = new ArrayList<>();
     boolean wantsShoot = false;
     public Paths paths;
     boolean finished;
     int green = 0;
-
-//    public FollowPathCommand closeshoot(){
-//        return robot.getDrive().pathCommand(
-//                !isFar ? paths.shootPaths[shot++] : paths.farShootPaths[shot++]);
-//    }
 
     @Override
     public void init() {
@@ -120,17 +116,18 @@ public class AutoClose extends OpMode {
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
-        telemetry.addData("order", robot.getCamera().getOrder());
-        telemetry.addData("last state", lastState);
-        telemetry.addData("wantsShoot", wantsShoot);
-        telemetry.addData("target", Launcher.pidTarget);
-        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
-        telemetry.addData("can shoot", robot.getLauncher().canShoot());
-        telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
-        telemetry.addData("loading finished", finished);
-        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
-        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
-        telemetry.update();
+        robot.getLauncher().updateSpindexer();
+//        telemetry.addData("order", robot.getCamera().getOrder());
+//        telemetry.addData("last state", lastState);
+//        telemetry.addData("wantsShoot", wantsShoot);
+//        telemetry.addData("target", Launcher.pidTarget);
+//        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
+//        telemetry.addData("can shoot", robot.getLauncher().canShoot());
+//        telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
+//        telemetry.addData("loading finished", finished);
+//        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
+//        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
+//        telemetry.update();
     }
 
     public void stop() {
@@ -145,9 +142,10 @@ public class AutoClose extends OpMode {
             case motifDetect:
                 nextState = lines > 0 ? States.settingLaunch : States.finish;
                 new SequentialCommandGroup(
-                    robot.getLauncher().toShoot(),
-                            PathShootEx(),
-                    new WaitCommand(300),
+                    robot.getLauncher().toShoot()
+                            .alongWith(new WaitCommand(100)
+                                    .andThen(PathShootEx())),
+                    new WaitCommand(200),
                     robot.getCamera().getMotif(),
                     new WaitCommand(50),
                     new InstantCommand(()-> state = nextState))
@@ -159,11 +157,13 @@ public class AutoClose extends OpMode {
                 new WaitCommand(delay)
                         .andThen(
                             new SequentialCommandGroup(
-                                robot.getLauncher().setLaunch(0,robot.getCamera().getOrder()),
-                                new DeferredCommand(PathShoot(), Collections.emptyList()),
+                                robot.getLauncher().setLaunch(0,robot.getCamera().getOrder())
+                                        .alongWith(PathShoot()),
                                 new WaitUntilCommand(robot.getLauncher()::canShoot),
                                 robot.getLauncher().fire(),
+                                new WaitCommand(150),
                                 new InstantCommand(()->state = nextState)
+                                        .alongWith(robot.getLauncher().toShoot())
                             )
                         )
                         .schedule();
@@ -178,24 +178,31 @@ public class AutoClose extends OpMode {
                 lastState = States.pick1;
                 nextState = lines > 2 ? States.pick2 : States.finish;
                 wantsShoot = false;
-                Pose pose = new Pose(paths.Path1.getX(),paths.Path1.getY() + 10,
-                        color == Alliance.Blue ? Math.toRadians(141) : Math.toRadians(62));
+                PathChain pathChain3 = robot.getDrive().getFollower().pathBuilder()
+                    .addPath(new BezierCurve(paths.Path7,
+                            paths.Path7Ex.plus(new Pose(color == Alliance.Blue ? 12:-12, 3)),
+                            paths.Path7Ex))
+                    .setLinearHeadingInterpolation(paths.Path7.getHeading(), paths.Path7Ex.getHeading())
+                    .build();
                 green = 2;
-                new ParallelCommandGroup(
-                        new SequentialCommandGroup(
-                                Pick1(),
-                                robot.getDrive().moveTo(pose),
-                                new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                                robot.getLauncher().fire(),
-                                new InstantCommand(() -> state = nextState)
-                        ),
-                        new SequentialCommandGroup (
-                                new WaitUntilCommand(
-                                        ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                                != Launcher.Color.Nothing || Bot.hasBeen(3000)) ,
+                new SequentialCommandGroup(
+                    Pick1(),
+                        new ParallelCommandGroup(
+                            new SequentialCommandGroup(
                                 robot.getLauncher().toFull(),
-                                robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
-                        )
+                                robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())),
+                            new SequentialCommandGroup(
+                                hitGate ? robot.getDrive().pathCommand(pathChain3) : new WaitCommand(20),
+                                new WaitCommand(1000),
+                                new DeferredCommand(this::PathShoot, Collections.emptyList())
+                            )
+                        ),
+                    new WaitUntilCommand(()->robot.getLauncher().canShoot()),
+                    robot.getLauncher().fire(),
+                    new WaitCommand(500),
+                    new InstantCommand(()->state = nextState)
+//                            .alongWith(robot.getLauncher().toShoot()
+//                                    .andThen(new InstantCommand(robot.getLauncher()::resetEncoder)))
                 ).schedule();
                 state = States.idle;
                 break;
@@ -205,57 +212,65 @@ public class AutoClose extends OpMode {
                 nextState = lines > 3 ? States.pickFar : States.finish;
                 wantsShoot = false;
                 green = 1;
-                PathChain toShoot = robot.getDrive().getFollower().pathBuilder()
-                        .addPath(new BezierCurve(robot.getDrive().getPose(), paths.Path3Ex, paths.Path1))
-                        .setLinearHeadingInterpolation(robot.getDrive().getZ(),paths.Path1.getHeading())
-                        .build();
-                new ParallelCommandGroup(
+                PathChain pathChain4 = robot.getDrive().getFollower().pathBuilder()
+                    .addPath(new BezierCurve(paths.Path3,
+                            paths.Path7Ex.plus(new Pose(color == Alliance.Blue ? 9 : -9, -3)),
+                            paths.Path7Ex.plus(new Pose(0, -5))))
+                    .setLinearHeadingInterpolation(paths.Path7.getHeading(), paths.Path7Ex.getHeading() + Math.PI)
+                    .build();
+                new SequentialCommandGroup(
+                    Pick2(),
+                    new ParallelCommandGroup(
                         new SequentialCommandGroup(
-                                Pick2(),
-                                robot.getDrive().pathCommand(toShoot),
-                                new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                                robot.getLauncher().fire(),
-                                new InstantCommand(() -> state = nextState)
-                        ),
-                        new SequentialCommandGroup (
-                                new WaitUntilCommand(
-                                        ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                                != Launcher.Color.Nothing) ,
-                                robot.getLauncher().toFull(),
-                                robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
+                            robot.getLauncher().toFull(),
+                            robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())),
+                        new SequentialCommandGroup(
+                            hitGate ? robot.getDrive().pathCommand(pathChain4) : new WaitCommand(20),
+                            new WaitCommand(1000),
+                            new DeferredCommand(this::PathShoot2, Collections.emptyList())
                         )
+                    ),
+                    new WaitUntilCommand(()->robot.getLauncher().canShoot()),
+                    robot.getLauncher().fire(),
+                    new WaitCommand(150),
+                    new InstantCommand(()->state = nextState)
+//                            .alongWith(robot.getLauncher().toShoot()
+//                                    .andThen(new InstantCommand(robot.getLauncher()::resetEncoder)))
                 ).schedule();
                 state = States.idle;
                 break;
             case pickFar:
                 finished = false;
                 lastState = States.pickFar;
-                nextState = States.finish;
+                PathChain pathChain = robot.getDrive().getFollower().pathBuilder()
+                        .addPath(new BezierLine(paths.Path10,paths.Path1.plus(new Pose(0,15))))
+                        .setHeadingInterpolation(HeadingInterpolator.facingPoint(
+                                new Pose(color == Alliance.Blue ? 0 : 144, 146)))
+                        .build();
                 wantsShoot = false;
                 green = 0;
-                new ParallelCommandGroup(
-                    new SequentialCommandGroup(
-                        Pick3(),
-                        new DeferredCommand(PathShoot(), Collections.emptyList()),
-                        new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                        robot.getLauncher().fire(),
-                        new InstantCommand(() -> state = nextState)
+                new SequentialCommandGroup(
+                    Pick3(),
+                    new ParallelCommandGroup(
+                            robot.getDrive().pathCommand(pathChain),
+                            robot.getLauncher().toFull(),
+                            robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
                     ),
-                    new SequentialCommandGroup (
-                        new WaitUntilCommand(
-                                ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                        != Launcher.Color.Nothing),
-                        robot.getLauncher().toFull(),
-                        robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
-                    )
+                    new WaitUntilCommand(()->robot.getLauncher().canShoot()),
+                    robot.getLauncher().fire()
+//                    robot.getLauncher().toShoot(),
+//                    new InstantCommand(robot.getLauncher()::resetEncoder)
                 ).schedule();
                 state = States.idle;
                 break;
             case finish:
                 lastState = States.finish;
                 finish().schedule();
-                robot.getLauncher().toZero().schedule();
                 robot.getLauncher().flywheelOff().schedule();
+                robot.getLauncher().toShoot()
+                        .andThen(new InstantCommand(robot.getLauncher()::resetEncoder))
+                        .schedule();
+                robot.getIntake().stop().schedule();
                 state = States.idle;
                 break;
         }
@@ -271,57 +286,63 @@ public class AutoClose extends OpMode {
         pickFar,
         finish
     }
-        public Supplier<Command> PathShoot() {
-        return ()->robot.getDrive().moveTo(paths.Path1);
+    public Command PathShoot() {
+        return robot.getDrive().pathCommand(robot.getDrive().getFollower().pathBuilder()
+            .addPath(new BezierLine(robot.getDrive().getPose(), paths.Path1))
+            .setHeadingInterpolation(HeadingInterpolator.facingPoint(new Pose(
+                    color == Alliance.Blue ? 0 :144, 147)))
+            .build());
     }
-        public Command PathShootEx() {
-            return robot.getDrive().moveTo(paths.Path1Ex);
-        }
+    public Command PathShoot2() {
+        return robot.getDrive().pathCommand(robot.getDrive().getFollower().pathBuilder()
+            .addPath(new BezierCurve(robot.getDrive().getPose(), paths.Path3Ex, paths.Path1))
+            .setHeadingInterpolation(HeadingInterpolator.facingPoint(
+                    new Pose(color == Alliance.Blue ? 0 : 144, 144)))
+            .build());
+    }
+    public Command PathShootEx() {
+        return robot.getDrive().moveTo(paths.Path1Ex);
+    }
 
-        public Command Pick1() {
-            PathChain path = robot.getDrive().getFollower().pathBuilder()
-                    .addPath(new BezierCurve(robot.getDrive().getPose(),paths.Path6,
-                            paths.Path7.plus(new Pose(0,-1))))
-                    .setLinearHeadingInterpolation(robot.getDrive().getZ(),paths.Path7.getHeading())
-                    .build();
-            return new ParallelCommandGroup(
-                    robot.getIntake().start(),
-                    robot.getLauncher().toZero(),
-                    robot.getDrive().pathCommand(path)
-            );
-        }
-
-        public Command Pick2() {
-            PathChain path = robot.getDrive().getFollower().pathBuilder()
-                    .addPath(new BezierCurve(robot.getDrive().getPose(),paths.Path2,paths.Path3))
-                    .setLinearHeadingInterpolation(robot.getDrive().getZ(),paths.Path3.getHeading())
-                    .build();
-            return new SequentialCommandGroup(
-                new ParallelCommandGroup(
-                    robot.getIntake().start(),
-                    robot.getLauncher().toZero(),
-                    robot.getDrive().pathCommand(path)
-                )
-            );
-        }
-
-        public Command Pick3() {
-            PathChain path = robot.getDrive().getFollower().pathBuilder()
-                    .addPath(new BezierCurve(robot.getDrive().getPose(),paths.Path9,paths.Path10))
-                    .setLinearHeadingInterpolation(robot.getDrive().getZ(), paths.Path10.getHeading())
-                    .build();
-            return new ParallelCommandGroup(
+    public Command Pick1() {
+        PathChain path = robot.getDrive().getFollower().pathBuilder()
+                .addPath(new BezierLine(robot.getDrive().getPose(),
+                        paths.Path7))
+                .setConstantHeadingInterpolation(paths.Path7.getHeading())
+                .build();
+        return new ParallelCommandGroup(
                 robot.getIntake().start(),
-                robot.getLauncher().toZero(),
+                robot.getDrive().pathCommand(path)
+        );
+    }
+
+    public Command Pick2() {
+        PathChain path = robot.getDrive().getFollower().pathBuilder()
+                .addPath(new BezierCurve(robot.getDrive().getPose(),paths.Path2,paths.Path3))
+                .setLinearHeadingInterpolation(robot.getDrive().getZ(),paths.Path3.getHeading())
+                .build();
+        return new ParallelCommandGroup(
+                robot.getIntake().start(),
                 robot.getDrive().pathCommand(path)
             );
-        }
+    }
 
-        public Command finish() {
-            return robot.getDrive().moveTo(
-                    new Pose(paths.Path1.getX(), 130, Math.toRadians(90))
-            );
-        }
+    public Command Pick3() {
+        PathChain path = robot.getDrive().getFollower().pathBuilder()
+                .addPath(new BezierCurve(robot.getDrive().getPose(),paths.Path9,paths.Path10))
+                .setLinearHeadingInterpolation(robot.getDrive().getZ(), paths.Path10.getHeading())
+                .build();
+        return new ParallelCommandGroup(
+            robot.getIntake().start(),
+            robot.getDrive().pathCommand(path)
+        );
+    }
+
+    public Command finish() {
+        return robot.getDrive().moveTo(
+                new Pose(paths.Path1.getX(), 130, Math.toRadians(90))
+        );
+    }
 
     public enum Alliance {
         Red,

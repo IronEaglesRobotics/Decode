@@ -172,11 +172,6 @@ public class Drive extends SubsystemBase {
         return follower.getPose().getHeading();
     }
 
-    @Override
-    public void periodic() {
-        follower.update();
-    }
-
     public static class CancelablePathCommand extends FollowPathCommand {
         Follower follower;
 

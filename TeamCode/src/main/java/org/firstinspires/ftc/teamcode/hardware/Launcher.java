@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.ftc.localization.Encoder;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -15,6 +17,7 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDController;
+import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.hardware.motors.CRServo;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
@@ -29,21 +32,23 @@ import java.util.Set;
 
 @Configurable
 public class Launcher extends SubsystemBase {
-    public DcMotorEx spinner;
+    public Motor spinner;
     public MotorEx flyWheel1;
     public MotorEx flyWheel2;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
     //public CRServo quickLaunch;
-    public static double kp = 0.0002;
-    public static double ki = 0.042;
-    public static double kd = 0.00001;
-    public PIDController controller = new PIDController(kp,ki,kd);
+    public static double kp = 0.0008;
+    public static double ki = 0.02;
+    public static double kd = 0;
+    public static double kf = 0;
+    public PIDFController controller = new PIDFController(kp,ki,kd,kf);
     Servo pusher;
+    AnalogInput servoInput;
     Servo lift1;
     Servo lift2;
-    public static int halfDelta = 1365;
-    public static int fullDelta = 2730;
+    public static int halfDelta = -237;
+    public static int fullDelta = -474;
     public static int pidTarget = 0;
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
@@ -55,8 +60,9 @@ public class Launcher extends SubsystemBase {
     public static double power = .43;
     public static double servoPos = 0;
     public static double liftpos = 1;
-    private static long lastChange = System.currentTimeMillis();
-    private boolean fixUrSelf = false;
+    public static int tolerance = 10;
+    public static int offset = 50;
+    public static double speed = .9;
 
     public static double[] veloCoeffecient = new double[] {11,0,0};
     public static double[] feedforward = new double[] {11,0,0};
@@ -65,11 +71,15 @@ public class Launcher extends SubsystemBase {
     double speed1 = 0;
     double speed2 = 0;
     private int order;
+    Thread spindexerThread;
 
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
-        spinner = hardwareMap.get(DcMotorEx.class,"spinner");
-        spinner.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        spinner = new Motor(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
+        pidTarget = 0;
+        spinner.stopAndResetEncoder();
+        spinner.setRunMode(Motor.RunMode.VelocityControl);
+        spinner.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
         flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
@@ -77,7 +87,8 @@ public class Launcher extends SubsystemBase {
 
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
-        pusher.setPosition(0.1);
+        pusher.setPosition(0.05);
+        servoInput = hardwareMap.get(AnalogInput.class, "input1");
 
         lift1 = hardwareMap.get(Servo.class,"lift1");
         lift2 = hardwareMap.get(Servo.class, "lift2");
@@ -90,7 +101,7 @@ public class Launcher extends SubsystemBase {
         chambers.add(Color.Nothing);
         chambers.add(Color.Nothing);
         chambers.add(Color.Nothing);
-        controller.setTolerance(300);
+        controller.setTolerance(tolerance);
     }
     public Color getColor(RevColorSensorV3 cs){
         if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1.1) {
@@ -101,12 +112,6 @@ public class Launcher extends SubsystemBase {
         }
         return Color.Nothing;
     }
-//    public void startQuickLaunch(){
-//        quickLaunch.set(1);
-//    }
-//    public void stopQuickLaunch(){
-//        quickLaunch.set(0);
-//    }
     public Command plusVelo(){
         return new InstantCommand(()-> speed1 = speed1 + 100);
     }
@@ -138,15 +143,13 @@ public class Launcher extends SubsystemBase {
     }
 
     public void resetEncoder(){
-        spinner.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spinner.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        pidTarget = 0;
+        spinner.resetEncoder();
     }
     public Command flywheelOff(){
         return new InstantCommand(()->{
             speed1 = 0;
             speed2 = 0;
-//            flyWheel1.setPower(0);
-//            flyWheel2.setPower(0);
         });
     }
 
@@ -166,13 +169,13 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                servoPos = 0.35;
+                servoPos = 0.4;
                 time = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return time + 200 < System.currentTimeMillis();
+                return time + 300 < System.currentTimeMillis();
             }
 
             @Override
@@ -182,7 +185,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                servoPos = 0.1;
+                servoPos = 0.05;
             }
         };
     }
@@ -222,7 +225,7 @@ public class Launcher extends SubsystemBase {
                     pidTarget = CHAMBER1;
                 }
                 else {
-                    pidTarget -= fullDelta * (order - 1);
+                    pidTarget -= fullDelta * (order - 1) + fullDelta * 3;
                 }
             }
 
@@ -233,38 +236,32 @@ public class Launcher extends SubsystemBase {
         };
     }
     public boolean canShoot(){
-        return atTarget();
+        return controller.atSetPoint();
     }
     public boolean atShootPos(){
         return ((pidTarget - halfDelta)%fullDelta) == 0;
     }
     public boolean atTarget(){
-        return controller.atSetPoint();
+        return spinner.getCurrentPosition() < pidTarget - offset || spinner.getCurrentPosition() > pidTarget + offset;
     }
     public Command fire(){
         return new SequentialCommandGroup(
             new WaitUntilCommand(this::atSpeed),
             shoot(),
-            new WaitCommand(150),
+            new WaitCommand(600),
             toNext(),
             shoot(),
-            new WaitCommand(150),
+            new WaitCommand(600),
             toNext(),
-            shoot());
-    }
-
-    public void fan(){
-        pidTarget = pidTarget +fullDelta;
-        pidTarget = Math.max(Math.min(pidTarget,2000),-5000);
-    }
-    public void Shoot(){
-        pidTarget = pidTarget +halfDelta;
-        pidTarget = Math.max(Math.min(pidTarget,2000),-5000);
+            shoot(),
+            new WaitCommand(400),
+            toShoot(),
+            new InstantCommand(this::resetEncoder));
     }
 
     public void fixPose(){
-        int fixer = spinner.getCurrentPosition()/fullDelta;
-        pidTarget = fullDelta * fixer;
+        int fixer = spinner.getCurrentPosition()%halfDelta;
+        pidTarget = fullDelta + fixer;
     }
     public void Zero(){
         pidTarget = 0;
@@ -279,12 +276,11 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 pidTarget += fullDelta;
-                lastChange = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return controller.atSetPoint();
+                return !atTarget();
             }
         };
     }
@@ -300,12 +296,11 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 pidTarget += halfDelta;
-                lastChange = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return controller.atSetPoint();
+                return !atTarget();
             }
         };
     }
@@ -322,12 +317,11 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 pidTarget -= halfDelta;
-                lastChange = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return controller.atSetPoint();
+                return !atTarget();
             }
         };
     }
@@ -343,19 +337,20 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 pidTarget = 0;
-                lastChange = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return controller.atSetPoint();
+                return !atTarget();
             }
         };
     }
     public Command toFull(){
         return new SequentialCommandGroup(
                 toNext(),
+                new WaitCommand(200),
                 toNext(),
+                new WaitCommand(200),
                 toNext()
         );
     }
@@ -381,23 +376,24 @@ public class Launcher extends SubsystemBase {
 
     @Override
     public void periodic(){
-        controller.setPID(kp,ki,kd);
+        controller.setPIDF(kp,ki,kd,kf);
         controller.setSetPoint(pidTarget);
         flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
         flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
         flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
         flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
-        spinner.setPower(controller.calculate(spinner.getCurrentPosition(), pidTarget));
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
         pusher.setPosition(servoPos);
         lift1.setPosition(liftpos);
         lift2.setPosition(liftpos);
-        if(controller.atSetPoint()){
-            safePose = pidTarget;
+    }
+    public void updateSpindexer(){
+        if (atTarget()){
+            spinner.set(speed * Math.signum(pidTarget - spinner.getCurrentPosition()));
         }
-        if (lastChange + 5000 < System.currentTimeMillis() && !atTarget()){
-            new FixUrSelf().schedule();
+        else {
+            spinner.set(controller.calculate(spinner.getCurrentPosition()));
         }
     }
 
@@ -466,27 +462,5 @@ public class Launcher extends SubsystemBase {
         Purple,
         Green,
         Nothing
-    }
-    class FixUrSelf extends CommandBase{
-        boolean wasToZero = false; // 1 is returning to zero fix 2 is anything else
-        @Override
-        public void initialize() {
-            wasToZero = pidTarget == 0;
-        }
-
-        @Override
-        public void execute() {
-            if (!wasToZero){
-                pidTarget = spinner.getCurrentPosition() - spinner.getCurrentPosition() % halfDelta;
-            }
-            else {
-                pidTarget = (spinner.getCurrentPosition() - spinner.getCurrentPosition() % halfDelta) + halfDelta;
-            }
-        }
-
-        @Override
-        public boolean isFinished() {
-            return atTarget();
-        }
     }
 }
