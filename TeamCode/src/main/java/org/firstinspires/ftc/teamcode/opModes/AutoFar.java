@@ -52,6 +52,7 @@ public class AutoFar extends OpMode {
     public void init() {
         robot = new Bot().init(hardwareMap, null);
         controller = new GamepadEx(gamepad1);
+        robot.getLauncher().resetEncoder();
     }
 
     @Override
@@ -138,6 +139,7 @@ public class AutoFar extends OpMode {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         Storage.getInstance().setPose(robot.getDrive().getPose(),paths.Path1);
+        Storage.getInstance().resetSpindexer = false;
         super.stop();
     }
 
@@ -147,6 +149,7 @@ public class AutoFar extends OpMode {
                 nextState = lines > 0 ? States.settingLaunch : States.finish;
                 new SequentialCommandGroup(
                     robot.getLauncher().toShoot(),
+                    robot.getDrive().moveTo(paths.Path12Ex),
                     robot.getCamera().getMotif(),
                     new WaitCommand(50),
                     new InstantCommand(()-> state = nextState))
@@ -156,13 +159,14 @@ public class AutoFar extends OpMode {
             case settingLaunch:
                 nextState = lines > 1 ? States.pickFar : States.finish;
                 new WaitCommand(delay)
-                        .whenFinished(() -> {
-                            robot.getLauncher().setOrder(robot.getCamera().getOrder());
-                            robot.getLauncher().setChambers(new Launcher.Color[]
-                                    {Launcher.Color.Green, Launcher.Color.Purple, Launcher.Color.Green}
-                            );
-                            state = nextState;
-                        })
+                        .andThen(
+                                new SequentialCommandGroup(
+                                        robot.getLauncher().setLaunch(0,robot.getCamera().getOrder())
+                                                .alongWith(farPathShoot().get()),
+                                        new WaitUntilCommand(robot.getLauncher()::canShoot),
+                                        robot.getLauncher().fire(),
+                                        new WaitCommand(150),
+                                        new InstantCommand(()->state = nextState)))
                         .schedule();
                 state = States.idle;
                 break;
@@ -174,6 +178,7 @@ public class AutoFar extends OpMode {
                 green = 0;
                 new ParallelCommandGroup(
                         new SequentialCommandGroup(
+                            robot.getLauncher().toZero(),
                             Pick3(),
                             new DeferredCommand(farPathShoot(), Collections.emptyList()),
                             new WaitUntilCommand(()->robot.getLauncher().canShoot()),
@@ -193,11 +198,12 @@ public class AutoFar extends OpMode {
             case pick2:
                 finished = false;
                 lastState = States.pick2;
-                nextState = lines > 3 ? States.pick1 : States.finish;
+                nextState = lines > 3 ? (hitGate ? States.pick1 : States.pickCorner) : States.finish;
                 wantsShoot = false;
                 green = 1;
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
+                        robot.getLauncher().toZero(),
                         Pick2(),
                         new DeferredCommand(farPathShoot(), Collections.emptyList()),
                         new WaitUntilCommand(()->robot.getLauncher().canShoot()),
@@ -222,6 +228,7 @@ public class AutoFar extends OpMode {
                 green = 2;
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
+                        robot.getLauncher().toZero(),
                         Pick1(),
                         new DeferredCommand(farPathShoot(), Collections.emptyList()),
                         new WaitUntilCommand(()->robot.getLauncher().canShoot()),
@@ -374,8 +381,9 @@ public class AutoFar extends OpMode {
 
     public Command finish() {
         return robot.getDrive().moveTo(
-                new Pose(paths.Path11.getX() + 40 * (color == Alliance.Blue ? -1 : 1),
-                        32, Math.toRadians(90)));
+                new Pose(paths.Path11.getX() + (color == Alliance.Blue ? -30 : 30),
+                        paths.Path11.getY() - 10,
+                        Math.toRadians(90)));
     }
 
 

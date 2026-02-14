@@ -17,27 +17,28 @@ public class Paths {
     public Pose Path10;
     public Pose Path11;
     public Pose Path12;
+    public Pose Path12Ex;
     public Pose Path13;
 
     public Paths(boolean isBlue) {
-        double shootX = isBlue ? 42 : 106;
-        double prePickX = isBlue ? 65 : 109;
+        double shootX = isBlue ? 32 : 106;
+        double prePickX = isBlue ? 65 : 70;
         double postPickX1 = isBlue ? 4 : 142;
-        double postPickEx = isBlue ? 25 : 117;
-        double postPickX2 = isBlue ? 9 : 137;
+        double postPickEx = isBlue ? 25 : 119;
+        double postPickX2 = isBlue ? 9 : 135;
         double farShootX = isBlue ? 42 : 99;
         double cornerPickX = isBlue ? -3 : 137;
 
         double closeAim = isBlue ? 131 : 52;
         double seeObelisk = isBlue ? 70 : 110;
-        double pickUp = isBlue ? 187 : 0;
+        double pickUp = isBlue ? 187 : -10;
         double farAim = isBlue ? 115 : 72;
         double cornerZ = !isBlue ? 245 : 335;
 
-        Path1 = new Pose(shootX, 95.500, Math.toRadians(closeAim));
+        Path1 = new Pose(shootX, 105.500, Math.toRadians(closeAim));
         Path1Ex = new Pose(shootX, 105.500, Math.toRadians(seeObelisk));
 
-        Path2 = new Pose(prePickX, 71.000, Math.toRadians(pickUp));
+        Path2 = new Pose(prePickX, 74.000, Math.toRadians(pickUp));
 
         Path3 = new Pose(postPickX1, 70.000, Math.toRadians(pickUp));
         Path3Ex = new Pose(postPickEx, 70.000, Math.toRadians(pickUp));
@@ -45,7 +46,7 @@ public class Paths {
         Path6 = new Pose(prePickX, 93.000, Math.toRadians(pickUp));
 
         Path7 = new Pose(postPickX2, 93.500, Math.toRadians(pickUp));
-        Path7Ex = new Pose(isBlue ? 4.5 : 137, 86, Math.toRadians(90));
+        Path7Ex = new Pose(isBlue ? 4.5 : 139.5, 86, Math.toRadians(pickUp + 180));
 
         Path9 = new Pose(prePickX, 44.000, Math.toRadians(pickUp));
 
@@ -54,6 +55,7 @@ public class Paths {
         Path11 = new Pose(farShootX, 32, Math.toRadians(farAim));
 
         Path12 = new Pose(cornerPickX, 40, Math.toRadians(cornerZ));
+        Path12Ex = new Pose(farShootX, 50, Math.toRadians(90));
 
         Path13 = new Pose(cornerPickX, 20, Math.toRadians(cornerZ));
     }

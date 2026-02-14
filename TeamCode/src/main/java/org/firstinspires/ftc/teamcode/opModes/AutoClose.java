@@ -49,6 +49,7 @@ public class AutoClose extends OpMode {
     public void init() {
         robot = new Bot().init(hardwareMap, null);
         controller = new GamepadEx(gamepad1);
+        robot.getLauncher().resetEncoder();
     }
 
     @Override
@@ -102,7 +103,7 @@ public class AutoClose extends OpMode {
     @Override
     public void start() {
         robot.getDrive().getFollower().setStartingPose(
-                new Pose(color == Alliance.Blue ? 14 : 129,
+                new Pose(color == Alliance.Blue ? 14 : 130,
                         135,
                         Math.toRadians(color == Alliance.Blue ? 45 : 135)));
         paths = new Paths(color == Alliance.Blue);
@@ -120,20 +121,21 @@ public class AutoClose extends OpMode {
 //        telemetry.addData("order", robot.getCamera().getOrder());
 //        telemetry.addData("last state", lastState);
 //        telemetry.addData("wantsShoot", wantsShoot);
-//        telemetry.addData("target", Launcher.pidTarget);
-//        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
+        telemetry.addData("target", Launcher.pidTarget);
+        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
 //        telemetry.addData("can shoot", robot.getLauncher().canShoot());
 //        telemetry.addData("is busy", robot.getDrive().getFollower().isBusy());
 //        telemetry.addData("loading finished", finished);
 //        telemetry.addData("cs 1", robot.getLauncher().getColor(robot.getLauncher().cs1));
 //        telemetry.addData("cs 2", robot.getLauncher().getColor(robot.getLauncher().cs2));
-//        telemetry.update();
+        telemetry.update();
     }
 
     public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         Storage.getInstance().setPose(robot.getDrive().getPose(),paths.Path1);
+        Storage.getInstance().resetSpindexer = false;
         super.stop();
     }
 
@@ -145,7 +147,7 @@ public class AutoClose extends OpMode {
                     robot.getLauncher().toShoot()
                             .alongWith(new WaitCommand(100)
                                     .andThen(PathShootEx())),
-                    new WaitCommand(200),
+                    new WaitCommand(300),
                     robot.getCamera().getMotif(),
                     new WaitCommand(50),
                     new InstantCommand(()-> state = nextState))
@@ -186,6 +188,7 @@ public class AutoClose extends OpMode {
                     .build();
                 green = 2;
                 new SequentialCommandGroup(
+                    robot.getLauncher().toZero(),
                     Pick1(),
                         new ParallelCommandGroup(
                             new SequentialCommandGroup(
@@ -215,10 +218,11 @@ public class AutoClose extends OpMode {
                 PathChain pathChain4 = robot.getDrive().getFollower().pathBuilder()
                     .addPath(new BezierCurve(paths.Path3,
                             paths.Path7Ex.plus(new Pose(color == Alliance.Blue ? 9 : -9, -3)),
-                            paths.Path7Ex.plus(new Pose(0, -5))))
+                            paths.Path7Ex))
                     .setLinearHeadingInterpolation(paths.Path7.getHeading(), paths.Path7Ex.getHeading() + Math.PI)
                     .build();
                 new SequentialCommandGroup(
+                    robot.getLauncher().toZero(),
                     Pick2(),
                     new ParallelCommandGroup(
                         new SequentialCommandGroup(
@@ -267,9 +271,7 @@ public class AutoClose extends OpMode {
                 lastState = States.finish;
                 finish().schedule();
                 robot.getLauncher().flywheelOff().schedule();
-                robot.getLauncher().toShoot()
-                        .andThen(new InstantCommand(robot.getLauncher()::resetEncoder))
-                        .schedule();
+                robot.getLauncher().toZero().schedule();
                 robot.getIntake().stop().schedule();
                 state = States.idle;
                 break;
@@ -290,14 +292,14 @@ public class AutoClose extends OpMode {
         return robot.getDrive().pathCommand(robot.getDrive().getFollower().pathBuilder()
             .addPath(new BezierLine(robot.getDrive().getPose(), paths.Path1))
             .setHeadingInterpolation(HeadingInterpolator.facingPoint(new Pose(
-                    color == Alliance.Blue ? 0 :144, 147)))
+                    color == Alliance.Blue ? 0 :139, 147)))
             .build());
     }
     public Command PathShoot2() {
         return robot.getDrive().pathCommand(robot.getDrive().getFollower().pathBuilder()
             .addPath(new BezierCurve(robot.getDrive().getPose(), paths.Path3Ex, paths.Path1))
             .setHeadingInterpolation(HeadingInterpolator.facingPoint(
-                    new Pose(color == Alliance.Blue ? 0 : 144, 144)))
+                    new Pose(color == Alliance.Blue ? 0 : 139, 147)))
             .build());
     }
     public Command PathShootEx() {
@@ -306,9 +308,10 @@ public class AutoClose extends OpMode {
 
     public Command Pick1() {
         PathChain path = robot.getDrive().getFollower().pathBuilder()
-                .addPath(new BezierLine(robot.getDrive().getPose(),
+                .addPath(new BezierCurve(robot.getDrive().getPose(),
+                        paths.Path6,
                         paths.Path7))
-                .setConstantHeadingInterpolation(paths.Path7.getHeading())
+                .setLinearHeadingInterpolation(robot.getDrive().getZ(),paths.Path7.getHeading())
                 .build();
         return new ParallelCommandGroup(
                 robot.getIntake().start(),
@@ -319,7 +322,7 @@ public class AutoClose extends OpMode {
     public Command Pick2() {
         PathChain path = robot.getDrive().getFollower().pathBuilder()
                 .addPath(new BezierCurve(robot.getDrive().getPose(),paths.Path2,paths.Path3))
-                .setLinearHeadingInterpolation(robot.getDrive().getZ(),paths.Path3.getHeading())
+                .setConstantHeadingInterpolation(paths.Path3.getHeading())
                 .build();
         return new ParallelCommandGroup(
                 robot.getIntake().start(),

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.Command;
@@ -8,6 +9,9 @@ import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Configurable
 public class Bot extends Robot {
@@ -19,6 +23,7 @@ public class Bot extends Robot {
     Servo lift2;
     static boolean started = false;
     static long time = 0;
+    List<LynxModule> allHubs;
 
     public Bot init(HardwareMap hardwareMap, GamepadEx gamepad){
         camera = new Cam(hardwareMap);
@@ -32,7 +37,14 @@ public class Bot extends Robot {
         lift1 = hardwareMap.get(Servo.class,"lift1");
         lift2 = hardwareMap.get(Servo.class,"lift2");
         lift2.setDirection(Servo.Direction.REVERSE);
+        allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs){
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
         return this;
+    }
+    public List<LynxModule> getAllHubs(){
+        return allHubs;
     }
 
     public Cam getCamera() {

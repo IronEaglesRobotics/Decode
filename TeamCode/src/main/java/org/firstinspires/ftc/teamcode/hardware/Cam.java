@@ -51,6 +51,10 @@ public class Cam extends SubsystemBase {
         limelight.close();
     }
 
+    public double getArea() {
+        return limelight.getLatestResult().getTa();
+    }
+
 
     public boolean seestag(){
         return limelight.getLatestResult().isValid();

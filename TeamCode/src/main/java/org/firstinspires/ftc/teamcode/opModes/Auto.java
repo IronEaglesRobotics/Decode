@@ -50,6 +50,7 @@ public class Auto extends OpMode {
     public void init() {
         robot = new Bot().init(hardwareMap, null);
         controller = new GamepadEx(gamepad1);
+        robot.getLauncher().resetEncoder();
     }
 
     @Override
@@ -142,6 +143,7 @@ public class Auto extends OpMode {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
         Storage.getInstance().setPose(robot.getDrive().getPose(),paths.Path1);
+        Storage.getInstance().resetSpindexer = false;
         super.stop();
     }
 

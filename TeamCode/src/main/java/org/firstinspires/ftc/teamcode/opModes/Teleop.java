@@ -47,16 +47,14 @@ public class Teleop extends OpMode {
     boolean aprilCentric = false;
     // 1. Create Logger
     DataLogger logger = new DataLogger("MyLogFile");
-    List<LynxModule> lynxController;
-
     JoinedTelemetry panelsTelemetry;
+    public static double speedCap = .7;
 
     public Teleop() throws IOException {
     }
 
     @Override
     public void init() {
-        lynxController = hardwareMap.getAll(LynxModule.class);
         try {
             logger.addHeaderLine("Time", "Voltage");
         } catch (IOException e) {
@@ -65,6 +63,9 @@ public class Teleop extends OpMode {
         controller1 = new GamepadEx(gamepad1);
         robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
+        if (Storage.getInstance().resetSpindexer){
+            robot.getLauncher().resetEncoder();
+        }
         robot.getDrive().getFollower().setStartingPose(Storage.getInstance().pose);
         robot.getDrive().getFollower().update();
         CommandScheduler.getInstance().reset();
@@ -122,8 +123,8 @@ public class Teleop extends OpMode {
     }
     @Override
     public void loop(){
-        lynxController.get(0).clearBulkCache();
-        lynxController.get(1).clearBulkCache();
+        robot.getAllHubs().get(0).clearBulkCache();
+        robot.getAllHubs().get(1).clearBulkCache();
         controller1.readButtons();
         controller2.readButtons();
         robot.getDrive().getFollower().update();
@@ -151,30 +152,22 @@ public class Teleop extends OpMode {
         if (manualDrive){
             double driveY = controller1.getLeftY();
             double driveX = -controller1.getLeftX();
-            double manualTurn = -controller1.getRightX();
+            double manualTurn = -controller1.getRightX() * speedCap;
             double turnOutput = manualTurn;// default
 
             if(aprilCentric) {
-                double tx = robot.getCamera().getFiducialAngle(); // Limelight horizontal offset
+                double tx = robot.getCamera().getFiducialAngle() + robot.getCamera().getArea() < .6 ? -1.8 : 0; // Limelight horizontal offset
 
-                // If Limelight sees a tag:
-                if (!Double.isNaN(tx)) {
+                headingIntegral += tx;
+                double derivative = tx - lastHeadingError;
+                lastHeadingError = tx;
 
-                    // PID compute
-                    headingIntegral += tx;
-                    double derivative = tx - lastHeadingError;
-                    lastHeadingError = tx;
+                double pid = (kP * tx) + (kI * headingIntegral) + (kD * derivative);
 
-                    double pid = (kP * tx) + (kI * headingIntegral) + (kD * derivative);
+                // limit
+                pid = Math.max(-0.6, Math.min(0.6, pid));
 
-                    // limit
-                    pid = Math.max(-0.6, Math.min(0.6, pid));
-
-                    turnOutput = -pid;
-                }
-                else{
-                    turnOutput = manualTurn;
-                }
+                turnOutput = -pid;
             }
 
             // Send controls (translation from driver, rotation from PID or manual)
@@ -197,9 +190,9 @@ public class Teleop extends OpMode {
         }
 
         CommandScheduler.getInstance().run();
-//        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
-//        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
-        panelsTelemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
+        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
+        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
+//        panelsTelemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
 //        panelsTelemetry.addData("target", Launcher.pidTarget);
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));

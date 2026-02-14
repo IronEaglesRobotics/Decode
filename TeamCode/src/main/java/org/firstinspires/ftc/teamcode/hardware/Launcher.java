@@ -48,19 +48,19 @@ public class Launcher extends SubsystemBase {
     Servo lift1;
     Servo lift2;
     public static int halfDelta = -237;
-    public static int fullDelta = -474;
+    public static int fullDelta = -476;
     public static int pidTarget = 0;
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = -775;
+    public static int closeSpeed = -750;
     public static int farSpeed = -990;
     public static int autoSpeed = -775;
     public static double power = .43;
     public static double servoPos = 0;
     public static double liftpos = 1;
-    public static int tolerance = 10;
+    public static int tolerance = 20;
     public static int offset = 50;
     public static double speed = .9;
 
@@ -71,13 +71,10 @@ public class Launcher extends SubsystemBase {
     double speed1 = 0;
     double speed2 = 0;
     private int order;
-    Thread spindexerThread;
-
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
         spinner = new Motor(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
         pidTarget = 0;
-        spinner.stopAndResetEncoder();
         spinner.setRunMode(Motor.RunMode.VelocityControl);
         spinner.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
@@ -143,8 +140,8 @@ public class Launcher extends SubsystemBase {
     }
 
     public void resetEncoder(){
+        spinner.stopAndResetEncoder();
         pidTarget = 0;
-        spinner.resetEncoder();
     }
     public Command flywheelOff(){
         return new InstantCommand(()->{
@@ -248,15 +245,16 @@ public class Launcher extends SubsystemBase {
         return new SequentialCommandGroup(
             new WaitUntilCommand(this::atSpeed),
             shoot(),
-            new WaitCommand(600),
+            new WaitCommand(300),
             toNext(),
+            new WaitCommand(300),
+            new WaitUntilCommand(this::atSpeed),
             shoot(),
-            new WaitCommand(600),
+            new WaitCommand(300),
             toNext(),
-            shoot(),
-            new WaitCommand(400),
-            toShoot(),
-            new InstantCommand(this::resetEncoder));
+            new WaitCommand(300),
+            new WaitUntilCommand(this::atSpeed),
+            shoot());
     }
 
     public void fixPose(){
