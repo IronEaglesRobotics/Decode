@@ -48,7 +48,7 @@ public class Teleop extends OpMode {
     // 1. Create Logger
     DataLogger logger = new DataLogger("MyLogFile");
     JoinedTelemetry panelsTelemetry;
-    public static double speedCap = .7;
+    public static double speedCap = .75;
 
     public Teleop() throws IOException {
     }
@@ -190,10 +190,10 @@ public class Teleop extends OpMode {
         }
 
         CommandScheduler.getInstance().run();
-        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
-        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
-//        panelsTelemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
-//        panelsTelemetry.addData("target", Launcher.pidTarget);
+//        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
+//        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
+        panelsTelemetry.addData("current", robot.getLauncher().throughBore.getCurrentPosition());
+        panelsTelemetry.addData("target", Launcher.pidTarget);
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
 //        panelsTelemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());

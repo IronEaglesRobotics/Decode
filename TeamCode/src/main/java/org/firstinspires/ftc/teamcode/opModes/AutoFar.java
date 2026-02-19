@@ -94,12 +94,12 @@ public class AutoFar extends OpMode {
         telemetry.addData("shots", lines);
         telemetry.addData("color", color);
         telemetry.addData("delay", ((double) delay) / 1000);
-        telemetry.addData("hit gate",hitGate);
+        telemetry.addData("pick corner",hitGate);
         telemetry.addLine("Lines: A:4 B:3 X:2 Y:1");
         telemetry.addLine("Color: Left Bumper: red Right Bumper: blue");
         telemetry.addLine("Start: Right Stick: far Left Stick: close");
         telemetry.addLine("delay: Dpad ^v");
-        telemetry.addLine("Gate: Dpad <>");
+        telemetry.addLine("Corner: Dpad <>");
         telemetry.update();
     }
 
@@ -122,8 +122,9 @@ public class AutoFar extends OpMode {
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
+        robot.getLauncher().updateSpindexer();
 //        telemetry.addData("order", robot.getCamera().getOrder());
-//        telemetry.addData("last state", lastState);
+        telemetry.addData("last state", lastState);
 //        telemetry.addData("wantsShoot", wantsShoot);
 //        telemetry.addData("target", Launcher.pidTarget);
 //        telemetry.addData("current", robot.getLauncher().spinner.getCurrentPosition());
@@ -152,7 +153,8 @@ public class AutoFar extends OpMode {
                     robot.getDrive().moveTo(paths.Path12Ex),
                     robot.getCamera().getMotif(),
                     new WaitCommand(50),
-                    new InstantCommand(()-> state = nextState))
+                    new InstantCommand(()-> state = nextState)
+                )
                         .schedule();
                 state = States.idle;
                 break;
@@ -198,7 +200,7 @@ public class AutoFar extends OpMode {
             case pick2:
                 finished = false;
                 lastState = States.pick2;
-                nextState = lines > 3 ? (hitGate ? States.pick1 : States.pickCorner) : States.finish;
+                nextState = lines > 3 ? (hitGate ? States.pickCorner : States.pick1) : States.finish;
                 wantsShoot = false;
                 green = 1;
                 new ParallelCommandGroup(
@@ -213,7 +215,7 @@ public class AutoFar extends OpMode {
                     new SequentialCommandGroup (
                         new WaitUntilCommand(
                                 ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                        != Launcher.Color.Nothing || Bot.hasBeen(3000)),
+                                        != Launcher.Color.Nothing || Bot.hasBeen(6000)),
                         robot.getLauncher().toFull(),
                         robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
                     )

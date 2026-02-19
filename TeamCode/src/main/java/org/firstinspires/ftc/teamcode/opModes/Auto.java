@@ -155,7 +155,7 @@ public class Auto extends OpMode {
                             robot.getLauncher().toShoot(),
                             paths.PathShootEx()),
                     isFar ? new WaitCommand(20) : new WaitCommand(1000),
-                    robot.getCamera().getMotif(),
+                    //robot.getCamera().getMotif(),
                     new WaitCommand(200),
                     new InstantCommand(()-> state = States.settingLaunch)
                 ).schedule();

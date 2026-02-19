@@ -35,34 +35,36 @@ public class Launcher extends SubsystemBase {
     public Motor spinner;
     public MotorEx flyWheel1;
     public MotorEx flyWheel2;
+    public Motor throughBore;
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
     //public CRServo quickLaunch;
-    public static double kp = 0.0008;
-    public static double ki = 0.02;
-    public static double kd = 0;
+    public static double kp = 0.0000000002;
+    public static double ki = 0.000000002;
+    public static double kd = 0.00000000001;
     public static double kf = 0;
     public PIDFController controller = new PIDFController(kp,ki,kd,kf);
     Servo pusher;
     AnalogInput servoInput;
     Servo lift1;
     Servo lift2;
-    public static int halfDelta = -237;
-    public static int fullDelta = -476;
+    public static int halfDelta = -1365;
+    public static int fullDelta = -2731;
     public static int pidTarget = 0;
     private static final int CHAMBER1 = halfDelta+fullDelta;
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = -750;
-    public static int farSpeed = -990;
-    public static int autoSpeed = -775;
+    public static int closeSpeed = -790;
+    public static int farSpeed = -975;
+    public static int autoSpeed = -765;
     public static double power = .43;
     public static double servoPos = 0;
-    public static double liftpos = 1;
-    public static int tolerance = 20;
-    public static int offset = 50;
+    public static double liftPos = 1;
+    public static int tolerance = 100;
+    public static int offset = 600;
     public static double speed = .9;
+    public static double minSpeed = .1;
 
     public static double[] veloCoeffecient = new double[] {11,0,0};
     public static double[] feedforward = new double[] {11,0,0};
@@ -81,6 +83,8 @@ public class Launcher extends SubsystemBase {
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
         flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
+        throughBore = new Motor(hardwareMap,"rr",8192,0);
+        throughBore.setInverted(true);
 
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
@@ -89,7 +93,7 @@ public class Launcher extends SubsystemBase {
 
         lift1 = hardwareMap.get(Servo.class,"lift1");
         lift2 = hardwareMap.get(Servo.class, "lift2");
-        liftpos=0;
+        liftPos=0;
 
 
 //        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
@@ -141,6 +145,7 @@ public class Launcher extends SubsystemBase {
 
     public void resetEncoder(){
         spinner.stopAndResetEncoder();
+        throughBore.stopAndResetEncoder();
         pidTarget = 0;
     }
     public Command flywheelOff(){
@@ -152,12 +157,12 @@ public class Launcher extends SubsystemBase {
 
     public Command Park(){
         return new InstantCommand(() ->
-            liftpos=1
+            liftPos=1
         );
     }
     public Command UnPark(){
         return new InstantCommand(() ->
-            liftpos=0
+            liftPos=0
         );
     }
     public Command shoot() {
@@ -166,7 +171,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                servoPos = 0.4;
+                servoPos = 0.5;
                 time = System.currentTimeMillis();
             }
 
@@ -239,7 +244,8 @@ public class Launcher extends SubsystemBase {
         return ((pidTarget - halfDelta)%fullDelta) == 0;
     }
     public boolean atTarget(){
-        return spinner.getCurrentPosition() < pidTarget - offset || spinner.getCurrentPosition() > pidTarget + offset;
+        return throughBore.getCurrentPosition() < pidTarget - offset
+                || throughBore.getCurrentPosition() > pidTarget + offset;
     }
     public Command fire(){
         return new SequentialCommandGroup(
@@ -262,7 +268,7 @@ public class Launcher extends SubsystemBase {
         pidTarget = fullDelta + fixer;
     }
     public void Zero(){
-        pidTarget = 0;
+        pidTarget =  - ((throughBore.getCurrentPosition() % fullDelta) + fullDelta);
     }
     public Command toNext(){
         return new Command() {
@@ -334,7 +340,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                pidTarget = 0;
+                pidTarget = throughBore.getCurrentPosition() - ((throughBore.getCurrentPosition() % fullDelta) + fullDelta);
             }
 
             @Override
@@ -376,6 +382,7 @@ public class Launcher extends SubsystemBase {
     public void periodic(){
         controller.setPIDF(kp,ki,kd,kf);
         controller.setSetPoint(pidTarget);
+        controller.setMinimumOutput(minSpeed);
         flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
         flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
         flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
@@ -383,15 +390,15 @@ public class Launcher extends SubsystemBase {
         flyWheel1.setVelocity(speed1);
         flyWheel2.setVelocity(-speed1);
         pusher.setPosition(servoPos);
-        lift1.setPosition(liftpos);
-        lift2.setPosition(liftpos);
+        lift1.setPosition(liftPos);
+        lift2.setPosition(liftPos);
     }
     public void updateSpindexer(){
         if (atTarget()){
             spinner.set(speed * Math.signum(pidTarget - spinner.getCurrentPosition()));
         }
         else {
-            spinner.set(controller.calculate(spinner.getCurrentPosition()));
+            spinner.set(controller.calculate(throughBore.getCurrentPosition()));
         }
     }
 
@@ -409,10 +416,10 @@ public class Launcher extends SubsystemBase {
         @Override
         public void initialize() {
             currentChamber = 0;
-            pidTarget = 0;
             launcher.chambers.set(0,Color.Nothing);
             launcher.chambers.set(1,Color.Nothing);
             launcher.chambers.set(2,Color.Nothing);
+            launcher.Zero();
         }
 
         @Override
