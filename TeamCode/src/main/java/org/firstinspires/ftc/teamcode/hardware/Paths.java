@@ -22,7 +22,7 @@ public class Paths {
 
     public Paths(boolean isBlue) {
         double shootX = isBlue ? 32 : 106;
-        double prePickX = isBlue ? 65 : 85;
+        double prePickX = isBlue ? 65 : 80;
         double postPickX1 = isBlue ? 4 : 142;
         double postPickEx = isBlue ? 25 : 119;
         double postPickX2 = isBlue ? 9 : 135;
@@ -43,7 +43,7 @@ public class Paths {
         Path3 = new Pose(postPickX1, 70.000, Math.toRadians(pickUp));
         Path3Ex = new Pose(postPickEx, 70.000, Math.toRadians(pickUp));
 
-        Path6 = new Pose(prePickX, 93.000, Math.toRadians(pickUp));
+        Path6 = new Pose(prePickX, 92.000, Math.toRadians(pickUp));
 
         Path7 = new Pose(postPickX2, 93.500, Math.toRadians(pickUp));
         Path7Ex = new Pose(isBlue ? 4.5 : 139.5, 86, Math.toRadians(90));

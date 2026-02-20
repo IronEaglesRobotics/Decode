@@ -39,9 +39,9 @@ public class Launcher extends SubsystemBase {
     public RevColorSensorV3 cs1;
     public RevColorSensorV3 cs2;
     //public CRServo quickLaunch;
-    public static double kp = 0.0000000002;
-    public static double ki = 0.000000002;
-    public static double kd = 0.00000000001;
+    public static double kp = 0.000000008;
+    public static double ki = 0.000000008;
+    public static double kd = 0.0000000001;
     public static double kf = 0;
     public PIDFController controller = new PIDFController(kp,ki,kd,kf);
     Servo pusher;
@@ -61,8 +61,8 @@ public class Launcher extends SubsystemBase {
     public static double power = .43;
     public static double servoPos = 0;
     public static double liftPos = 1;
-    public static int tolerance = 100;
-    public static int offset = 600;
+    public static int tolerance = 80;
+    public static int offset = 800;
     public static double speed = .9;
     public static double minSpeed = .1;
 
@@ -72,7 +72,7 @@ public class Launcher extends SubsystemBase {
     public static int safePose = 0;
     double speed1 = 0;
     double speed2 = 0;
-    private int order;
+    public int order;
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
         spinner = new Motor(hardwareMap,"spinner", Motor.GoBILDA.RPM_223);
@@ -223,12 +223,13 @@ public class Launcher extends SubsystemBase {
                 } else if (greenLoc == 2) {
                     pidTarget = CHAMBER3;
                 }
-                if (greenLoc == -1 || order == 0){
-                    pidTarget = CHAMBER1;
-                }
-                else {
-                    pidTarget -= fullDelta * (order - 1) + fullDelta * 3;
-                }
+//                if (greenLoc == -1 || order == 0){
+//                    pidTarget = CHAMBER1;
+//                }
+//                else {
+                pidTarget -= fullDelta * (order - 1);
+//                }
+                pidTarget += fullDelta * 3;
             }
 
             @Override
@@ -395,7 +396,7 @@ public class Launcher extends SubsystemBase {
     }
     public void updateSpindexer(){
         if (atTarget()){
-            spinner.set(speed * Math.signum(pidTarget - spinner.getCurrentPosition()));
+            spinner.set(speed * Math.signum(pidTarget - throughBore.getCurrentPosition()));
         }
         else {
             spinner.set(controller.calculate(throughBore.getCurrentPosition()));
@@ -455,7 +456,7 @@ public class Launcher extends SubsystemBase {
                 } else {
                     pidTarget += fullDelta;
                 }
-//                launcher.current -= fullDelta * (order - 1);
+                pidTarget -= fullDelta * (order - 1);
 
             } else {
                 pidTarget = CHAMBER1;

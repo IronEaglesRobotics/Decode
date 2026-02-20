@@ -148,6 +148,7 @@ public class AutoFar extends OpMode {
         switch (state) {
             case motifDetect:
                 nextState = lines > 0 ? States.settingLaunch : States.finish;
+                lastState = States.motifDetect;
                 new SequentialCommandGroup(
                     robot.getLauncher().toShoot(),
                     robot.getDrive().moveTo(paths.Path12Ex),
@@ -159,6 +160,7 @@ public class AutoFar extends OpMode {
                 state = States.idle;
                 break;
             case settingLaunch:
+                lastState = States.settingLaunch;
                 nextState = lines > 1 ? States.pickFar : States.finish;
                 new WaitCommand(delay)
                         .andThen(

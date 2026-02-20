@@ -166,6 +166,7 @@ public class AutoClose extends OpMode {
                 new WaitCommand(delay)
                         .andThen(
                             new SequentialCommandGroup(
+                                new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
                                 robot.getLauncher().setLaunch(0,robot.getCamera().getOrder())
                                         .alongWith(PathShoot()),
                                 new WaitUntilCommand(robot.getLauncher()::canShoot),
@@ -200,7 +201,7 @@ public class AutoClose extends OpMode {
                         new ParallelCommandGroup(
                             new SequentialCommandGroup(
                                 robot.getLauncher().toFull(),
-                                robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())),
+                                robot.getLauncher().setLaunch(2,robot.getLauncher().order)),
                             new SequentialCommandGroup(
                                 hitGate ? robot.getDrive().pathCommand(pathChain3) : new WaitCommand(20),
                                 new WaitCommand(hitGate ? 1000 : 20),
@@ -234,7 +235,7 @@ public class AutoClose extends OpMode {
                     new ParallelCommandGroup(
                         new SequentialCommandGroup(
                             robot.getLauncher().toFull(),
-                            robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())),
+                            robot.getLauncher().setLaunch(1,robot.getLauncher().order)),
                         new SequentialCommandGroup(
                             hitGate2 ? robot.getDrive().pathCommand(pathChain4) : new WaitCommand(20),
                             new WaitCommand(hitGate2 ? 1000 : 20),
@@ -265,7 +266,7 @@ public class AutoClose extends OpMode {
                     new ParallelCommandGroup(
                             robot.getDrive().pathCommand(pathChain),
                             robot.getLauncher().toFull(),
-                            robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
+                            robot.getLauncher().setLaunch(0,robot.getCamera().getOrder())
                     ),
                     new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                     robot.getLauncher().fire(),
