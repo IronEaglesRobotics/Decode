@@ -21,7 +21,7 @@ public class Paths {
     public Pose Path13;
 
     public Paths(boolean isBlue) {
-        double shootX = isBlue ? 32 : 106;
+        double shootX = isBlue ? 38 : 104;
         double prePickX = isBlue ? 65 : 80;
         double postPickX1 = isBlue ? 4 : 142;
         double postPickEx = isBlue ? 25 : 119;
@@ -30,7 +30,7 @@ public class Paths {
         double cornerPickX = isBlue ? -3 : 137;
 
         double closeAim = isBlue ? 131 : 52;
-        double seeObelisk = isBlue ? 70 : 110;
+        double seeObelisk = isBlue ? 70 : 105;
         double pickUp = isBlue ? 187 : -7;
         double farAim = isBlue ? 115 : 72;
         double cornerZ = !isBlue ? 245 : 335;

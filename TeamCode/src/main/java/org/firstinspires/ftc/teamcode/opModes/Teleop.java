@@ -80,9 +80,6 @@ public class Teleop extends OpMode {
                                 .andThen(robot.getIntake().stop())
                         ,robot.getIntake().stop()
                                         .alongWith(robot.getLauncher().setLaunch())
-                                        .andThen(robot.getIntake().reverse())
-                                        .raceWith(new WaitCommand(1000))
-                                        .andThen(robot.getIntake().stop())
                 );
         controller1.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getIntake().stop());

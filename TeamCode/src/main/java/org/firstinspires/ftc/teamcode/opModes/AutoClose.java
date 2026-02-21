@@ -150,13 +150,14 @@ public class AutoClose extends OpMode {
             case motifDetect:
                 nextState = lines > 0 ? States.settingLaunch : States.finish;
                 new SequentialCommandGroup(
+                    new InstantCommand(()->robot.getCamera().startLL()),
                     robot.getLauncher().toShoot()
                             .alongWith(new WaitCommand(100)
                                     .andThen(PathShootEx())),
-                    new WaitCommand(1000),
-                    new InstantCommand(()->robot.getCamera().startLL()),
+                    new WaitCommand(300),
+                    new WaitCommand(1500),
                     robot.getCamera().getMotif(),
-                    new WaitCommand(50),
+                    new WaitCommand(100),
                     new InstantCommand(()-> state = nextState))
                         .schedule();
                 state = States.idle;
@@ -171,7 +172,7 @@ public class AutoClose extends OpMode {
                                         .alongWith(PathShoot()),
                                 new WaitUntilCommand(robot.getLauncher()::canShoot),
                                 robot.getLauncher().fire(),
-                                new WaitCommand(150),
+                                new WaitCommand(400),
                                 new InstantCommand(()->state = nextState)
                                         .alongWith(robot.getLauncher().toShoot())
                             )
@@ -201,6 +202,7 @@ public class AutoClose extends OpMode {
                         new ParallelCommandGroup(
                             new SequentialCommandGroup(
                                 robot.getLauncher().toFull(),
+                                new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
                                 robot.getLauncher().setLaunch(2,robot.getLauncher().order)),
                             new SequentialCommandGroup(
                                 hitGate ? robot.getDrive().pathCommand(pathChain3) : new WaitCommand(20),
@@ -210,7 +212,7 @@ public class AutoClose extends OpMode {
                         ),
                     new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                     robot.getLauncher().fire(),
-                    new WaitCommand(500),
+                    new WaitCommand(1000),
                     new InstantCommand(()->state = nextState)
 //                            .alongWith(robot.getLauncher().toShoot()
 //                                    .andThen(new InstantCommand(robot.getLauncher()::resetEncoder)))
@@ -235,6 +237,7 @@ public class AutoClose extends OpMode {
                     new ParallelCommandGroup(
                         new SequentialCommandGroup(
                             robot.getLauncher().toFull(),
+                            new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
                             robot.getLauncher().setLaunch(1,robot.getLauncher().order)),
                         new SequentialCommandGroup(
                             hitGate2 ? robot.getDrive().pathCommand(pathChain4) : new WaitCommand(20),
@@ -244,7 +247,7 @@ public class AutoClose extends OpMode {
                     ),
                     new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                     robot.getLauncher().fire(),
-                    new WaitCommand(150),
+                    new WaitCommand(1000),
                     new InstantCommand(()->state = nextState)
 //                            .alongWith(robot.getLauncher().toShoot()
 //                                    .andThen(new InstantCommand(robot.getLauncher()::resetEncoder)))

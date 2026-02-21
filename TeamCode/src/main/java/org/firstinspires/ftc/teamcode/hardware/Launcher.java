@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -55,9 +56,9 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = -790;
+    public static int closeSpeed = -805;
     public static int farSpeed = -975;
-    public static int autoSpeed = -765;
+    public static int autoSpeed = -805;
     public static double power = .43;
     public static double servoPos = 0;
     public static double liftPos = 1;
@@ -217,24 +218,26 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 if (greenLoc == 0) {
-                    pidTarget = CHAMBER1;
+                    pidTarget = CHAMBER1 - (fullDelta*(order - 1));
                 } else if (greenLoc == 1) {
-                    pidTarget = CHAMBER2;
+                    pidTarget = CHAMBER2 - (fullDelta*(order - 1));
                 } else if (greenLoc == 2) {
-                    pidTarget = CHAMBER3;
+                    pidTarget = CHAMBER3 - (fullDelta*(order - 1));
                 }
 //                if (greenLoc == -1 || order == 0){
 //                    pidTarget = CHAMBER1;
 //                }
 //                else {
-                pidTarget -= fullDelta * (order - 1);
+//                pidTarget -= fullDelta * (order - 1);
 //                }
-                pidTarget += fullDelta * 3;
+
+//                pidTarget += fullDelta * 3;
             }
 
             @Override
             public boolean isFinished() {
-                return controller.atSetPoint();
+//                return controller.atSetPoint();
+                return !atTarget();
             }
         };
     }
@@ -341,7 +344,8 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                pidTarget = throughBore.getCurrentPosition() - ((throughBore.getCurrentPosition() % fullDelta) + fullDelta);
+                pidTarget = 0;
+                //throughBore.getCurrentPosition() - ((throughBore.getCurrentPosition() % fullDelta) + fullDelta);
             }
 
             @Override
@@ -353,9 +357,9 @@ public class Launcher extends SubsystemBase {
     public Command toFull(){
         return new SequentialCommandGroup(
                 toNext(),
-                new WaitCommand(200),
+                new WaitCommand(300),
                 toNext(),
-                new WaitCommand(200),
+                new WaitCommand(300),
                 toNext()
         );
     }
