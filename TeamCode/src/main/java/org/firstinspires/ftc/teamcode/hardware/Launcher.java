@@ -58,7 +58,7 @@ public class Launcher extends SubsystemBase {
     List<Color> chambers;
     public static int closeSpeed = -805;
     public static int farSpeed = -975;
-    public static int autoSpeed = -805;
+    public static int autoSpeed = -790;
     public static double power = .43;
     public static double servoPos = 0;
     public static double liftPos = 1;
