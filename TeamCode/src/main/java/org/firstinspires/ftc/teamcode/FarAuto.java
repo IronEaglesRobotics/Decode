@@ -69,7 +69,7 @@ public class FarAuto extends OpMode {
         launchBatch1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup1Pose(), this.config.getScorePose()))
                 .setLinearHeadingInterpolation(this.config.getPickup1Pose().getHeading(), this.config.getScorePose().getHeading())
-                .addParametricCallback(.99, (() -> timer = getRuntime() + .5))
+                .addParametricCallback(.99, (() -> timer = getRuntime() + 1))
                 .build();
 
         getPickup2 = robot.getFollower().pathBuilder()
@@ -82,7 +82,7 @@ public class FarAuto extends OpMode {
 //                .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
                 .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
                 .setTangentHeadingInterpolation()
-                .addParametricCallback(.99, (() -> timer = getRuntime() + .5))
+                .addParametricCallback(.99, (() -> timer = getRuntime() + 1))
                 .build();
     }
 
@@ -130,14 +130,19 @@ public class FarAuto extends OpMode {
                     } else {
                         follower().followPath(getPickup1Straight, .75, true);
                     }
-                    runs = !runs;
                     setPathState(6);
                     timer = getRuntime() + 3.5;
                 }
                 break;
             case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy() || timer < getRuntime()) {
-                    follower().followPath(launchBatch2, true);
+                    if (!runs) {
+                        follower().followPath(launchBatch2, true);
+                    } else {
+                        follower().followPath(launchBatch1, .75, true);
+                    }
+                    runs = !runs;
+
                     setPathState(7);
 //                    timer = getRuntime() + .9;
                 }

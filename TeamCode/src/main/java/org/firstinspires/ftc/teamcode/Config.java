@@ -49,7 +49,34 @@ public class Config {
             .pickup2Pose(new Pose(123, 57, Math.toRadians(0)))
             .pickup2Control(new Pose(87, 57, Math.toRadians(180)))
 
-            .pickup3Pose(new Pose(125, 60.5, Math.toRadians(0)))
+            .pickup3Pose(new Pose(124, 56.5, Math.toRadians(0)))
+//            .pickup3Pose(new Pose(127, 58.5, Math.toRadians(0)))
+            .pickup3Control(new Pose(108, 56, Math.toRadians(205 + 180)))
+            .pickup3Control2(new Pose(102, 58, Math.toRadians(180)))
+
+            .pickup4Pose(new Pose(120, 35, Math.toRadians(0)))
+            .pickup4Control(new Pose(70, 30, Math.toRadians(180)))
+            .pickup4End(new Pose(120, 35, Math.toRadians(180)))
+            .parkPose(new Pose(105, 60, Math.toRadians(180)))
+
+
+            .build();
+
+    public static final Config red2 = Config.builder()
+            .team("red")
+            .goalPose(new Pose(135, 133, Math.toRadians(180)))
+
+            .startPose(new Pose(116.5, 130.410, Math.toRadians(127))) // 180 - 53
+            .scorePose(new Pose(84, 86, Math.toRadians(160)))
+
+            .pickup1Pose(new Pose(118, 80, Math.toRadians(180)))
+            .pickup1Control(new Pose(103, 78, Math.toRadians(180)))
+
+            .pickup2Pose(new Pose(123, 57, Math.toRadians(0)))
+            .pickup2Control(new Pose(87, 57, Math.toRadians(180)))
+
+            .pickup3Pose(new Pose(124, 58.25, Math.toRadians(0)))
+//            .pickup3Pose(new Pose(127, 58.5, Math.toRadians(0)))
             .pickup3Control(new Pose(108, 56, Math.toRadians(205 + 180)))
             .pickup3Control2(new Pose(102, 58, Math.toRadians(180)))
 
@@ -63,13 +90,13 @@ public class Config {
 
     public static final Config redFar = Config.builder()
             .team("red")
-            .goalPose(new Pose(135, 133, Math.toRadians(180)))
+            .goalPose(new Pose(140, 133, Math.toRadians(180)))
 
             .startPose(new Pose(100, 6, Math.toRadians(180)))
             .scorePose(new Pose(90, 12, Math.toRadians(180)))
 
-            .pickup1Pose(new Pose(131, 7, Math.toRadians(150)))
-            .pickup1Control(new Pose(128, 25, Math.toRadians(0)))
+            .pickup1Pose(new Pose(134, 7, Math.toRadians(150)))
+            .pickup1Control(new Pose(138, 28, Math.toRadians(0)))
 
             .pickup2Transition(new Pose(125, 27, Math.toRadians(-30)))
             .pickup2Control(new Pose(130, 3, Math.toRadians(0)))
@@ -78,6 +105,32 @@ public class Config {
             .build();
 
     public static final Config blue = Config.builder()
+            .team("blue")
+            .goalPose(new Pose(4, 141, 0))
+
+            .startPose(new Pose(31.5, 129.410, Math.toRadians(270+53)))
+            .scorePose(new Pose(63, 83, Math.toRadians(20)))
+            .pickup1Pose(new Pose(22, 80, Math.toRadians(0)))
+            .pickup1Control(new Pose(41, 78, Math.toRadians(0)))
+
+            .pickup2Pose(new Pose(17, 55, Math.toRadians(180)))
+            .pickup2Control(new Pose(57, 57, Math.toRadians(0)))
+
+            .openGate(new Pose (22.25,67,Math.toRadians(0)))
+
+            .pickup3Control(new Pose(20, 54, Math.toRadians(0)))
+            .pickup3Pose(new Pose(17, 50 , Math.toRadians(360-30)))
+            .pickup3Transition(new Pose(15, 56, Math.toRadians(360-30)))
+            .pickup3Control2(new Pose(27, 53, Math.toRadians(0)))
+
+            .pickup4Pose(new Pose(23, 28, Math.toRadians(180)))
+
+            .pickup4Control(new Pose(72, 27, Math.toRadians(0)))
+            .pickup4End(new Pose(17, 28, Math.toRadians(0)))
+            .parkPose(new Pose(25, 60, Math.toRadians(0)))
+            .build();
+
+    public static final Config blue2 = Config.builder()
             .team("blue")
             .goalPose(new Pose(0, 140, 0))
 
@@ -89,7 +142,10 @@ public class Config {
             .pickup2Pose(new Pose(16, 57, Math.toRadians(180)))
             .pickup2Control(new Pose(57, 57, Math.toRadians(0)))
 //            .pickup2Control2(new Pose(43, 100, ath.toRadians(0)))
-            .pickup3Pose(new Pose(13.25, 57.5, Math.toRadians(180)))
+
+            .pickup3Pose(new Pose(12, 58.75 , Math.toRadians(180)))
+//            .pickup3Pose(new Pose(13.25, 56.25, Math.toRadians(180)))
+
 //            .pickup3Control(new Pose(39, 60, Math.toRadians(0)))
             .pickup3Control(new Pose(40, 56, Math.toRadians(330 - 180)))
             .pickup3Control2(new Pose(42, 58, Math.toRadians(0)))
@@ -108,13 +164,13 @@ public class Config {
             .startPose(new Pose(44, 6, Math.toRadians(0)))
             .scorePose(new Pose(54, 12, Math.toRadians(0)))
 
-            .pickup1Pose(new Pose(13, 7, Math.toRadians(35)))
-            .pickup1Control(new Pose(12, 25, Math.toRadians(180)))
+            .pickup1Pose(new Pose(13, 7, Math.toRadians(42.5)))
+            .pickup1Control(new Pose(6, 28, Math.toRadians(180)))
 
 //            .pickup2Transition(new Pose(19, 27, Math.toRadians(210-180)))
             .pickup2Transition(new Pose(19, 36, Math.toRadians(210-180)))
-            .pickup2Control(new Pose(9, 3, Math.toRadians(180)))
-            .pickup2Pose(new Pose(13, 30, Math.toRadians(-60)))
+            .pickup2Control(new Pose(2, -4, Math.toRadians(180)))
+            .pickup2Pose(new Pose(13, 20, Math.toRadians(-70)))
             .build();
 
     public static final Config blueTeleOp = Config.builder()
@@ -123,7 +179,7 @@ public class Config {
 //            .shootPose(new Pose(62, 94, Math.toRadians(140)))
             .shootPoseFar(new Pose(72, 13, Math.toRadians(118)))
             .resetPose(new Pose(135, 8, Math.toRadians(90)))
-            .goalPose(new Pose(5, 136, 0))
+            .goalPose(new Pose(4, 132, 0))
             .build();
 
     public static final Config redTeleOp = Config.builder()
@@ -132,7 +188,7 @@ public class Config {
             .shootPoseFar(new Pose(72, 13, Math.toRadians(118)))
             .resetPose(new Pose(9, 8, Math.toRadians(90)))
 //            .resetPose(new Pose(135, 8, Math.toRadians(90)))
-            .goalPose(new Pose(136, 143, 0))
+            .goalPose(new Pose(139, 143, 0))
             .build();
 
 

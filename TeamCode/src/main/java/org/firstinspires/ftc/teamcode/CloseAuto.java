@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import static org.firstinspires.ftc.teamcode.RobotNew.Shooter.getInterpolatedValue;
+
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -28,7 +30,7 @@ public class CloseAuto extends OpMode {
     public TelemetryManager telemetryM;
     private final PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
     private double timer;
-    private boolean foo = true;
+    private boolean foo = false;
     private double shooterTimer = 0.6;
     private double power = .3;
     private double hood = .7;
@@ -49,12 +51,13 @@ public class CloseAuto extends OpMode {
         return new Pose(pose.getX() + x, pose.getY() + y, pose.getHeading());
     }
 
-    private Path scorePreloads, openGate;
-    private PathChain getPickup1, park, launchBatch1, getPickup2, launchBatch2, getPickup3, launchBatch3, getPickup4, launchBatch4;
+    private Path scorePreloads;
+    private PathChain openGate, getPickup1, park, launchBatch1, getPickup2, launchBatch2, getPickup3, launchBatch3, getPickup4, launchBatch4;
 
     public void buildPaths() {
         scorePreloads = new Path(new BezierLine(this.config.getStartPose(), this.config.getScorePose()));
-        scorePreloads.setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getScorePose().getHeading(), .8);
+//        scorePreloads.setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getScorePose().getHeading(), .8);
+        scorePreloads.setTangentHeadingInterpolation();
 
         getPickup1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup1Control(), this.config.getPickup1Pose()))
@@ -77,26 +80,25 @@ public class CloseAuto extends OpMode {
                 .setTangentHeadingInterpolation()
                 .build();
 
+        openGate = robot.getFollower().pathBuilder()
+
+                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup3Control2(), this.config.getOpenGate()))
+                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), this.config.getOpenGate().getHeading())
+//                .setReversed()
+                .build();
+
         getPickup3 = robot.getFollower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup3Control(), this.config.getPickup3Pose()))
-                .setHeadingInterpolation(
-                        HeadingInterpolator.piecewise(
-                                new HeadingInterpolator.PiecewiseNode(0, .2, HeadingInterpolator.tangent),
-                                new HeadingInterpolator.PiecewiseNode(.2, 1, HeadingInterpolator.constant(this.config.getPickup3Control().getHeading()))
-                        )
-                )
-                .setReversed()
+                .addPath(new BezierCurve(this.config.getOpenGate(), this.config.getPickup3Control(), this.config.getPickup3Pose()))
+                .setConstantHeadingInterpolation(this.config.getPickup3Pose().getHeading())
+//                .addPath(new BezierLine(this.config.getPickup3Pose(),this.config.getPickup3Transition()))
+//                .setConstantHeadingInterpolation(this.config.getPickup3Pose().getHeading())
                 .build();
 
 
         launchBatch3 = follower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getPickup3Pose(), config.getPickup3Control2(), this.config.getScorePose()))
-                .setHeadingInterpolation(
-                        HeadingInterpolator.piecewise(
-                                new HeadingInterpolator.PiecewiseNode(0, .4, HeadingInterpolator.tangent),
-                                new HeadingInterpolator.PiecewiseNode(.4, 1, HeadingInterpolator.constant(this.config.getScorePose().getHeading()))
-                        )
-                ).build();
+                .addPath(new BezierLine(this.config.getPickup3Pose(), this.config.getScorePose()))
+                .setTangentHeadingInterpolation()
+                .build();
 
         getPickup4 = robot.getFollower().pathBuilder()
                 .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup4Control(), this.config.getPickup4Pose()))
@@ -127,7 +129,7 @@ public class CloseAuto extends OpMode {
                 setPathState(1);
                 break;
             case 1: // if at location, launch
-                if (!follower().isBusy()) {
+                if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
                     robot.getIntake().open();
                     setPathState(5);
                     timer = getRuntime() + shooterTimer;
@@ -179,7 +181,8 @@ public class CloseAuto extends OpMode {
                 if (getRuntime() > timer) {
                     robot.intake.close();
                     runs++;
-                    follower().followPath(getPickup3, .9, true);
+                    follower().followPath(openGate, .8, true);
+                    timer = getRuntime();
                     setPathState(100);
 //                    timer = getRuntime() + 4;
 
@@ -187,10 +190,20 @@ public class CloseAuto extends OpMode {
                 break;
             case 100: //if all balls are launched, reset the shooter and go to next position
                 if (!follower().isBusy()) {
-//                    follower().followPath(launchBatch3, true);
-                    robot.intake.close();
-                    timer = getRuntime() + 1;
-                    setPathState(9);
+                    if (!foo) {
+                        if(runs == 1) {
+                            timer = getRuntime() + .01;
+                        } else {
+                            timer = getRuntime() + .2;
+                        }
+                        foo = true;
+                    } else if (timer < getRuntime()) {
+                        follower().followPath(getPickup3, true);
+                        robot.intake.close();
+                        timer = getRuntime() + 1.8;
+                        setPathState(9);
+                        foo = false;
+                    }
                 }
                 break;
             case 9://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
@@ -201,7 +214,7 @@ public class CloseAuto extends OpMode {
                 }
                 break;
             case 10: //if at launch pos and shooter fast enough, then shoot
-                if (timer > getRuntime() && !follower().isBusy()) {
+                if (timer > getRuntime() && !follower().isBusy() && robot.getShooter().atTargetVelocity()) {
 //                    if (!follower().isBusy() && follower().getPose().getX() < 100 && follower().getPose().getX() > 40) {
                     robot.intake.open();
                     if (runs < 2) {
@@ -274,6 +287,10 @@ public class CloseAuto extends OpMode {
             this.config = Config.blue;
         } else if (this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
             this.config = Config.red;
+        } else if (this.controller1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)) {
+            this.config = Config.blue2;
+        } else if (this.controller1.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)) {
+            this.config = Config.red2;
         }
         telemetry.addData("Team:", this.config == null ? null : this.config.getTeam());
         controller1.readButtons();
@@ -296,11 +313,12 @@ public class CloseAuto extends OpMode {
         robot.getFollower().update();
 
         robot.getIntake().intake();
+        distance = robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), config.getGoalPose().getX(), config.getGoalPose().getY());
 
-        distance = 4 + robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), config.getGoalPose().getX(), config.getGoalPose().getY());
-        power = robot.getShooter().calculateShooterPower(distance);
-        hood = robot.getShooter().calculateHoodPose(distance);
-        robot.getShooter().setShot(power, hood);
+        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance);
+        power = result.y1;
+        hood = result.z;
+        robot.getShooter().setShot(power, hood,true);
         robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), Math.toDegrees(robot.getFollower().getHeading()));
         runAuto();
 

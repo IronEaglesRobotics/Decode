@@ -41,6 +41,7 @@ public class TeleOPRed extends OpMode {
     private double hood = .7;
     private double distance = 50;
     private double offset = 2;
+    private double dOffset = 0;
 
 
     @Override
@@ -72,27 +73,34 @@ public class TeleOPRed extends OpMode {
             far = !far;
         }
 
-        power = robot.getShooter().calculateShooterPower(distance );
-        hood = robot.getShooter().calculateHoodPose(distance);
+        power = robot.getShooter().calculateShooterPower(distance + dOffset );
+        hood = robot.getShooter().calculateHoodPose(distance +dOffset);
 
 
         robot.getShooter().setShot(power,hood);
 
-        if (controller1.isDown(GamepadKeys.Button.DPAD_DOWN)) {
-            robot.getIntake().open();
-            robot.getIntake().transfer();
-        } else {
-            robot.getIntake().close();
-            robot.getIntake().intake();
+        if(controller1.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)){
+            if (robot.getTurret().getLimeError() > 3 || robot.getTurret().getLimeError() < 0) {
+                robot.getFollower().setPose(new Pose(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), Math.toRadians(Math.toDegrees(robot.getFollower().getPose().getHeading()) + (robot.getTurret().getLimeError())-3)));
+            }
         }
 
+        if (controller1.isDown(GamepadKeys.Button.DPAD_DOWN)) {
+            robot.getIntake().open();
+            robot.getIntake().transfer(distance);
+
+//        }
+        } else {
+            robot.getIntake().close();
+            robot.getIntake().transfer(distance);
+        }
 
         robot.getFollower().update();
         if (!automatedDrive) {
             robot.getFollower().setTeleOpDrive(
-                    controller1.getLeftY(),
-                    -controller1.getLeftX(),
-                    -controller1.getRightX(), true // Robot Centric
+                    -controller1.getLeftY(),
+                    controller1.getLeftX(),
+                    -controller1.getRightX()*.6, true // Robot Centric
             );
         }
 
@@ -123,6 +131,12 @@ public class TeleOPRed extends OpMode {
             offset++;
         } else if(controller1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)){
             offset--;
+        }
+
+        if (controller1.wasJustPressed(GamepadKeys.Button.SQUARE)){
+            dOffset--;
+        } else if(controller1.wasJustPressed(GamepadKeys.Button.CIRCLE)){
+            dOffset++;
         }
 
         //Auto Drive turning

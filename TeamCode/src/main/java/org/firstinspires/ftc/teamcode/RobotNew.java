@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -15,7 +18,12 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
+import java.util.Map;
+import java.util.TreeMap;
 
 import java.util.List;
 
@@ -33,6 +41,8 @@ public class RobotNew {
     private Follower follower;
     @Getter
     private Lights lights;
+
+    public static double distanceThreshold = 100;
 
     public RobotNew init(HardwareMap hardwareMap) {
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
@@ -105,9 +115,9 @@ public class RobotNew {
         private ServoEx ramp;
 
         public static double rampOpen = .59;
-        public static double rampClose = .79;
+        public static double rampClose = .78;
         public static double intakeFast = -1;
-        public static double intakeTransfer = -1;
+        public static double intakeTransfer = -.3;
 
 
         public Intake init(HardwareMap hardwareMap) {
@@ -131,8 +141,12 @@ public class RobotNew {
             intake.set(intakeFast);
         }
 
-        public void transfer() {
-            intake.set(intakeTransfer);
+        public void transfer(double distance) {
+            if (distance > distanceThreshold) {
+                intake.set(intakeTransfer);
+            } else {
+                intake.set(intakeFast);
+            }
         }
 
     }
@@ -149,9 +163,9 @@ public class RobotNew {
         public static double I = 5;
         public static double D = 0;
 
-        public static double powerFar = .55;
+        public static double powerFar = .85;
         public static double powerNear = .44;
-        public static double hoodFar = 1;
+        public static double hoodFar = .75;
         public static double hoodNear = .9;
 
 
@@ -164,6 +178,8 @@ public class RobotNew {
 
             this.shooter = new MotorGroup(motorR, motorL);
             this.shooter.setRunMode(Motor.RunMode.VelocityControl);
+//            this.shooter.setRunMode(Motor.RunMode.RawPower);
+
             this.shooter.setVeloCoefficients(P, I, D);
             this.shooter.setPositionTolerance(1);
             this.shooter.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
@@ -172,6 +188,77 @@ public class RobotNew {
             this.hood = new ServoEx(hardwareMap, "hood");
             return this;
         }
+
+        //INTERP --------------------------------------------------------------------------------------------------------------------------------
+        //INTERP --------------------------------------------------------------------------------------------------------------------------------
+        //INTERP --------------------------------------------------------------------------------------------------------------------------------
+
+        public static class Metrics {
+            public double y1;
+            public double z;
+
+            public Metrics(double y1, double z) {
+                this.y1 = y1;
+                this.z = z;
+            }
+        }
+
+        private static final TreeMap<Double, Metrics> table = new TreeMap<>();
+
+        static {
+            // Data from your image
+            table.put(0.0, new Metrics(0, 1));
+            table.put(66.5, new Metrics(0.65, 0.1));
+            table.put(74.0, new Metrics(0.7, 0.1));
+            table.put(86.0, new Metrics(0.7, 0.14));
+            table.put(97.0, new Metrics(0.76, 0.35));
+            table.put(104.0, new Metrics(0.78, 0.58));
+            table.put(118.0, new Metrics(0.83, 0.7));
+            table.put(125.0, new Metrics(0.9, 0.78));
+            table.put(139.0, new Metrics(0.94, 0.8));
+            table.put(151.0, new Metrics(1.0, 0.95));
+            table.put(250.0, new Metrics(1.0, .9));
+        }
+
+        public static Metrics getInterpolatedValue(double x) {
+            // 1. Exact match
+            if (table.containsKey(x)) return table.get(x);
+
+            // 2. Out of bounds check
+            if (x < table.firstKey() || x > table.lastKey()) return null;
+
+            // 3. Find surrounding points
+            Map.Entry<Double, Metrics> low = table.floorEntry(x);
+            Map.Entry<Double, Metrics> high = table.ceilingEntry(x);
+
+            double x0 = low.getKey();
+            double x1 = high.getKey();
+
+            // Calculate the "weight" (how far between x0 and x1 we are)
+            double t = (x - x0) / (x1 - x0);
+
+            // Linear interpolation formula: y = y0 + t * (y1 - y0)
+            double interpolatedY1 = low.getValue().y1 + t * (high.getValue().y1 - low.getValue().y1);
+            double interpolatedZ = low.getValue().z + t * (high.getValue().z - low.getValue().z);
+
+            return new Metrics(interpolatedY1, interpolatedZ);
+        }
+
+
+
+        public static void main(String[] args) {
+            double input = 80.0; // Not in the table
+            Metrics result = getInterpolatedValue(input);
+
+            if (result != null) {
+                System.out.printf("Interpolated for x=%.1f: y1=%.3f, z=%.3f%n", input, result.y1, result.z);
+            }
+        }
+
+
+        //INTERP --------------------------------------------------------------------------------------------------------------------------------
+        //INTERP --------------------------------------------------------------------------------------------------------------------------------
+        //INTERP --------------------------------------------------------------------------------------------------------------------------------
 
         public boolean atTargetVelocity() {
             return (calculatedVelocity() >= targetVelocity - 80 && calculatedVelocity() <= targetVelocity + 80);
@@ -193,6 +280,8 @@ public class RobotNew {
         public void farShot() {
             setPower(powerFar);
             hoodSet(hoodFar);
+//            hood.set(1);
+//            this.hood.set(1);
         }
 
 
@@ -206,8 +295,17 @@ public class RobotNew {
             hoodSet(hood);
         }
 
+        public void setShot(double power, double hood, boolean adjust) {
+            setPower(power);
+            this.hood.set(hood);
+        }
+
         public void hoodSet(double pos) {
-            hood.set(pos - (((double) (targetVelocity - calculatedVelocity()) / targetVelocity) * 1.35));
+//            if (pos < .3) {
+//                hood.set(pos);
+//            } else {
+            hood.set(pos - (((double) (targetVelocity - calculatedVelocity()) / targetVelocity) * 2.6));
+//            }
         }
 
         public double calculateShooterPower(double distance) {
@@ -223,22 +321,22 @@ public class RobotNew {
         }
 
         public double calculateHoodPose(double distance) {
-            if (distance > 50 && distance< 135) {
-                return Math.min(0.00462719 * distance + 0.269066, 1); //desmos regression
-            } else if (distance > 134){
-                return 1;
+            if (distance > distanceThreshold && distance < 135) {
+//                return Math.min(0.00462719 * distance + 0.269066, 1); //desmos regression
+                return hoodFar;
             } else {
-                return .15;
+                return .1;
             }
         }
     }
 
     @Configurable
     public static class Turret {
-        public DcMotorEx turret;
         @Getter
         private int ticks = 0;
         public int targetTicks;
+        public DcMotorEx turret;
+        public Limelight3A limelight;
 
         public static double P = 1;
         public static double I = 0;
@@ -248,7 +346,7 @@ public class RobotNew {
         public static double EXTERNAL_GEAR_RATIO = 10;
         public static double ENCODER_TICKS_PER_REV = 145.1;
         public static double MINPOWER = .15;
-        public static double TURRETSTARTINGOFFSET = 68; // NEEDS TO CHANGE
+        public static double TURRETSTARTINGOFFSET = 2; // NEEDS TO CHANGE
 
         private PIDController pid;
         public static double p = .8, i = 0, d = 0.01;
@@ -260,6 +358,12 @@ public class RobotNew {
             this.turret.setTargetPosition(0);
             this.turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             this.turret.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+
+            this.limelight = hardwareMap.get(Limelight3A.class, "limelight");
+            this.limelight.setPollRateHz(45);
+            this.limelight.pipelineSwitch(0);
+//            this.limelight.uploadFieldmap();
+            this.limelight.start();
 //            this.turret.setDirection(DcMotorSimple.Direction.REVERSE);
             this.pid = new PIDController(p, i, d);
             return this;
@@ -273,10 +377,26 @@ public class RobotNew {
 //
 //            setCorrectedTurretPose(targetAngle + delta, heading);
 
-            double finalTarget = Math.max(0, Math.min(correctedTarget, 292 - 70));
+            double finalTarget = Math.max(0, Math.min(correctedTarget, 330 - 5));
             targetTicks = degreeToTicks(finalTarget);
             turret.setTargetPosition(degreeToTicks(finalTarget));
             turret.setPower(.8);
+
+        }
+
+        public double getLimeError() {
+            LLResult result = limelight.getLatestResult();
+//            Pose3D pose = limelight.getLatestResult().getBotpose();
+//            return new Pose(pose.getPosition().x,pose.getPosition().y,pose.getOrientation().getYaw());
+//            if (limelight.)
+            if (result.isValid()) {
+                return limelight.getLatestResult().getTx() - 3;
+            } else {
+                return 0;
+            }
+        }
+
+        public void printLimePose() {
 
         }
 
@@ -339,7 +459,7 @@ public class RobotNew {
         }
 
         public void calibrate() {
-            turret.setTargetPosition(turret.getCurrentPosition() - 100);
+            turret.setTargetPosition(turret.getCurrentPosition() - 50);
             turret.setPower(1);
         }
 

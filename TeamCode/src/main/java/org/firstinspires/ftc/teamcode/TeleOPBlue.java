@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.RobotNew.Shooter.getInterpolatedValue;
+
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.BezierLine;
@@ -41,6 +43,8 @@ public class TeleOPBlue extends OpMode {
     private double hood = .7;
     private double distance = 50;
     private double offset = 0;
+    private double dOffset = 0;
+    private double error = 0;
 
 
     @Override
@@ -51,9 +55,7 @@ public class TeleOPBlue extends OpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         pathChainFar = () -> robot.getFollower().pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(robot.getFollower()::getPose, shootPoseFar)))
-                .setHeadingInterpolation(HeadingInterpolator.facingPoint(shootPoseFar))
-                .build();
+                .addPath(new Path(new BezierLine(robot.getFollower()::getPose, shootPoseFar))).setHeadingInterpolation(HeadingInterpolator.facingPoint(shootPoseFar)).build();
     }
 
     @Override
@@ -66,6 +68,7 @@ public class TeleOPBlue extends OpMode {
     public void loop() {
         controller1.readButtons();
         telemetryM.update();
+        error = robot.getTurret().getLimeError();
 
         distance = robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), aimPose.getX(), aimPose.getY());
 
@@ -73,18 +76,35 @@ public class TeleOPBlue extends OpMode {
             far = !far;
         }
 
-        power = robot.getShooter().calculateShooterPower(distance);
-        hood = robot.getShooter().calculateHoodPose(distance);
+//        power = robot.getShooter().calculateShooterPower(distance + dOffset );
+//        hood = robot.getShooter().calculateHoodPose(distance +dOffset);
 
+        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance + dOffset);
+        power = result.y1;
+        hood = result.z;
+
+//        if (result != null) {
+//            System.out.printf("Interpolated for x=%.1f: y1=%.3f, z=%.3f%n", input, result.y1, result.z);
+//        }
+//        hood = 1;
 
         robot.getShooter().setShot(power, hood);
 
+//        robot.getShooter().ge
+
+        if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER) && (error < -2 || error > 2) && distance > 120) {
+//                robot.getFollower().setPose(new Pose(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), Math.toRadians(Math.toDegrees(robot.getFollower().getPose().getHeading()) + (robot.getTurret().getLimeError()))));
+            offset -= error;
+        }
+
         if (controller1.isDown(GamepadKeys.Button.DPAD_DOWN)) {
             robot.getIntake().open();
-            robot.getIntake().transfer();
+            robot.getIntake().transfer(distance);
+
+//        }
         } else {
             robot.getIntake().close();
-            robot.getIntake().transfer();
+            robot.getIntake().intake();
         }
 
         robot.getLights().blinker(getRuntime());
@@ -95,12 +115,17 @@ public class TeleOPBlue extends OpMode {
 
         robot.getFollower().update();
         if (!automatedDrive) {
-            robot.getFollower().setTeleOpDrive(
-                    controller1.getLeftY(),
-                    -controller1.getLeftX(),
-                    -controller1.getRightX(), true // Robot Centric
+            robot.getFollower().setTeleOpDrive(-controller1.getLeftY(), controller1.getLeftX(), -controller1.getRightX() * .6, true // Robot Centric
             );
         }
+//
+//        if (!automatedDrive) {
+//            robot.getFollower().setTeleOpDrive(
+//                    controller1.getLeftY(),
+//                    -controller1.getLeftX(),
+//                    -controller1.getRightX()*.6, true // Robot Centric
+//            );
+//        }
 
         if (controller1.isDown(GamepadKeys.Button.RIGHT_BUMPER)) {
             robot.getTurret().calibrate();
@@ -118,12 +143,19 @@ public class TeleOPBlue extends OpMode {
             }
         } else {
             robot.getTurret().aim(offset + robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), Math.toDegrees(robot.getFollower().getHeading()));
+//            robot.getTurret().aim(50,Math.toDegrees(robot.getFollower().getHeading()));
         }
 
         if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)) {
             offset++;
         } else if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)) {
             offset--;
+        }
+
+        if (controller1.wasJustPressed(GamepadKeys.Button.SQUARE)) {
+            dOffset--;
+        } else if (controller1.wasJustPressed(GamepadKeys.Button.CIRCLE)) {
+            dOffset++;
         }
 
         //Auto Drive turning
@@ -148,6 +180,12 @@ public class TeleOPBlue extends OpMode {
         telemetryM.addData("distance from Goal", distance);
         telemetryM.addData("shooter Power", power);
         telemetryM.addData("hood", hood);
+        telemetryM.addData("lime x", robot.getTurret().limelight.getLatestResult().isValid());
+        telemetryM.addData("lime x", error);
+//        telemetryM.addData("lime x", robot.getTurret().limelight.getLatestResult().getFiducialResults());
+
+
+//        telemetryM.addData("lime error", robot.getTurret().getLimeError());
         telemetryM.update(telemetry);
 
     }
