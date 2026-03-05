@@ -9,7 +9,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
@@ -19,8 +18,8 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 //@Disabled
-@Autonomous(name = "Far Auto")
-public class FarAuto extends OpMode {
+@Autonomous(name = "Far Stack Auto")
+public class FarAutoStack extends OpMode {
 
 
     private RobotNew robot;
@@ -52,7 +51,7 @@ public class FarAuto extends OpMode {
     }
 
     private Path scorePreloads, park, openGate;
-    private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2, getPickup1Straight, launchBatch3, getPickup4, launchBatch4;
+    private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2, getPickup3, launchBatch3, getPickup4, launchBatch4;
 
     public void buildPaths() {
         getPickup1 = robot.getFollower().pathBuilder()
@@ -61,32 +60,31 @@ public class FarAuto extends OpMode {
 //                .setReversed()
                 .build();
 
-        getPickup1Straight = robot.getFollower().pathBuilder()
-                .addPath(new BezierLine(this.config.getScorePose(), this.config.getPickup1Pose()))
-//                .setLinearHeadingInterpolation(this.config.getShootPose().getHeading(), this.config.getPickup1Pose().getHeading())
-                .setTangentHeadingInterpolation()
-                .setReversed()
-                .build();
-
         launchBatch1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup1Pose(), this.config.getScorePose()))
                 .setLinearHeadingInterpolation(this.config.getPickup1Pose().getHeading(), this.config.getScorePose().getHeading())
-                .addParametricCallback(.99, (() -> timer = getRuntime() + 1))
                 .build();
 
         getPickup2 = robot.getFollower().pathBuilder()
-//                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup2Control(), this.config.getPickup2Pose()))
-                .addPath(new BezierLine(this.config.getScorePose(), this.config.getPickup2Pose()))
-
-                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), (this.config.getPickup2Pose().getHeading()))
-
+                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup2Control(),this.config.getPickup2Pose()))
+//                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), (this.config.getPickup2Pose().getHeading()))
+                .setConstantHeadingInterpolation(this.config.getPickup2Pose().getHeading())
                 .build();
 //
         launchBatch2 = follower().pathBuilder()
 //                .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
                 .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
-                .setTangentHeadingInterpolation()
-                .addParametricCallback(.99, (() -> timer = getRuntime() + 1))
+                .setConstantHeadingInterpolation(this.config.getScorePose().getHeading())
+                .build();
+
+        getPickup3 = robot.getFollower().pathBuilder()
+                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup3Control(),this.config.getPickup3Pose()))
+                .setConstantHeadingInterpolation(this.config.getPickup3Pose().getHeading())
+                .build();
+//
+        launchBatch3 = follower().pathBuilder()
+                .addPath(new BezierLine(this.config.getPickup3Pose(), this.config.getScorePose()))
+                .setConstantHeadingInterpolation(this.config.getScorePose().getHeading())
                 .build();
     }
 
@@ -133,11 +131,7 @@ public class FarAuto extends OpMode {
                 if (getRuntime() > timer) {
                     robot.intake.intake();
                     robot.intake.close();
-//                    if (!runs) {
-                        follower().followPath(getPickup2, 1, true);
-//                    } else {
-//                        follower().followPath(getPickup1Straight, .75, true);
-//                    }
+                    follower().followPath(getPickup2, 1, true);
                     setPathState(6);
                     timer = getRuntime() + 7.5;
                 }
@@ -167,9 +161,24 @@ public class FarAuto extends OpMode {
                 if (getRuntime() > timer) {
                     robot.intake.intake();
                     robot.intake.close();
-//                    follower().followPath(getPickup2, true);
-                    setPathState(5);
+                    follower().followPath(getPickup3, true);
+                    setPathState(9);
                 }
+                break;
+            case 9: //if all balls are launched, reset the shooter and go to next position
+                if (!follower().isBusy() && robot.getIntake().currentSpiked()) {
+                    follower().followPath(launchBatch3, true);
+                    setPathState(10);
+                }
+                break;
+            case 10:
+                if (!follower().isBusy() && robot.getShooter().atTargetVelocity() && timer < getRuntime()) {
+                    robot.getIntake().transfer(true);
+                    robot.intake.open();
+                    setPathState(8);
+                    timer = getRuntime() + shooterTimer;
+                }
+                setPathState(-1);
                 break;
         }
     }
@@ -195,9 +204,9 @@ public class FarAuto extends OpMode {
     @Override
     public void init_loop() {
         if (this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            this.config = Config.blueFar;
+            this.config = Config.blueFarStack;
         } else if (this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
-            this.config = Config.redFar;
+//            this.config = Config.redFarStack;
         }
         telemetry.addData("Team:", this.config == null ? null : this.config.getTeam());
         controller1.readButtons();

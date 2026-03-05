@@ -102,8 +102,10 @@ public class CloseAuto extends OpMode {
 
         getPickup4 = robot.getFollower().pathBuilder()
                 .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup4Control(), this.config.getPickup4Pose()))
-                .setTangentHeadingInterpolation()
-                .setReversed()
+//                .setTangentHeadingInterpolation()
+                .setConstantHeadingInterpolation(this.config.getPickup4End().getHeading())
+
+//                .setReversed()
                 .build();
 
 
@@ -192,15 +194,15 @@ public class CloseAuto extends OpMode {
                 if (!follower().isBusy()) {
                     if (!foo) {
                         if(runs == 1) {
-                            timer = getRuntime() + .01;
+                            timer = getRuntime() + .1;
                         } else {
-                            timer = getRuntime() + .2;
+                            timer = getRuntime() + .3;
                         }
                         foo = true;
                     } else if (timer < getRuntime()) {
                         follower().followPath(getPickup3, true);
                         robot.intake.close();
-                        timer = getRuntime() + 1.8;
+                        timer = getRuntime() + 2.125;
                         setPathState(9);
                         foo = false;
                     }

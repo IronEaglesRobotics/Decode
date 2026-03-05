@@ -118,6 +118,7 @@ public class RobotNew {
         public static double rampClose = .78;
         public static double intakeFast = -1;
         public static double intakeTransfer = -.3;
+        public static int currentThreshold = 2250;
 
 
         public Intake init(HardwareMap hardwareMap) {
@@ -141,12 +142,24 @@ public class RobotNew {
             intake.set(intakeFast);
         }
 
+        public double getCurrent(){
+            return intake.getCurrent(CurrentUnit.MILLIAMPS);
+        }
+
+        public boolean currentSpiked(){
+            return getCurrent() > currentThreshold;
+        }
+
         public void transfer(double distance) {
             if (distance > distanceThreshold) {
                 intake.set(intakeTransfer);
             } else {
                 intake.set(intakeFast);
             }
+        }
+
+        public void transfer(boolean slow) {
+                intake.set(intakeTransfer);
         }
 
     }

@@ -182,7 +182,7 @@ public class TeleOPBlue extends OpMode {
         telemetryM.addData("hood", hood);
         telemetryM.addData("lime x", robot.getTurret().limelight.getLatestResult().isValid());
         telemetryM.addData("lime x", error);
-//        telemetryM.addData("lime x", robot.getTurret().limelight.getLatestResult().getFiducialResults());
+        telemetryM.addData("intake current", robot.intake.getCurrent());
 
 
 //        telemetryM.addData("lime error", robot.getTurret().getLimeError());
