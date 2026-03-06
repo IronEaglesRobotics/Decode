@@ -134,7 +134,7 @@ public class FarAuto extends OpMode {
                     robot.intake.intake();
                     robot.intake.close();
 //                    if (!runs) {
-                        follower().followPath(getPickup2, 1, true);
+                    follower().followPath(getPickup2, 1, true);
 //                    } else {
 //                        follower().followPath(getPickup1Straight, .75, true);
 //                    }
@@ -145,7 +145,7 @@ public class FarAuto extends OpMode {
             case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy() && robot.getIntake().currentSpiked()) {
 //                    if (!runs) {
-                        follower().followPath(launchBatch2, true);
+                    follower().followPath(launchBatch2, true);
 //                    } else {
 //                        follower().followPath(launchBatch1, .75, true);
 //                    }
@@ -228,7 +228,6 @@ public class FarAuto extends OpMode {
         robot.getShooter().setShot(power, hood);
         robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), Math.toDegrees(robot.getFollower().getHeading()));
         runAuto();
-
 
 
         telemetryM.debug("step", pathState);

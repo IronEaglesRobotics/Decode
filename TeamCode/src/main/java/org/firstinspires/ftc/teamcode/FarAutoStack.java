@@ -30,11 +30,11 @@ public class FarAutoStack extends OpMode {
     private final PanelsTelemetry panelsTelemetry = PanelsTelemetry.INSTANCE;
     private double timer;
     private boolean foo = true;
-    private double shooterTimer = 1.25;
+    private double shooterTimer = .75;
     private double power = .3;
     private double hood = .7;
     private double distance = 50;
-    private boolean runs = false;
+    private boolean preloads = false;
 
     private Config config;
 
@@ -51,22 +51,23 @@ public class FarAutoStack extends OpMode {
     }
 
     private Path scorePreloads, park, openGate;
-    private PathChain getPickup1, launchBatch1, getPickup2, launchBatch2, getPickup3, launchBatch3, getPickup4, launchBatch4;
+    private PathChain launchBatch3Secondary, getPickup1, launchBatch1, getPickup2, launchBatch2, getPickup3, launchBatch3, getPickup4, launchBatch4;
 
     public void buildPaths() {
         getPickup1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierCurve(this.config.getStartPose(), this.config.getPickup1Control(), this.config.getPickup1Pose()))
-                .setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getPickup1Pose().getHeading())
+                .setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getPickup1Pose().getHeading(),.75)
 //                .setReversed()
                 .build();
 
         launchBatch1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup1Pose(), this.config.getScorePose()))
                 .setLinearHeadingInterpolation(this.config.getPickup1Pose().getHeading(), this.config.getScorePose().getHeading())
+                .addParametricCallback(.99, (() -> timer = getRuntime() + .5))
                 .build();
 
         getPickup2 = robot.getFollower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup2Control(),this.config.getPickup2Pose()))
+                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup2Control(), this.config.getPickup2Pose()))
 //                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), (this.config.getPickup2Pose().getHeading()))
                 .setConstantHeadingInterpolation(this.config.getPickup2Pose().getHeading())
                 .build();
@@ -75,16 +76,29 @@ public class FarAutoStack extends OpMode {
 //                .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
                 .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getScorePose()))
                 .setConstantHeadingInterpolation(this.config.getScorePose().getHeading())
+                .addParametricCallback(.99, (() -> timer = getRuntime() + .5))
                 .build();
 
         getPickup3 = robot.getFollower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup3Control(),this.config.getPickup3Pose()))
+                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup3Control(), this.config.getPickup3Pose()))
                 .setConstantHeadingInterpolation(this.config.getPickup3Pose().getHeading())
+                .build();
+
+        getPickup4 = robot.getFollower().pathBuilder()
+                .addPath(new BezierCurve(this.config.getPickup3Pose(), this.config.getPickup4Control(), this.config.getPickup4Pose()))
+                .setConstantHeadingInterpolation(this.config.getPickup4Pose().getHeading())
                 .build();
 //
         launchBatch3 = follower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup3Pose(), this.config.getScorePose()))
                 .setConstantHeadingInterpolation(this.config.getScorePose().getHeading())
+                .addParametricCallback(.99, (() -> timer = getRuntime() + .5))
+                .build();
+        //
+        launchBatch3Secondary = follower().pathBuilder()
+                .addPath(new BezierLine(this.config.getPickup4Pose(), this.config.getScorePose()))
+                .setConstantHeadingInterpolation(this.config.getScorePose().getHeading())
+                .addParametricCallback(.99, (() -> timer = getRuntime() + .5))
                 .build();
     }
 
@@ -109,6 +123,7 @@ public class FarAutoStack extends OpMode {
                     robot.intake.close();
                     follower().followPath(getPickup1, .85, true);
                     timer = getRuntime() + 3.5;
+                    preloads = true;
                     setPathState(3);
                 }
                 break;
@@ -139,11 +154,10 @@ public class FarAutoStack extends OpMode {
             case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy() && robot.getIntake().currentSpiked()) {
 //                    if (!runs) {
-                        follower().followPath(launchBatch2, true);
+                    follower().followPath(launchBatch2, true);
 //                    } else {
 //                        follower().followPath(launchBatch1, .75, true);
 //                    }
-                    runs = !runs;
                     setPathState(7);
 //                    timer = getRuntime() + .9;
                 }
@@ -151,7 +165,6 @@ public class FarAutoStack extends OpMode {
             case 7: //if at launch pos and shooter fast enough, then shoot
                 if (!follower().isBusy() && robot.getShooter().atTargetVelocity() && timer < getRuntime()) {
                     robot.getIntake().transfer(true);
-
                     robot.intake.open();
                     setPathState(8);
                     timer = getRuntime() + shooterTimer;
@@ -161,14 +174,19 @@ public class FarAutoStack extends OpMode {
                 if (getRuntime() > timer) {
                     robot.intake.intake();
                     robot.intake.close();
-                    follower().followPath(getPickup3, true);
+                    follower().followPath(getPickup3);
                     setPathState(9);
                 }
                 break;
             case 9: //if all balls are launched, reset the shooter and go to next position
-                if (!follower().isBusy() && robot.getIntake().currentSpiked()) {
-                    follower().followPath(launchBatch3, true);
-                    setPathState(10);
+                if (!follower().isBusy() && getRuntime() < 27) {
+                    if(robot.getIntake().currentSpiked()) {
+                        follower().followPath(launchBatch3, true);
+                        setPathState(10);
+                    } else {
+                        follower().followPath(getPickup4,true);
+                        setPathState(100);
+                    }
                 }
                 break;
             case 10:
@@ -178,7 +196,13 @@ public class FarAutoStack extends OpMode {
                     setPathState(8);
                     timer = getRuntime() + shooterTimer;
                 }
-                setPathState(-1);
+                break;
+            case 100:
+                if((!follower().isBusy() || robot.getIntake().currentSpiked()) && getRuntime() < 27){
+                    follower().breakFollowing();
+                    follower().followPath(launchBatch3Secondary, true);
+                    setPathState(10);
+                }
                 break;
         }
     }
@@ -206,7 +230,7 @@ public class FarAutoStack extends OpMode {
         if (this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             this.config = Config.blueFarStack;
         } else if (this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
-//            this.config = Config.redFarStack;
+            this.config = Config.redFarStack;
         }
         telemetry.addData("Team:", this.config == null ? null : this.config.getTeam());
         controller1.readButtons();
@@ -231,13 +255,18 @@ public class FarAutoStack extends OpMode {
 //        robot.getIntake().intake();
         distance = robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), config.getGoalPose().getX(), config.getGoalPose().getY());
 
-        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance);
+        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance-2);
         power = result.y1;
         hood = result.z;
         robot.getShooter().setShot(power, hood);
-        robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), Math.toDegrees(robot.getFollower().getHeading()));
-        runAuto();
+//        robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), Math.toDegrees(robot.getFollower().getHeading()));
 
+        if (!preloads) {
+            robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), config.getStartPose().getX(), config.getStartPose().getY()), Math.toDegrees(config.getStartPose().getHeading()));
+        } else {
+            robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), config.getScorePose().getX(), config.getScorePose().getY()), Math.toDegrees(config.getScorePose().getHeading()));
+        }
+        runAuto();
 
 
         telemetryM.debug("step", pathState);

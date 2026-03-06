@@ -9,7 +9,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
@@ -19,8 +18,8 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 //@Disabled
-@Autonomous(name = "Close Auto")
-public class CloseAuto extends OpMode {
+@Autonomous(name = "Gate Auto")
+public class GateOpenAuto extends OpMode {
 
 
     private RobotNew robot;
@@ -36,6 +35,7 @@ public class CloseAuto extends OpMode {
     private double hood = .7;
     private double distance = 50;
     private int runs = 0;
+    private double settleTime = .15;
 
     private Config config;
 
@@ -60,30 +60,38 @@ public class CloseAuto extends OpMode {
         scorePreloads.setTangentHeadingInterpolation();
 
         getPickup1 = robot.getFollower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup1Control(), this.config.getPickup1Pose()))
+                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup1Control(),this.config.getPickup1Pose()))
+//                .addPath(new BezierLine(this.config.getScorePose(), this.config.getPickup1Pose()))
                 .setConstantHeadingInterpolation(this.config.getPickup1Pose().getHeading())
+                .addParametricCallback(.99, (() -> timer = getRuntime() + 1.5))
+
                 .build();
 
         launchBatch1 = robot.getFollower().pathBuilder()
                 .addPath(new BezierLine(this.config.getPickup1Pose(), this.config.getScorePose()))
-                .setTangentHeadingInterpolation()
+                .setConstantHeadingInterpolation(this.config.getScorePose().getHeading())
+                .addParametricCallback(.99, (() -> timer = getRuntime() + settleTime))
                 .build();
 
         getPickup2 = robot.getFollower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup2Control(), this.config.getPickup2Pose()))
-                .setTangentHeadingInterpolation()
-                .setReversed()
+                .addPath(new BezierCurve(this.config.getScorePose(), config.getPickup2Control(), this.config.getPickup2Pose()))
+                .setConstantHeadingInterpolation(this.config.getPickup2Pose().getHeading())
+                .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getOpenGate()))
+                .setLinearHeadingInterpolation(config.getPickup2Pose().getHeading(),this.config.getOpenGate().getHeading())
+                .addParametricCallback(.99, (() -> timer = getRuntime() + 1.5))
+//                .setReversed()
                 .build();
 
         launchBatch2 = follower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getPickup2Pose(), this.config.getPickup3Control2(), this.config.getScorePose()))
+                .addPath(new BezierLine(this.config.getPickup2Pose(),this.config.getScorePose()))
                 .setTangentHeadingInterpolation()
+                .addParametricCallback(.99, (() -> timer = getRuntime() + settleTime))
                 .build();
 
         openGate = robot.getFollower().pathBuilder()
 
                 .addPath(new BezierCurve(this.config.getScorePose(), this.config.getPickup3Control2(), this.config.getOpenGate()))
-                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), this.config.getOpenGate().getHeading())
+                .setLinearHeadingInterpolation(this.config.getScorePose().getHeading(), this.config.getPickup4End().getHeading())
 //                .setReversed()
                 .build();
 
@@ -133,19 +141,19 @@ public class CloseAuto extends OpMode {
             case 1: // if at location, launch
                 if (!follower().isBusy() && robot.getShooter().atTargetVelocity()) {
                     robot.getIntake().open();
-                    setPathState(5);
+                    setPathState(2);
                     timer = getRuntime() + shooterTimer;
                 }
                 break;
             case 2: //is the robot done launching? if yes, go to pickup 1 and stop shooter
                 if (getRuntime() > timer) {
                     robot.intake.close();
-                    follower().followPath(getPickup1, true);
+                    follower().followPath(getPickup1,.7, true);
                     setPathState(3);
                 }
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
-                if (!follower().isBusy()) {
+                if (!follower().isBusy() && timer < getRuntime()) {
                     follower().followPath(launchBatch1, true);
                     setPathState(4);
                     timer = getRuntime() + .9;
@@ -154,19 +162,19 @@ public class CloseAuto extends OpMode {
             case 4: //if at launch pos and shooter fast enough, then shoot
                 if (!follower().isBusy() && robot.getShooter().atTargetVelocity() && timer < getRuntime()) {
                     robot.intake.open();
-                    setPathState(11);
+                    setPathState(5);
                     timer = getRuntime() + shooterTimer;
                 }
                 break;
             case 5: //if all balls are launched, reset the shooter and go to next position
-                if (getRuntime() > timer) {
+                if (!follower().isBusy() && timer < getRuntime()) {
                     robot.intake.close();
-                    follower().followPath(getPickup2, true);
+                    follower().followPath(getPickup2,.8, true);
                     setPathState(6);
                 }
                 break;
             case 6://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
-                if (!follower().isBusy()) {
+                if (!follower().isBusy() && timer < getRuntime()) {
                     follower().followPath(launchBatch2, true);
                     setPathState(7);
                     timer = getRuntime() + .9;
@@ -222,7 +230,7 @@ public class CloseAuto extends OpMode {
                     if (runs < 2) {
                         setPathState(8);
                     } else {
-                        setPathState(2);
+                        setPathState(11);
                     }
                     timer = getRuntime() + shooterTimer;
 //                    }
@@ -231,14 +239,14 @@ public class CloseAuto extends OpMode {
             case 11: //is the robot done launching? if yes, go to pickup 1 and stop shooter
                 if (getRuntime() > timer) {
                     robot.intake.close();
-                    follower().followPath(getPickup4, true);
+                    follower().followPath(park, true);
                     setPathState(12);
                 }
                 break;
             case 12://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy() && timer < getRuntime()) {
-                    follower().followPath(launchBatch4, true);
-                    setPathState(13);
+//                    follower().followPath(launchBatch4, true);
+                    setPathState(-1);
                     timer = getRuntime() + .3;
                 }
                 break;
@@ -286,7 +294,7 @@ public class CloseAuto extends OpMode {
     @Override
     public void init_loop() {
         if (this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            this.config = Config.blue;
+            this.config = Config.blueGate;
         } else if (this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
             this.config = Config.red;
         }

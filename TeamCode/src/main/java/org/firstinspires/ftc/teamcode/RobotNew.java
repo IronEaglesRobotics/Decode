@@ -51,7 +51,20 @@ public class RobotNew {
         }
         this.intake = new Intake().init(hardwareMap);
         this.shooter = new Shooter().init(hardwareMap);
-        this.turret = new Turret().init(hardwareMap);
+        this.turret = new Turret().init(hardwareMap, true);
+        this.follower = Constants.createFollower(hardwareMap);
+        this.lights = new Lights().init(hardwareMap);
+        return this;
+    }
+
+    public RobotNew init(HardwareMap hardwareMap, boolean blue) {
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+        this.intake = new Intake().init(hardwareMap);
+        this.shooter = new Shooter().init(hardwareMap);
+        this.turret = new Turret().init(hardwareMap, blue);
         this.follower = Constants.createFollower(hardwareMap);
         this.lights = new Lights().init(hardwareMap);
         return this;
@@ -142,11 +155,11 @@ public class RobotNew {
             intake.set(intakeFast);
         }
 
-        public double getCurrent(){
+        public double getCurrent() {
             return intake.getCurrent(CurrentUnit.MILLIAMPS);
         }
 
-        public boolean currentSpiked(){
+        public boolean currentSpiked() {
             return getCurrent() > currentThreshold;
         }
 
@@ -159,7 +172,7 @@ public class RobotNew {
         }
 
         public void transfer(boolean slow) {
-                intake.set(intakeTransfer);
+            intake.set(intakeTransfer);
         }
 
     }
@@ -256,7 +269,6 @@ public class RobotNew {
 
             return new Metrics(interpolatedY1, interpolatedZ);
         }
-
 
 
         public static void main(String[] args) {
@@ -365,7 +377,7 @@ public class RobotNew {
         public static double p = .8, i = 0, d = 0.01;
         public static double TICKS_PER_DEGREE = (ENCODER_TICKS_PER_REV * MOTOR_INTERNAL_GEARBOX * EXTERNAL_GEAR_RATIO) / 360.0;
 
-        public Turret init(HardwareMap hardwareMap) {
+        public Turret init(HardwareMap hardwareMap, boolean blue) {
             this.turret = hardwareMap.get(DcMotorEx.class, "turret");
             this.turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             this.turret.setTargetPosition(0);
@@ -374,7 +386,11 @@ public class RobotNew {
 
             this.limelight = hardwareMap.get(Limelight3A.class, "limelight");
             this.limelight.setPollRateHz(45);
-            this.limelight.pipelineSwitch(0);
+            if (blue) {
+                this.limelight.pipelineSwitch(0);
+            } else {
+                this.limelight.pipelineSwitch(1);
+            }
 //            this.limelight.uploadFieldmap();
             this.limelight.start();
 //            this.turret.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -397,13 +413,17 @@ public class RobotNew {
 
         }
 
-        public double getLimeError() {
+        public double getLimeError(boolean blue) {
             LLResult result = limelight.getLatestResult();
 //            Pose3D pose = limelight.getLatestResult().getBotpose();
 //            return new Pose(pose.getPosition().x,pose.getPosition().y,pose.getOrientation().getYaw());
 //            if (limelight.)
             if (result.isValid()) {
-                return limelight.getLatestResult().getTx() - 3;
+                if (blue) {
+                    return result.getTx() - 3;
+                } else {
+                    return result.getTx() + 2 ;
+                }
             } else {
                 return 0;
             }

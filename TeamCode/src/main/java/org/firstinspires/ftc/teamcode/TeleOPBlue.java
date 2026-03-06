@@ -55,20 +55,21 @@ public class TeleOPBlue extends OpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         pathChainFar = () -> robot.getFollower().pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(robot.getFollower()::getPose, shootPoseFar))).setHeadingInterpolation(HeadingInterpolator.facingPoint(shootPoseFar)).build();
+                .addPath(new Path(new BezierLine(robot.getFollower()::getPose, shootPoseFar)))
+                .setHeadingInterpolation(HeadingInterpolator.facingPoint(shootPoseFar))
+                .build();
     }
 
     @Override
     public void start() {
         robot.getFollower().startTeleopDrive();
-
     }
 
     @Override
     public void loop() {
         controller1.readButtons();
         telemetryM.update();
-        error = robot.getTurret().getLimeError();
+        error = robot.getTurret().getLimeError(true);
 
         distance = robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), aimPose.getX(), aimPose.getY());
 
@@ -83,17 +84,9 @@ public class TeleOPBlue extends OpMode {
         power = result.y1;
         hood = result.z;
 
-//        if (result != null) {
-//            System.out.printf("Interpolated for x=%.1f: y1=%.3f, z=%.3f%n", input, result.y1, result.z);
-//        }
-//        hood = 1;
-
         robot.getShooter().setShot(power, hood);
 
-//        robot.getShooter().ge
-
         if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER) && (error < -2 || error > 2) && distance > 120) {
-//                robot.getFollower().setPose(new Pose(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), Math.toRadians(Math.toDegrees(robot.getFollower().getPose().getHeading()) + (robot.getTurret().getLimeError()))));
             offset -= error;
         }
 
@@ -109,13 +102,14 @@ public class TeleOPBlue extends OpMode {
 
         robot.getLights().blinker(getRuntime());
 
-
         robot.getLights().shooterCheck(robot.getShooter().atTargetVelocity());
-
 
         robot.getFollower().update();
         if (!automatedDrive) {
-            robot.getFollower().setTeleOpDrive(-controller1.getLeftY(), controller1.getLeftX(), -controller1.getRightX() * .6, true // Robot Centric
+            robot.getFollower().setTeleOpDrive(
+                    -controller1.getLeftY(),
+                    controller1.getLeftX(),
+                    -controller1.getRightX() * .6, true // Robot Centric
             );
         }
 //
@@ -143,7 +137,6 @@ public class TeleOPBlue extends OpMode {
             }
         } else {
             robot.getTurret().aim(offset + robot.getTurret().calculateAngle(aimPose.getX(), aimPose.getY(), robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY()), Math.toDegrees(robot.getFollower().getHeading()));
-//            robot.getTurret().aim(50,Math.toDegrees(robot.getFollower().getHeading()));
         }
 
         if (controller1.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)) {
@@ -180,13 +173,9 @@ public class TeleOPBlue extends OpMode {
         telemetryM.addData("distance from Goal", distance);
         telemetryM.addData("shooter Power", power);
         telemetryM.addData("hood", hood);
-        telemetryM.addData("lime x", robot.getTurret().limelight.getLatestResult().isValid());
+        telemetryM.addData("turret current",robot.getTurret().getCurrent() );
         telemetryM.addData("lime x", error);
         telemetryM.addData("intake current", robot.intake.getCurrent());
-
-
-//        telemetryM.addData("lime error", robot.getTurret().getLimeError());
         telemetryM.update(telemetry);
-
     }
 }
