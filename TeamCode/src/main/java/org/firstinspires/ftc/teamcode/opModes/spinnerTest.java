@@ -56,33 +56,6 @@ public class spinnerTest extends OpMode {
     @Override
     public void loop() {
         controller.readButtons();
-        if(controller.wasJustPressed(GamepadKeys.Button.A)) {
-            target += fullDelta;
-        }
-        else if(controller.wasJustPressed(GamepadKeys.Button.B)){
-            target += halfDelta;
-        }
-        else if(controller.wasJustPressed(GamepadKeys.Button.X)) {
-            target = 0;
-        }
-        else if(controller.wasJustPressed(GamepadKeys.Button.Y)) {
-            spinner.stopAndResetEncoder();
-        }
-        if (spinner.getCurrentPosition() < target - offset || spinner.getCurrentPosition() > target + offset){
-            spinner.set(speed * Math.signum(target - spinner.getCurrentPosition()));
-        }
-        else {
-            spinner.set(0);
-        }
-        for (int i = 0; i < lynxController.size(); i++){
-            voltages.add(lynxController.get(i).getInputVoltage(VoltageUnit.VOLTS));
-            current.add(lynxController.get(i).getCurrent(CurrentUnit.AMPS));
-        }
-        try {
-            logger.addDataLine(System.currentTimeMillis(),voltages,current);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
         joinedTelemetry.addData("target",target);
         joinedTelemetry.addData("current", spinner.getCurrentPosition());
     }
