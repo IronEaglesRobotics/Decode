@@ -54,12 +54,14 @@ public class Launcher extends SubsystemBase {
     public static double fullDelta = 0;
     public static int pidTarget = 0;
     private static final double FIRE1 = 0;
-    private static final double FIRE2 = 0;
-    private static final double FIRE3 = 0;
-    private static final double LOAD1 = 0;
-    private static final double LOAD2 = 0;
-    private static final double LOAD3 = 0;
-    private static final double FIRE4 = 0;
+    private static final double FIRE2 =  0.185;
+    private static final double FIRE3 = 0.37;
+    private static final double FIRE4 = 0.555;
+    private static final double FIRE5 = 0.74;
+    private static final double LOAD1 = 0.0925;
+    private static final double LOAD2 = 0.2775;
+    private static final double LOAD3 = 0.4625;
+
     private static final double[] POSITIONS = {FIRE1,LOAD1,FIRE2,LOAD2,FIRE3,LOAD3};
     List<Color> chambers;
     public static int closeSpeed = -2000;
@@ -210,6 +212,9 @@ public class Launcher extends SubsystemBase {
     public Command setLaunch(int order) {
         int i = chambers.indexOf(Color.Green);
         return setLaunch(i,order);
+    }
+    public boolean canShoot(){
+        return false;
     }
     public Command setLaunch(){
         return setLaunch(order);

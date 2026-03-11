@@ -67,7 +67,7 @@ public class Bot extends Robot {
         return new Aim(this);
     }
     public Command loading(){
-        return new Launcher.Loading(launcher,camera.order);
+        return new InstantCommand();
     }
     public Command Lift(){
         return new InstantCommand(()-> {

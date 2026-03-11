@@ -60,7 +60,6 @@ public class TeleOpTest extends OpMode {
         robot.getAllHubs().get(0).clearBulkCache();
         robot.getAllHubs().get(1).clearBulkCache();
         controller1.readButtons();
-        controller2.readButtons();
         robot.getDrive().getFollower().update();
 //        List<Double> voltages = new ArrayList<>();
 //        List<Double> current = new ArrayList<>();
