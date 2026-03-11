@@ -155,7 +155,7 @@ public class AutoClose extends OpMode {
                             .alongWith(new WaitCommand(100)
                                     .andThen(PathShootEx())),
                     new WaitCommand(300),
-                    new WaitCommand(1500),
+                    new WaitCommand(800),
                     robot.getCamera().getMotif(),
                     new WaitCommand(100),
                     new InstantCommand(()-> state = nextState))
