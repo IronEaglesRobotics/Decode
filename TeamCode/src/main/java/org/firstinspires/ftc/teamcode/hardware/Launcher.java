@@ -34,7 +34,9 @@ import java.util.Set;
 @Configurable
 public class Launcher extends SubsystemBase {
     public Motor spinner;
-    public MotorEx flyWheel1;
+    public Servo spinner1;
+    public Servo spinner2;
+//    public MotorEx flyWheel1;
     public MotorEx flyWheel2;
     public Motor throughBore;
     public RevColorSensorV3 cs1;
@@ -56,11 +58,16 @@ public class Launcher extends SubsystemBase {
     private static final int CHAMBER2 = halfDelta+(fullDelta*2);
     private static final int CHAMBER3 = halfDelta+(fullDelta*3);
     List<Color> chambers;
-    public static int closeSpeed = -805;
-    public static int farSpeed = -975;
+    public static int closeSpeed = -2000;
+    //2 flywheel: -805
+    //1 flywheel: -2000
+    public static int farSpeed = -2650;
+    //2 flywheel: -975
+    //1 flywheel: -2650
     public static int autoSpeed = -805;
     public static double power = .43;
     public static double servoPos = 0;
+    public static double servoShootPos = 0.3;
     public static double liftPos = 1;
     public static int tolerance = 80;
     public static int offset = 800;
@@ -80,9 +87,9 @@ public class Launcher extends SubsystemBase {
         pidTarget = 0;
         spinner.setRunMode(Motor.RunMode.VelocityControl);
         spinner.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
+//        flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
-        flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+//        flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
         throughBore = new Motor(hardwareMap,"rr",8192,0);
         throughBore.setInverted(true);
@@ -122,8 +129,8 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = isClose? closeSpeed:farSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -132,8 +139,8 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelAuto(boolean isClose){
         return new InstantCommand(()->{
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
-            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = isClose? autoSpeed:farSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
@@ -172,13 +179,13 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                servoPos = 0.5;
+                servoPos = servoShootPos;
                 time = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return time + 300 < System.currentTimeMillis();
+                return time + 150 < System.currentTimeMillis();
             }
 
             @Override
@@ -367,8 +374,8 @@ public class Launcher extends SubsystemBase {
         return (int) (Math.abs(flywheel.getCorrectedVelocity())/.83);
     }
     public boolean atSpeed(){
-        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 30 &&
-                Math.abs(speed1 + calculateVelo(flyWheel2)) < 30 &&
+//        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 30 &&
+                return Math.abs(speed1 + calculateVelo(flyWheel2)) < 30 &&
                 speed1 <= autoSpeed;
     }
     public double getSpeed1() {
@@ -388,12 +395,12 @@ public class Launcher extends SubsystemBase {
         controller.setPIDF(kp,ki,kd,kf);
         controller.setSetPoint(pidTarget);
         controller.setMinimumOutput(minSpeed);
-        flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
-        flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+//        flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+//        flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
         flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
         flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
-        flyWheel1.setVelocity(speed1);
-        flyWheel2.setVelocity(-speed1);
+//        flyWheel1.setVelocity(speed1);
+        flyWheel2.setVelocity(speed1);
         pusher.setPosition(servoPos);
         lift1.setPosition(liftPos);
         lift2.setPosition(liftPos);
