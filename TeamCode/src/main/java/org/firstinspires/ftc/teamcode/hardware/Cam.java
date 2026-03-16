@@ -15,7 +15,7 @@ import java.util.List;
 
 public class Cam extends SubsystemBase {
     Limelight3A limelight;
-    int order = 4;
+    Launcher.Motif order = Launcher.Motif.GPP;
     String teamColor;
     Pose lastPose;
     List<Ball> foundBalls = new ArrayList<>();
@@ -31,7 +31,7 @@ public class Cam extends SubsystemBase {
         limelight.pipelineSwitch(i);
     }
 
-    public void setOrder(int order1) {
+    public void setOrder(Launcher.Motif order1) {
         order = order1;
     }
 
@@ -68,7 +68,7 @@ public class Cam extends SubsystemBase {
         return limelight;
     }
 
-    public int getOrder() {
+    public Launcher.Motif getOrder() {
         return order;
     }
 
@@ -97,7 +97,7 @@ public class Cam extends SubsystemBase {
 
     public static class getMotif extends CommandBase {
         Cam camera;
-        int order = 0;
+        Launcher.Motif order = Launcher.Motif.GPP;
         double time = 0;
 
         public getMotif(Cam temp) {
@@ -115,19 +115,19 @@ public class Cam extends SubsystemBase {
             LLResult result = camera.limelight.getLatestResult();
             for (LLResultTypes.FiducialResult fiducial : result.getFiducialResults()) {
                 if (fiducial.getFiducialId() == 21) {
-                    order = 1;
+                    order = Launcher.Motif.GPP;
                 }
                 if (fiducial.getFiducialId() == 22) {
-                    order = 2;
+                    order = Launcher.Motif.PGP;
                 }
                 if (fiducial.getFiducialId() == 23) {
-                    order = 3;
+                    order = Launcher.Motif.PPG;
                 }
             }
         }
 
         public boolean isFinished() {
-            return ((camera.limelight.getLatestResult() != null && order != 0))
+            return ((camera.limelight.getLatestResult() != null))
                     || time + 1000 < System.currentTimeMillis();
         }
 
@@ -137,7 +137,7 @@ public class Cam extends SubsystemBase {
         }
     }
 
-    class Ball {
+    static class Ball {
         String color;
         Pose pose;
 

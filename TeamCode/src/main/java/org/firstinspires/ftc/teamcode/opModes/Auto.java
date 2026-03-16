@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
+import static org.firstinspires.ftc.teamcode.hardware.Launcher.Motif.*;
+
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -43,8 +45,6 @@ public class Auto extends OpMode {
     boolean wantsShoot = false;
     public Paths paths;
     boolean finished;
-    int green = 0;
-
 
     @Override
     public void init() {
@@ -182,10 +182,9 @@ public class Auto extends OpMode {
                 new SequentialCommandGroup(
                         (!isFar ? paths.PathShoot() : paths.farPathShoot()),
                         new InstantCommand(()->wantsShoot = true),
-                        robot.getLauncher().setLaunch(green,robot.getCamera().getOrder()),
+                        robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder()),
                         new WaitUntilCommand(() -> !robot.getDrive().getFollower().isBusy()),
 //                        (isFar ? robot.aim():new WaitCommand(20)),
-                        new WaitUntilCommand(() -> robot.getLauncher().canShoot() || isFar),
                         robot.getLauncher().fire(),
                         new WaitCommand(400),
                         new InstantCommand(() -> state = States.swap)
@@ -199,7 +198,6 @@ public class Auto extends OpMode {
                 nextState = lines < 4 ? States.finish : States.pick2;
                 nextState = hitGate ? States.pickCorner : nextState;
                 wantsShoot = false;
-                green = 0;
                 robot.loading()
                         .raceWith(new WaitUntilCommand(() -> wantsShoot))
                         .andThen(robot.getIntake().stop())
@@ -217,7 +215,6 @@ public class Auto extends OpMode {
             case pickCorner:
                 lastState = States.pickCorner;
                 nextState = States.finish;
-                green = 0;
                 PathChain path2 = robot.getDrive().getFollower().pathBuilder()
                     .addPath(new BezierLine(robot.getDrive().getPose(),
                         new Pose(
@@ -253,7 +250,7 @@ public class Auto extends OpMode {
                         robot.getLauncher().toZero(),
                         robot.getIntake().start(),
                         new WaitCommand(6500),
-                        robot.getLauncher().toFull(),
+                        //robot.getLauncher().toFull(),
                         robot.getIntake().reverse(),
                         robot.getLauncher().setLaunch(robot.getCamera().getOrder()),
                         robot.getIntake().stop()
@@ -272,7 +269,6 @@ public class Auto extends OpMode {
                 lastState = States.pick1;
                 nextState = States.pick2;
                 wantsShoot = false;
-                green = 2;
                 PathChain path = robot.getDrive().getFollower().pathBuilder()
                         .addPath(new BezierCurve(robot.getDrive().getPose(),
                                 new Pose(color == Alliance.Blue ? 8 : 135,
@@ -306,7 +302,6 @@ public class Auto extends OpMode {
                 nextState = States.finish;
                 nextState = isFar ? (hitGate ? States.pickFar : States.finish) : nextState;
                 wantsShoot = false;
-                green = 1;
                 robot.loading()
                         .raceWith(new WaitUntilCommand(() -> wantsShoot))
                         .andThen(robot.getIntake().stop())

@@ -45,8 +45,6 @@ public class AutoFar extends OpMode {
     boolean wantsShoot = false;
     public Paths paths;
     boolean finished;
-    int green = 0;
-
 
     @Override
     public void init() {
@@ -122,7 +120,6 @@ public class AutoFar extends OpMode {
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
-        robot.getLauncher().updateSpindexer();
 //        telemetry.addData("order", robot.getCamera().getOrder());
         telemetry.addData("last state", lastState);
 //        telemetry.addData("wantsShoot", wantsShoot);
@@ -165,7 +162,7 @@ public class AutoFar extends OpMode {
                 new WaitCommand(delay)
                         .andThen(
                                 new SequentialCommandGroup(
-                                        robot.getLauncher().setLaunch(0,robot.getCamera().getOrder())
+                                        robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
                                                 .alongWith(farPathShoot().get()),
                                         new WaitUntilCommand(robot.getLauncher()::canShoot),
                                         robot.getLauncher().fire(),
@@ -179,7 +176,6 @@ public class AutoFar extends OpMode {
                 lastState = States.pickFar;
                 nextState = lines > 2 ? States.pick2 : States.finish;
                 wantsShoot = false;
-                green = 0;
                 new ParallelCommandGroup(
                         new SequentialCommandGroup(
                             robot.getLauncher().toZero(),
@@ -194,7 +190,7 @@ public class AutoFar extends OpMode {
                                     ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
                                             != Launcher.Color.Nothing || Bot.hasBeen(3000)),
                             robot.getLauncher().toFull(),
-                            robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
+                            robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
                         )
                 ).schedule();
                 state = States.idle;
@@ -204,7 +200,6 @@ public class AutoFar extends OpMode {
                 lastState = States.pick2;
                 nextState = lines > 3 ? (hitGate ? States.pickCorner : States.pick1) : States.finish;
                 wantsShoot = false;
-                green = 1;
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
                         robot.getLauncher().toZero(),
@@ -219,7 +214,7 @@ public class AutoFar extends OpMode {
                                 ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
                                         != Launcher.Color.Nothing || Bot.hasBeen(6000)),
                         robot.getLauncher().toFull(),
-                        robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
+                        robot.getLauncher().setLaunch(Launcher.Picked.Second,robot.getCamera().getOrder())
                     )
                 ).schedule();
                 state = States.idle;
@@ -229,7 +224,6 @@ public class AutoFar extends OpMode {
                 lastState = States.pick1;
                 nextState = States.finish;
                 wantsShoot = false;
-                green = 2;
                 new ParallelCommandGroup(
                     new SequentialCommandGroup(
                         robot.getLauncher().toZero(),
@@ -244,7 +238,7 @@ public class AutoFar extends OpMode {
                                 ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
                                         != Launcher.Color.Nothing || Bot.hasBeen(3000)),
                         robot.getLauncher().toFull(),
-                        robot.getLauncher().setLaunch(green,robot.getCamera().getOrder())
+                        robot.getLauncher().setLaunch(Launcher.Picked.Third,robot.getCamera().getOrder())
                     )
                 ).schedule();
                 state = States.idle;
@@ -252,7 +246,6 @@ public class AutoFar extends OpMode {
             case pickCorner:
                 lastState = States.pickCorner;
                 nextState = States.finish;
-                green = 0;
                 PathChain path2 = robot.getDrive().getFollower().pathBuilder()
                         .addPath(new BezierLine(robot.getDrive().getPose(),
                                 new Pose(

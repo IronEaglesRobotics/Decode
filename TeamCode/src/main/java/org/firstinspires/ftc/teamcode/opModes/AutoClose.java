@@ -44,8 +44,6 @@ public class AutoClose extends OpMode {
     boolean wantsShoot = false;
     public Paths paths;
     boolean finished;
-    int green = 0;
-
     @Override
     public void init() {
         robot = new Bot().init(hardwareMap, null);
@@ -123,7 +121,6 @@ public class AutoClose extends OpMode {
         run();
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
-        robot.getLauncher().updateSpindexer();
         telemetry.addData("order", robot.getCamera().getOrder());
 //        telemetry.addData("last state", lastState);
 //        telemetry.addData("wantsShoot", wantsShoot);
@@ -168,7 +165,7 @@ public class AutoClose extends OpMode {
                         .andThen(
                             new SequentialCommandGroup(
                                 new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
-                                robot.getLauncher().setLaunch(0,robot.getCamera().getOrder())
+                                robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
                                         .alongWith(PathShoot()),
                                 new WaitUntilCommand(robot.getLauncher()::canShoot),
                                 robot.getLauncher().fire(),
@@ -195,7 +192,6 @@ public class AutoClose extends OpMode {
                             paths.Path7Ex))
                     .setLinearHeadingInterpolation(paths.Path7.getHeading(), paths.Path7Ex.getHeading())
                     .build();
-                green = 2;
                 new SequentialCommandGroup(
                     robot.getLauncher().toZero(),
                     Pick1(),
@@ -203,7 +199,7 @@ public class AutoClose extends OpMode {
                             new SequentialCommandGroup(
                                 robot.getLauncher().toFull(),
                                 new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
-                                robot.getLauncher().setLaunch(2,robot.getLauncher().order)),
+                                robot.getLauncher().setLaunch(Launcher.Picked.Third,robot.getLauncher().order)),
                             new SequentialCommandGroup(
                                 hitGate ? robot.getDrive().pathCommand(pathChain3) : new WaitCommand(20),
                                 new WaitCommand(hitGate ? 1000 : 20),
@@ -224,7 +220,6 @@ public class AutoClose extends OpMode {
                 lastState = States.pick2;
                 nextState = lines > 3 ? States.pickFar : States.finish;
                 wantsShoot = false;
-                green = 1;
                 PathChain pathChain4 = robot.getDrive().getFollower().pathBuilder()
                     .addPath(new BezierCurve(paths.Path3,
                             paths.Path7Ex.plus(new Pose(color == Alliance.Blue ? 9 : -9, -3)),
@@ -238,7 +233,7 @@ public class AutoClose extends OpMode {
                         new SequentialCommandGroup(
                             robot.getLauncher().toFull(),
                             new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
-                            robot.getLauncher().setLaunch(1,robot.getLauncher().order)),
+                            robot.getLauncher().setLaunch(Launcher.Picked.Second,robot.getLauncher().order)),
                         new SequentialCommandGroup(
                             hitGate2 ? robot.getDrive().pathCommand(pathChain4) : new WaitCommand(20),
                             new WaitCommand(hitGate2 ? 1000 : 20),
@@ -263,13 +258,12 @@ public class AutoClose extends OpMode {
                                 new Pose(color == Alliance.Blue ? 0 : 144, 146)))
                         .build();
                 wantsShoot = false;
-                green = 0;
                 new SequentialCommandGroup(
                     Pick3(),
                     new ParallelCommandGroup(
                             robot.getDrive().pathCommand(pathChain),
                             robot.getLauncher().toFull(),
-                            robot.getLauncher().setLaunch(0,robot.getCamera().getOrder())
+                            robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
                     ),
                     new WaitUntilCommand(()->robot.getLauncher().canShoot()),
                     robot.getLauncher().fire(),

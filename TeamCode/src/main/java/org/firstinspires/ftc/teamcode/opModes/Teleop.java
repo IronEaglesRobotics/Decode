@@ -71,7 +71,7 @@ public class Teleop extends OpMode {
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
-        toShoot = ()-> robot.getDrive().moveTo(56,95.5,135);
+        toShoot = ()-> robot.getDrive().moveTo(0,0,0);
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
@@ -146,6 +146,9 @@ public class Teleop extends OpMode {
         if(gamepad1.dpad_left){
             robot.getLauncher().resetSpindexer();
         }
+        if (manualDrive && !robot.getDrive().getFollower().getTeleopDrive()){
+            robot.getDrive().getFollower().startTeleopDrive(true);
+        }
         if (manualDrive){
             double driveY = controller1.getLeftY();
             double driveX = -controller1.getLeftX();
@@ -176,10 +179,15 @@ public class Teleop extends OpMode {
             );
         }
         if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)){
-            manualDrive = false;
-            toShoot.get()
-                    .whenFinished(()->manualDrive = true)
-                    .schedule();
+            if (!manualDrive){
+                manualDrive = true;
+            }
+            else{
+                manualDrive = false;
+                toShoot.get()
+                        .whenFinished(() -> manualDrive = true)
+                        .schedule();
+            }
         }
 
         if(controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
@@ -189,11 +197,12 @@ public class Teleop extends OpMode {
         CommandScheduler.getInstance().run();
 //        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
 //        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
-        panelsTelemetry.addData("current", robot.getLauncher().throughBore.getCurrentPosition());
-        panelsTelemetry.addData("target", Launcher.pidTarget);
+//        panelsTelemetry.addData("current", robot.getLauncher().throughBore.getCurrentPosition());
+//        panelsTelemetry.addData("target", Launcher.pidTarget);
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
-//        panelsTelemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
+        panelsTelemetry.addData("Drive", manualDrive);
+        panelsTelemetry.addData("follower Drive", robot.getDrive().getFollower().getTeleopDrive());
         panelsTelemetry.update();
     }
 
