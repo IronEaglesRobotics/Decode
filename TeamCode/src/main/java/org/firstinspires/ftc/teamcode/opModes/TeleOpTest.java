@@ -85,7 +85,7 @@ public class TeleOpTest extends OpMode {
         CommandScheduler.getInstance().run();
 //        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
 //        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
-        panelsTelemetry.addData("current", Launcher.spinnercurrent);
+//        panelsTelemetry.addData("current", Launcher.spinnercurrent);
 //        panelsTelemetry.addData("target", Launcher.pidTarget);
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));

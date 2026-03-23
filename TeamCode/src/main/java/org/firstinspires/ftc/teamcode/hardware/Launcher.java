@@ -70,12 +70,12 @@ public class Launcher extends SubsystemBase {
     public static int farSpeed = -2650;
     //2 flywheel: -975
     //1 flywheel: -2650
-    public static int autoSpeed = -805;
+    public static int autoSpeed = -2000;
     public static double power = .43;
-    public static double servoPos = 0;
+    public static double servoPush = 0;
     public static double servoShootPos = 0.3;
     public static double liftPos = 1;
-    public static Picked lastPicked;
+    public static Picked lastPicked = Picked.First;
 
     public static double[] veloCoeffecient = new double[] {11,0,0};
     public static double[] feedforward = new double[] {11,0,0};
@@ -83,7 +83,7 @@ public class Launcher extends SubsystemBase {
     public static int safePose = 0;
     double speed1 = 0;
     double speed2 = 0;
-    public Motif order;
+    public Motif order = Motif.GPP;
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
@@ -180,7 +180,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                servoPos = servoShootPos;
+                servoPush = servoShootPos;
                 time = System.currentTimeMillis();
             }
 
@@ -196,7 +196,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void end(boolean interrupted) {
-                servoPos = 0.05;
+                servoPush = 0.05;
             }
         };
     }
@@ -259,7 +259,34 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 servoIndex += 2;
-                servoPos += POSITIONS[servoIndex];
+                if (servoIndex > POSITIONS.length - 1){
+                    servoIndex = servoIndex % 2;
+                }
+                servoTarget = POSITIONS[servoIndex];
+                time = System.currentTimeMillis();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return time + 150 < System.currentTimeMillis();
+            }
+        };
+    }
+    public Command backNext(){
+        return new Command() {
+            long time;
+            @Override
+            public Set<Subsystem> getRequirements() {
+                return new HashSet<>();
+            }
+
+            @Override
+            public void initialize() {
+                servoIndex -= 2;
+                if (servoIndex < 0){
+                    servoIndex = 0;
+                }
+                servoTarget = POSITIONS[servoIndex];
                 time = System.currentTimeMillis();
             }
 
@@ -271,7 +298,6 @@ public class Launcher extends SubsystemBase {
     }
     public Command toShoot(){
         return new Command() {
-
             long time;
             @Override
             public Set<Subsystem> getRequirements() {
@@ -282,7 +308,11 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                servoTarget = POSITIONS[++servoIndex];
+                servoIndex++;
+                if (servoIndex > POSITIONS.length - 1){
+                    servoIndex = 0;
+                }
+                servoTarget = POSITIONS[servoIndex];
                 time = System.currentTimeMillis();
             }
 
@@ -295,6 +325,7 @@ public class Launcher extends SubsystemBase {
 
     public Command backShoot(){
         return new Command() {
+            long time;
             @Override
             public Set<Subsystem> getRequirements() {
                 Set<Subsystem> set = new HashSet<>();
@@ -304,17 +335,23 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public void initialize() {
-                servoTarget -= POSITIONS[--servoIndex];
+                servoIndex--;
+                if (servoIndex < 0){
+                    servoIndex = 0;
+                }
+                servoTarget = POSITIONS[servoIndex];
+                time = System.currentTimeMillis();
             }
 
             @Override
             public boolean isFinished() {
-                return atTarget();
+                return time + 150 < System.currentTimeMillis();
             }
         };
     }
     public Command toZero(){
         return new Command() {
+            long time;
             @Override
             public Set<Subsystem> getRequirements() {
                 Set<Subsystem> set = new HashSet<>();
@@ -325,6 +362,13 @@ public class Launcher extends SubsystemBase {
             @Override
             public void initialize() {
                 servoTarget = LOAD1;
+                servoIndex = 1;
+                time = System.currentTimeMillis();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return time + 150 < System.currentTimeMillis();
             }
         };
     }
@@ -363,7 +407,7 @@ public class Launcher extends SubsystemBase {
         flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
         flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
         flyWheel2.setVelocity(speed1);
-        pusher.setPosition(servoPos);
+        pusher.setPosition(servoPush);
         spinner1.setPosition(servoTarget);
         spinner2.setPosition(servoTarget);
         lift1.setPosition(liftPos);
@@ -390,7 +434,7 @@ public class Launcher extends SubsystemBase {
             launcher.chambers.set(0,Color.Nothing);
             launcher.chambers.set(1,Color.Nothing);
             launcher.chambers.set(2,Color.Nothing);
-            launcher.Zero();
+//            launcher.Zero();
             time = -300;
         }
 

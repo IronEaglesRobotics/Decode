@@ -46,7 +46,6 @@ public class Teleop extends OpMode {
 
     boolean aprilCentric = false;
     // 1. Create Logger
-    DataLogger logger = new DataLogger("MyLogFile");
     JoinedTelemetry panelsTelemetry;
     public static double speedCap = .75;
 
@@ -55,11 +54,7 @@ public class Teleop extends OpMode {
 
     @Override
     public void init() {
-        try {
-            logger.addHeaderLine("Time", "Voltage");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
         controller1 = new GamepadEx(gamepad1);
         robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
@@ -79,7 +74,6 @@ public class Teleop extends OpMode {
                                 .andThen(robot.loading())
                                 .andThen(robot.getIntake().stop())
                         ,robot.getIntake().stop()
-                                        .alongWith(robot.getLauncher().setLaunch())
                 );
         controller1.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getIntake().stop());
@@ -92,7 +86,7 @@ public class Teleop extends OpMode {
         controller2.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
                 .whenPressed(robot.getLauncher().shoot());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-                .whenPressed(robot.getLauncher().toNext());
+                .whenPressed(robot.getLauncher().backNext());
         controller2.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getLauncher().flywheelOn(true));
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
@@ -108,7 +102,7 @@ public class Teleop extends OpMode {
         controller1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .toggleWhenPressed(robot.getLauncher().Park(),robot.getLauncher().UnPark());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_UP)
-                .whenPressed(robot.getLauncher().flywheelAuto(true));
+                .whenPressed(robot.getLauncher().setLaunch());
         controller2.getGamepadButton(GamepadKeys.Button.LEFT_STICK_BUTTON)
                 .whenPressed(robot.getLauncher().backShoot());
         controller1.getGamepadButton(GamepadKeys.Button.Y)
@@ -125,20 +119,6 @@ public class Teleop extends OpMode {
         controller1.readButtons();
         controller2.readButtons();
         robot.getDrive().getFollower().update();
-//        List<Double> voltages = new ArrayList<>();
-//        List<Double> current = new ArrayList<>();
-//
-//        for (int i = 0; i < lynxController.size(); i++){
-//            voltages.add(lynxController.get(i).getInputVoltage(VoltageUnit.VOLTS));
-//            current.add(lynxController.get(i).getCurrent(CurrentUnit.AMPS));
-//        }
-        try {
-            logger.addDataLine(System.currentTimeMillis());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        robot.getLauncher().updateSpindexer();
 
         if(gamepad1.right_bumper){
             robot.getLauncher().resetEncoder();
@@ -190,19 +170,16 @@ public class Teleop extends OpMode {
             }
         }
 
-        if(controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)){
-            robot.getLauncher().fixPose();
-        }
 
         CommandScheduler.getInstance().run();
-//        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
-//        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
+        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
+        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
 //        panelsTelemetry.addData("current", robot.getLauncher().throughBore.getCurrentPosition());
 //        panelsTelemetry.addData("target", Launcher.pidTarget);
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
-        panelsTelemetry.addData("Drive", manualDrive);
-        panelsTelemetry.addData("follower Drive", robot.getDrive().getFollower().getTeleopDrive());
+//        panelsTelemetry.addData("Drive", manualDrive);
+//        panelsTelemetry.addData("follower Drive", robot.getDrive().getFollower().getTeleopDrive());
         panelsTelemetry.update();
     }
 
@@ -210,7 +187,6 @@ public class Teleop extends OpMode {
     public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
-        logger.close();
         super.stop();
     }
 }
