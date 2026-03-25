@@ -29,7 +29,7 @@ public class Launcher extends SubsystemBase {
     //public Motor spinner;
     public Servo spinner1;
     public Servo spinner2;
-//    public MotorEx flyWheel1;
+    public MotorEx flyWheel1;
     public MotorEx flyWheel2;
     public Motor throughBore;
     public RevColorSensorV3 cs1;
@@ -67,7 +67,7 @@ public class Launcher extends SubsystemBase {
     public static int closeSpeed = -2000;
     //2 flywheel: -805
     //1 flywheel: -2000
-    public static int farSpeed = -2650;
+    public static int farSpeed = -2750;
     //2 flywheel: -975
     //1 flywheel: -2650
     public static int autoSpeed = -2000;
@@ -86,8 +86,19 @@ public class Launcher extends SubsystemBase {
     public Motif order = Motif.GPP;
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
+
+        flyWheel1 = new MotorEx(hardwareMap,"flywheel1",28,6000);
+        flyWheel1.motor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT);
+        flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+        flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+        flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+
         flyWheel2 = new MotorEx(hardwareMap,"flywheel2",28,6000);
+        flyWheel2.motor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT);
         flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
+        flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+        flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+
         throughBore = new Motor(hardwareMap,"rr",8192,0);
         throughBore.setInverted(true);
 
@@ -127,7 +138,7 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelOn(boolean isClose){
         return new InstantCommand(()->{
-//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = isClose? closeSpeed:farSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
@@ -137,7 +148,7 @@ public class Launcher extends SubsystemBase {
     }
     public Command flywheelAuto(boolean isClose){
         return new InstantCommand(()->{
-//            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
+            flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
             speed1 = isClose? autoSpeed:farSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
@@ -155,9 +166,12 @@ public class Launcher extends SubsystemBase {
         servoTarget = 0;
     }
     public Command flywheelOff(){
-        return new InstantCommand(()->{
+        return new InstantCommand(() -> {
             speed1 = 0;
-            speed2 = 0;
+            flyWheel1.setRunMode(Motor.RunMode.RawPower);
+            flyWheel2.setRunMode(Motor.RunMode.RawPower);
+            flyWheel1.set(0);
+            flyWheel2.set(0);
         });
     }
     public void setLastPicked(Picked lastPick){
@@ -386,8 +400,7 @@ public class Launcher extends SubsystemBase {
         return (int) (Math.abs(flywheel.getCorrectedVelocity())/.83);
     }
     public boolean atSpeed(){
-//        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 30 &&
-                return Math.abs(speed1 + calculateVelo(flyWheel2)) < 30 &&
+        return Math.abs(speed1 + calculateVelo(flyWheel1)) < 30 && Math.abs(speed1 + calculateVelo(flyWheel2)) < 30 &&
                 speed1 <= autoSpeed;
     }
     public double getSpeed1() {
@@ -404,9 +417,12 @@ public class Launcher extends SubsystemBase {
 
     @Override
     public void periodic(){
-        flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
-        flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+//        flyWheel2.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+//        flyWheel2.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
         flyWheel2.setVelocity(speed1);
+//        flyWheel1.setVeloCoefficients(veloCoeffecient[0],veloCoeffecient[1],veloCoeffecient[2]);
+//        flyWheel1.setFeedforwardCoefficients(feedforward[0], feedforward[1],feedforward[2]);
+        flyWheel1.setVelocity(-speed1);
         pusher.setPosition(servoPush);
         spinner1.setPosition(servoTarget);
         spinner2.setPosition(servoTarget);
@@ -470,7 +486,7 @@ public class Launcher extends SubsystemBase {
             else if (launcher.chambers.get(2) == Color.Green){
                 lastPicked = Picked.Third;
             }
-            launcher.backShoot().schedule();
+//            launcher.backShoot().schedule();
         }
     }
 

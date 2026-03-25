@@ -49,12 +49,8 @@ public class Teleop extends OpMode {
     JoinedTelemetry panelsTelemetry;
     public static double speedCap = .75;
 
-    public Teleop() throws IOException {
-    }
-
     @Override
     public void init() {
-
         controller1 = new GamepadEx(gamepad1);
         robot = new Bot().init(hardwareMap,controller1);
         controller2 = new GamepadEx(gamepad2);
@@ -66,14 +62,15 @@ public class Teleop extends OpMode {
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
-        toShoot = ()-> robot.getDrive().moveTo(0,0,0);
+        toShoot = ()-> robot.getDrive().moveTo(0,0,0).withTimeout(2000);
         controller1.getGamepadButton(GamepadKeys.Button.A)
                 .toggleWhenPressed(
                         robot.getLauncher().toZero()
                                 .andThen(robot.getIntake().start())
                                 .andThen(robot.loading())
                                 .andThen(robot.getIntake().stop())
-                        ,robot.getIntake().stop()
+                                .andThen(robot.getLauncher().backShoot())
+                        ,robot.getIntake().stop().andThen(robot.getLauncher().backShoot())
                 );
         controller1.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getIntake().stop());
@@ -86,7 +83,7 @@ public class Teleop extends OpMode {
         controller2.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
                 .whenPressed(robot.getLauncher().shoot());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-                .whenPressed(robot.getLauncher().backNext());
+                .whenPressed(robot.getLauncher().toNext());
         controller2.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getLauncher().flywheelOn(true));
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
@@ -114,8 +111,6 @@ public class Teleop extends OpMode {
     }
     @Override
     public void loop(){
-        robot.getAllHubs().get(0).clearBulkCache();
-        robot.getAllHubs().get(1).clearBulkCache();
         controller1.readButtons();
         controller2.readButtons();
         robot.getDrive().getFollower().update();
@@ -159,11 +154,9 @@ public class Teleop extends OpMode {
             );
         }
         if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_STICK_BUTTON)){
-            if (!manualDrive){
-                manualDrive = true;
-            }
-            else{
+            if (manualDrive) {
                 manualDrive = false;
+                // Schedule the command ONCE
                 toShoot.get()
                         .whenFinished(() -> manualDrive = true)
                         .schedule();
@@ -172,15 +165,17 @@ public class Teleop extends OpMode {
 
 
         CommandScheduler.getInstance().run();
-        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
-        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
+//        telemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
+//        telemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
 //        panelsTelemetry.addData("current", robot.getLauncher().throughBore.getCurrentPosition());
 //        panelsTelemetry.addData("target", Launcher.pidTarget);
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
 //        panelsTelemetry.addData("Drive", manualDrive);
 //        panelsTelemetry.addData("follower Drive", robot.getDrive().getFollower().getTeleopDrive());
-        panelsTelemetry.update();
+        telemetry.addData("Loop Time (ms)", getRuntime() * 1000);
+        resetRuntime();
+        telemetry.update();
     }
 
     @Override
