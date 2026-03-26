@@ -140,17 +140,17 @@ public class Bot extends Robot {
                 }
             }
         }
-        else{
-            new PerpetualCommand(new SequentialCommandGroup(
-                    new InstantCommand(()->{
-                        launcher.light.setPosition(launcher.light.getPosition() + .001);
-                        if (launcher.light.getPosition() > .788){
-                            launcher.light.setPosition(.28);
-                        }
-                    }),
-                    new WaitCommand(100)
-            )).schedule();
-        }
+//        else{
+//            new PerpetualCommand(new SequentialCommandGroup(
+//                    new InstantCommand(()->{
+//                        launcher.light.setPosition(launcher.light.getPosition() + .001);
+//                        if (launcher.light.getPosition() > .788){
+//                            launcher.light.setPosition(.28);
+//                        }
+//                    }),
+//                    new WaitCommand(100)
+//            )).schedule();
+//        }
     }
 
     @Configurable

@@ -124,6 +124,7 @@ public class AutoClose extends OpMode {
         CommandScheduler.getInstance().run();
         robot.getDrive().getFollower().update();
         telemetry.addData("order", robot.getCamera().getOrder());
+        telemetry.addData("fires", Launcher.fireQueue[0] + " : " + Launcher.fireQueue[1] + " : " + Launcher.fireQueue[2]);
 //        telemetry.addData("last state", lastState);
 //        telemetry.addData("wantsShoot", wantsShoot);
 //        telemetry.addData("target", Launcher.pidTarget);
@@ -168,11 +169,10 @@ public class AutoClose extends OpMode {
                         .andThen(
                             new SequentialCommandGroup(
                                 new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
-                                robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
+                                robot.getLauncher().setLaunch(Launcher.Picked.Second,robot.getCamera().getOrder())
                                         .alongWith(PathShoot()),
-                                new WaitUntilCommand(robot.getLauncher()::canShoot),
+                                //new WaitUntilCommand(robot.getLauncher()::canShoot),
                                 robot.getLauncher().fire(),
-                                new WaitCommand(400),
                                 new InstantCommand(()->state = nextState)
                                         .alongWith(robot.getLauncher().toShoot())
                             )
@@ -209,9 +209,7 @@ public class AutoClose extends OpMode {
                                 new DeferredCommand(this::PathShoot, Collections.emptyList())
                             )
                         ),
-                    new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                    robot.getLauncher().fire(),
-                    new WaitCommand(1000),
+                    new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
                     new InstantCommand(()->state = nextState)
 //                            .alongWith(robot.getLauncher().toShoot()
 //                                    .andThen(new InstantCommand(robot.getLauncher()::resetEncoder)))
@@ -243,9 +241,8 @@ public class AutoClose extends OpMode {
                             new DeferredCommand(this::PathShoot2, Collections.emptyList())
                         )
                     ),
-                    new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                    robot.getLauncher().fire(),
-                    new WaitCommand(1000),
+                    new WaitCommand(100),
+                    new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
                     new InstantCommand(()->state = nextState)
 //                            .alongWith(robot.getLauncher().toShoot()
 //                                    .andThen(new InstantCommand(robot.getLauncher()::resetEncoder)))
@@ -255,8 +252,10 @@ public class AutoClose extends OpMode {
             case pickFar:
                 finished = false;
                 lastState = States.pickFar;
+                nextState = States.idle;
                 PathChain pathChain = robot.getDrive().getFollower().pathBuilder()
-                        .addPath(new BezierLine(paths.Path10,paths.Path1.plus(new Pose(0,15))))
+                        .addPath(new BezierLine(paths.Path10,paths.Path1.plus(
+                                new Pose(color == Alliance.Blue ? 10 : -10,10))))
                         .setHeadingInterpolation(HeadingInterpolator.facingPoint(
                                 new Pose(color == Alliance.Blue ? 0 : 144, 146)))
                         .build();
@@ -268,8 +267,9 @@ public class AutoClose extends OpMode {
                             robot.getLauncher().toFull(),
                             robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
                     ),
-                    new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                    robot.getLauncher().fire(),
+                    new WaitCommand(100),
+                    new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
+                    new InstantCommand(()->state = nextState),
                     robot.getLauncher().toShoot(),
                     new InstantCommand(robot.getLauncher()::resetEncoder)
                 ).schedule();

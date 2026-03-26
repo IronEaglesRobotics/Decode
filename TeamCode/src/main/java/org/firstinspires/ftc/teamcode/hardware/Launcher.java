@@ -50,9 +50,9 @@ public class Launcher extends SubsystemBase {
     public static int pidTarget = 0;
     private static final double FIRE1 = 0;
     private static final double FIRE2 =  0.185;
-    private static final double FIRE3 = 0.37;
+    private static final double FIRE3 = 0.381;
     private static final double FIRE4 = 0.555;
-    private static final double FIRE5 = 0.74;
+    private static final double FIRE5 = 0.751;
     private static final double LOAD1 = 0.0925;
     private static final double LOAD2 = 0.2775;
     private static final double LOAD3 = 0.4625;
@@ -63,15 +63,15 @@ public class Launcher extends SubsystemBase {
             {{FIRE4,FIRE3,FIRE2},{FIRE3,FIRE4,FIRE2},{FIRE3,FIRE2,FIRE1}},
             {{FIRE5,FIRE4,FIRE3},{FIRE3,FIRE2,FIRE1},{FIRE4,FIRE3,FIRE2}}
     };
-    public static double[] fireQueue = new double[3];
+    public static double[] fireQueue = {FIRE3,FIRE2,FIRE1};
     List<Color> chambers;
     public static int closeSpeed = -2000;
     //2 flywheel: -805
     //1 flywheel: -2000
-    public static int farSpeed = -2750;
+    public static int farSpeed = -2650;
     //2 flywheel: -975
     //1 flywheel: -2650
-    public static int autoSpeed = -2000;
+    public static int autoSpeed = -1900;
     public static double power = .43;
     public static double servoPush = 0;
     public static double servoShootPos = 0.3;
@@ -115,7 +115,6 @@ public class Launcher extends SubsystemBase {
         liftPos=0;
 
         light = hardwareMap.get(Servo.class, "light");
-        light.setPosition(.444);
 
 //        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
@@ -203,7 +202,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return time + 150 < System.currentTimeMillis();
+                return time + 250 < System.currentTimeMillis();
             }
 
             @Override
@@ -246,17 +245,19 @@ public class Launcher extends SubsystemBase {
     }
     public Command fire(double[] fires){
         return new SequentialCommandGroup(
-                new WaitUntilCommand(this::atSpeed),
+//                new InstantCommand(()-> servoTarget = fires[0]),
+//                new WaitCommand(300),
+//                new WaitUntilCommand(this::atSpeed),
                 shoot(),
-                new WaitCommand(300),
+                new WaitCommand(100),
                 new InstantCommand(()-> servoTarget = fires[1]),
-                new WaitCommand(300),
+                new WaitCommand(200),
                 shoot(),
-                new WaitCommand(300),
+                new WaitCommand(100),
                 new InstantCommand(()-> servoTarget = fires[2]),
-                new WaitCommand(300),
+                new WaitCommand(200),
                 shoot(),
-                new WaitCommand(300),
+                new WaitCommand(100),
                 new InstantCommand(()->fireQueue = new double[]{FIRE3, FIRE2, FIRE1}),
                 toZero()
         );

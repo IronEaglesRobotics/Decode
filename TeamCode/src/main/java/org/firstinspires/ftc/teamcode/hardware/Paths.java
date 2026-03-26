@@ -48,7 +48,7 @@ public class Paths {
         Path7 = new Pose(postPickX2, 93.500, Math.toRadians(pickUp));
         Path7Ex = new Pose(isBlue ? 4.3 : 140.2, 86, Math.toRadians(97));
 
-        Path9 = new Pose(prePickX, 44.000, Math.toRadians(pickUp));
+        Path9 = new Pose(prePickX + (isBlue ? 15 : -15), 40.000, Math.toRadians(pickUp));
 
         Path10 = new Pose(postPickX1, 49.000, Math.toRadians(pickUp));
 
