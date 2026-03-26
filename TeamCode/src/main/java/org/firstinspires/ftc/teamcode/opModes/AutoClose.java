@@ -22,6 +22,8 @@ import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.teamcode.hardware.Launcher;
 import org.firstinspires.ftc.teamcode.hardware.Paths;
 import org.firstinspires.ftc.teamcode.hardware.Storage;
+import org.firstinspires.ftc.teamcode.opModes.Auto.Alliance;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +33,7 @@ import java.util.function.Supplier;
 @Autonomous(name = "AutoClose")
 public class AutoClose extends OpMode {
 
-    private Alliance color = Alliance.Blue;
+    private Auto.Alliance color = Auto.Alliance.Blue;
     private int lines = 3;
     private boolean hitGate = false;
     private boolean hitGate2 = false;
@@ -139,6 +141,7 @@ public class AutoClose extends OpMode {
         CommandScheduler.getInstance().reset();
         Storage.getInstance().setPose(robot.getDrive().getPose(),paths.Path1);
         Storage.getInstance().resetSpindexer = false;
+        Storage.getInstance().color = color;
         super.stop();
     }
 
@@ -350,10 +353,5 @@ public class AutoClose extends OpMode {
         return robot.getDrive().moveTo(
                 new Pose(paths.Path1.getX(), 130, Math.toRadians(90))
         );
-    }
-
-    public enum Alliance {
-        Red,
-        Blue
     }
 }

@@ -52,7 +52,7 @@ public class Teleop extends OpMode {
     @Override
     public void init() {
         controller1 = new GamepadEx(gamepad1);
-        robot = new Bot().init(hardwareMap,controller1);
+        robot = new Bot().init(hardwareMap,controller1,Storage.getInstance().color);
         controller2 = new GamepadEx(gamepad2);
         if (Storage.getInstance().resetSpindexer){
             robot.getLauncher().resetEncoder();
@@ -83,7 +83,7 @@ public class Teleop extends OpMode {
         controller2.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
                 .whenPressed(robot.getLauncher().shoot());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-                .whenPressed(robot.getLauncher().toNext());
+                .whenPressed(robot.getLauncher().backNext());
         controller2.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getLauncher().flywheelOn(true));
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
@@ -173,9 +173,11 @@ public class Teleop extends OpMode {
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
 //        panelsTelemetry.addData("Drive", manualDrive);
 //        panelsTelemetry.addData("follower Drive", robot.getDrive().getFollower().getTeleopDrive());
+        panelsTelemetry.addData("index", Launcher.servoIndex);
         telemetry.addData("Loop Time (ms)", getRuntime() * 1000);
         resetRuntime();
         telemetry.update();
+        robot.updateColor();
     }
 
     @Override

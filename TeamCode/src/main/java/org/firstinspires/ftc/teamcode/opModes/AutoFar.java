@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.hardware.Bot;
 import org.firstinspires.ftc.teamcode.hardware.Launcher;
 import org.firstinspires.ftc.teamcode.hardware.Paths;
 import org.firstinspires.ftc.teamcode.hardware.Storage;
+import org.firstinspires.ftc.teamcode.opModes.Auto.Alliance;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -138,6 +139,7 @@ public class AutoFar extends OpMode {
         CommandScheduler.getInstance().reset();
         Storage.getInstance().setPose(robot.getDrive().getPose(),paths.Path1);
         Storage.getInstance().resetSpindexer = false;
+        Storage.getInstance().color = color;
         super.stop();
     }
 
@@ -378,14 +380,10 @@ public class AutoFar extends OpMode {
 
     public Command finish() {
         return robot.getDrive().moveTo(
-                new Pose(paths.Path11.getX() + (color == Alliance.Blue ? -30 : 30),
+                new Pose(paths.Path11.getX() + (color == Auto.Alliance.Blue ? -30 : 30),
                         paths.Path11.getY() - 10,
                         Math.toRadians(90)));
     }
 
 
-    public enum Alliance {
-        Red,
-        Blue
-    }
 }

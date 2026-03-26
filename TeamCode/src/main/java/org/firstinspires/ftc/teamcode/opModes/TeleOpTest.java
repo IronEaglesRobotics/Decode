@@ -53,6 +53,18 @@ public class TeleOpTest extends OpMode {
         CommandScheduler.getInstance().reset();
         CommandScheduler.getInstance().registerSubsystem(robot.getDrive());
         CommandScheduler.getInstance().registerSubsystem(robot.getLauncher());
+        controller1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
+                .whenPressed(robot.getLauncher().toShoot());
+        controller1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
+                .whenPressed(robot.getLauncher().toNext());
+        controller1.getGamepadButton(GamepadKeys.Button.DPAD_UP)
+                .whenPressed(robot.getLauncher().backNext());
+        controller1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
+                .whenPressed(robot.getLauncher().backShoot());
+        controller1.getGamepadButton(GamepadKeys.Button.A)
+                .whenPressed(robot.getLauncher().toZero());
+        controller1.getGamepadButton(GamepadKeys.Button.B)
+                .whenPressed(robot.loading());
         panelsTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(),telemetry);
     }
     @Override
@@ -82,6 +94,7 @@ public class TeleOpTest extends OpMode {
         );
 
 
+
         CommandScheduler.getInstance().run();
 //        panelsTelemetry.addData("color1",robot.getLauncher().getColor(robot.getLauncher().cs1));
 //        panelsTelemetry.addData("color2",robot.getLauncher().getColor(robot.getLauncher().cs2));
@@ -90,6 +103,7 @@ public class TeleOpTest extends OpMode {
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
 //        panelsTelemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
+        panelsTelemetry.addData("index", Launcher.servoIndex);
         panelsTelemetry.update();
     }
 

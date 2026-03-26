@@ -7,8 +7,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.PerpetualCommand;
 import com.seattlesolvers.solverslib.command.Robot;
+import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
+import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
+
+import org.firstinspires.ftc.teamcode.opModes.Auto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +29,7 @@ public class Bot extends Robot {
     static boolean started = false;
     static long time = 0;
     List<LynxModule> allHubs;
+    Auto.Alliance team = null;
 
     public Bot init(HardwareMap hardwareMap, GamepadEx gamepad){
         camera = new Cam(hardwareMap);
@@ -41,6 +47,26 @@ public class Bot extends Robot {
         for (LynxModule hub : allHubs){
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
+        updateColor();
+        return this;
+    }
+    public Bot init(HardwareMap hardwareMap, GamepadEx gamepad, Auto.Alliance alliance){
+        camera = new Cam(hardwareMap);
+        intake = new Intake(hardwareMap);
+        launcher = new Launcher(hardwareMap);
+        if (gamepad == null){
+            drive = new Drive(hardwareMap);
+        } else {
+            drive = new Drive(hardwareMap,gamepad);
+        }
+        lift1 = hardwareMap.get(Servo.class,"lift1");
+        lift2 = hardwareMap.get(Servo.class,"lift2");
+        lift2.setDirection(Servo.Direction.REVERSE);
+        allHubs = hardwareMap.getAll(LynxModule.class);
+        for (LynxModule hub : allHubs){
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+        team = alliance;
         return this;
     }
     public List<LynxModule> getAllHubs(){
@@ -94,6 +120,37 @@ public class Bot extends Robot {
             time = 0;
         }
         return done;
+    }
+    public void updateColor(){
+        if (team != null){
+            if (camera.getArea() > .6 ){
+                if (Math.abs(camera.getFiducialAngle()) <= 2 && camera.getFiducialAngle() != 0){
+                    launcher.light.setPosition(.444);
+                }
+                else {
+                    launcher.light.setPosition(.29);
+                }
+            }
+            else{
+                if (Math.abs(camera.getFiducialAngle()) + (3 * (team == Auto.Alliance.Blue ? -1 : 1)) <= 2 && camera.getFiducialAngle() != 0){
+                    launcher.light.setPosition(.444);
+                }
+                else {
+                    launcher.light.setPosition(.29);
+                }
+            }
+        }
+        else{
+            new PerpetualCommand(new SequentialCommandGroup(
+                    new InstantCommand(()->{
+                        launcher.light.setPosition(launcher.light.getPosition() + .001);
+                        if (launcher.light.getPosition() > .788){
+                            launcher.light.setPosition(.28);
+                        }
+                    }),
+                    new WaitCommand(100)
+            )).schedule();
+        }
     }
 
     @Configurable

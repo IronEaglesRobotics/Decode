@@ -36,6 +36,7 @@ public class Launcher extends SubsystemBase {
     public RevColorSensorV3 cs2;
     //public CRServo quickLaunch;
     Servo pusher;
+    public Servo light;
     AnalogInput servoInput;
     Servo lift1;
     Servo lift2;
@@ -113,6 +114,8 @@ public class Launcher extends SubsystemBase {
         lift2 = hardwareMap.get(Servo.class, "lift2");
         liftPos=0;
 
+        light = hardwareMap.get(Servo.class, "light");
+        light.setPosition(.444);
 
 //        quickLaunch = new CRServo(hardwareMap,"quickLaunch");
         cs1 = hardwareMap.get(RevColorSensorV3.class,"cs1");
@@ -122,10 +125,10 @@ public class Launcher extends SubsystemBase {
         chambers.add(Color.Nothing);
     }
     public Color getColor(RevColorSensorV3 cs){
-        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < 1.1) {
+        if (cs.green() > (cs.red() + cs.blue()) * .9 && cs.getDistance(DistanceUnit.INCH) < .9) {
             return Color.Green;
         }
-        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < 1.1) {
+        else if (!(cs.green() > (cs.red() + cs.blue()) * .9) && cs.getDistance(DistanceUnit.INCH) < .9) {
             return Color.Purple;
         }
         return Color.Nothing;
@@ -465,7 +468,9 @@ public class Launcher extends SubsystemBase {
                     launcher.chambers.set(currentChamber, color);
                     currentChamber += 1;
                     time = System.currentTimeMillis();
-                    launcher.toNext().schedule();
+                    if (launcher.chambers.contains(Color.Nothing)){
+                        launcher.toNext().schedule();
+                    }
                 }
             }
         }
