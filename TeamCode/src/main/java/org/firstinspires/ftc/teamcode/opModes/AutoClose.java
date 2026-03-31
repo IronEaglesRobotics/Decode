@@ -155,7 +155,6 @@ public class AutoClose extends OpMode {
                     robot.getLauncher().toShoot()
                             .alongWith(new WaitCommand(100)
                                     .andThen(PathShootEx())),
-                    new WaitCommand(300),
                     new WaitCommand(800),
                     robot.getCamera().getMotif(),
                     new WaitCommand(100),
@@ -171,8 +170,8 @@ public class AutoClose extends OpMode {
                                 new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
                                 robot.getLauncher().setLaunch(Launcher.Picked.Second,robot.getCamera().getOrder())
                                         .alongWith(PathShoot()),
-                                //new WaitUntilCommand(robot.getLauncher()::canShoot),
-                                robot.getLauncher().fire(),
+                                new WaitUntilCommand(robot.getLauncher()::atTarget),
+                                new DeferredCommand(()->robot.getLauncher().fire(),Collections.emptyList()),
                                 new InstantCommand(()->state = nextState)
                                         .alongWith(robot.getLauncher().toShoot())
                             )
@@ -191,9 +190,9 @@ public class AutoClose extends OpMode {
                 wantsShoot = false;
                 PathChain pathChain3 = robot.getDrive().getFollower().pathBuilder()
                     .addPath(new BezierCurve(paths.Path7,
-                            paths.Path7Ex.plus(new Pose(color == Alliance.Blue ? 13:-13, 4)),
-                            paths.Path7Ex))
-                    .setLinearHeadingInterpolation(paths.Path7.getHeading(), paths.Path7Ex.getHeading())
+                            paths.Path7Ex.plus(new Pose(color == Alliance.Blue ? 25:-25, 4)),
+                            paths.Path7Ex.plus(new Pose(color == Alliance.Blue ? -1 : 1, .5))))
+                    .setLinearHeadingInterpolation(paths.Path7.getHeading(), paths.Path7Ex.getHeading(), .8, 1)
                     .build();
                 new SequentialCommandGroup(
                     robot.getLauncher().toZero(),
@@ -205,10 +204,11 @@ public class AutoClose extends OpMode {
                                 robot.getLauncher().setLaunch(Launcher.Picked.Third,robot.getLauncher().order)),
                             new SequentialCommandGroup(
                                 hitGate ? robot.getDrive().pathCommand(pathChain3) : new WaitCommand(20),
-                                new WaitCommand(hitGate ? 1000 : 20),
+                                new WaitCommand(hitGate ? 100 : 20),
                                 new DeferredCommand(this::PathShoot, Collections.emptyList())
                             )
                         ),
+                    new WaitUntilCommand(robot.getLauncher()::atTarget),
                     new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
                     new InstantCommand(()->state = nextState)
 //                            .alongWith(robot.getLauncher().toShoot()
@@ -241,7 +241,7 @@ public class AutoClose extends OpMode {
                             new DeferredCommand(this::PathShoot2, Collections.emptyList())
                         )
                     ),
-                    new WaitCommand(100),
+                    new WaitUntilCommand(robot.getLauncher()::atTarget),
                     new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
                     new InstantCommand(()->state = nextState)
 //                            .alongWith(robot.getLauncher().toShoot()
@@ -264,10 +264,10 @@ public class AutoClose extends OpMode {
                     Pick3(),
                     new ParallelCommandGroup(
                             robot.getDrive().pathCommand(pathChain),
-                            robot.getLauncher().toFull(),
-                            robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
+                            robot.getLauncher().toFull()
+                                .andThen(robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder()))
                     ),
-                    new WaitCommand(100),
+                    new WaitUntilCommand(robot.getLauncher()::atTarget),
                     new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
                     new InstantCommand(()->state = nextState),
                     robot.getLauncher().toShoot(),
@@ -299,15 +299,13 @@ public class AutoClose extends OpMode {
     public Command PathShoot() {
         return robot.getDrive().pathCommand(robot.getDrive().getFollower().pathBuilder()
             .addPath(new BezierLine(robot.getDrive().getPose(), paths.Path1))
-            .setHeadingInterpolation(HeadingInterpolator.facingPoint(new Pose(
-                    color == Alliance.Blue ? 0 :139, 147.5)))
+            .setLinearHeadingInterpolation(robot.getDrive().getZ(), paths.Path1.getHeading(), 1, .3)
             .build());
     }
     public Command PathShoot2() {
         return robot.getDrive().pathCommand(robot.getDrive().getFollower().pathBuilder()
             .addPath(new BezierCurve(robot.getDrive().getPose(), paths.Path3Ex, paths.Path1))
-            .setHeadingInterpolation(HeadingInterpolator.facingPoint(
-                    new Pose(color == Alliance.Blue ? 0 : 139, 147.5)))
+            .setLinearHeadingInterpolation(robot.getDrive().getZ(), paths.Path1.getHeading(), 1, .3)
             .build());
     }
     public Command PathShootEx() {
@@ -341,7 +339,8 @@ public class AutoClose extends OpMode {
     public Command Pick3() {
         PathChain path = robot.getDrive().getFollower().pathBuilder()
                 .addPath(new BezierCurve(robot.getDrive().getPose(),paths.Path9,paths.Path10))
-                .setLinearHeadingInterpolation(robot.getDrive().getZ(), paths.Path10.getHeading())
+                .setLinearHeadingInterpolation(Math.toRadians(270), paths.Path10.getHeading(), .7, .3)
+                //.setTangentHeadingInterpolation()
                 .build();
         return new ParallelCommandGroup(
             robot.getIntake().start(),

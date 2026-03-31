@@ -103,7 +103,7 @@ public class TeleOpTest extends OpMode {
 //        panelsTelemetry.addData("flywheel 1", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel1));
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
 //        panelsTelemetry.addData("flywheel speed", robot.getLauncher().getSpeed1());
-        panelsTelemetry.addData("index", Launcher.servoIndex);
+        panelsTelemetry.addData("index", Launcher.servoTarget);
         panelsTelemetry.update();
     }
 

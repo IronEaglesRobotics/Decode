@@ -37,7 +37,8 @@ public class Launcher extends SubsystemBase {
     //public CRServo quickLaunch;
     Servo pusher;
     public Servo light;
-    AnalogInput servoInput;
+    AnalogInput pusherInput;
+    AnalogInput indexInput;
     Servo lift1;
     Servo lift2;
 //    public static int halfDelta = -1365;
@@ -71,7 +72,7 @@ public class Launcher extends SubsystemBase {
     public static int farSpeed = -2650;
     //2 flywheel: -975
     //1 flywheel: -2650
-    public static int autoSpeed = -1900;
+    public static int autoSpeed = -1925;
     public static double power = .43;
     public static double servoPush = 0;
     public static double servoShootPos = 0.3;
@@ -85,6 +86,8 @@ public class Launcher extends SubsystemBase {
     double speed1 = 0;
     double speed2 = 0;
     public Motif order = Motif.GPP;
+    public boolean isMoving;
+    private double lastHold = 0;
     public Launcher(HardwareMap hardwareMap){
         this.chambers = new ArrayList<>(3);
 
@@ -108,7 +111,8 @@ public class Launcher extends SubsystemBase {
         pusher = hardwareMap.get(Servo.class,"pusher");
         pusher.setDirection(Servo.Direction.REVERSE);
         pusher.setPosition(0.05);
-        servoInput = hardwareMap.get(AnalogInput.class, "input1");
+        pusherInput = hardwareMap.get(AnalogInput.class, "input1");
+        indexInput = hardwareMap.get(AnalogInput.class, "input2");
 
         lift1 = hardwareMap.get(Servo.class,"lift1");
         lift2 = hardwareMap.get(Servo.class, "lift2");
@@ -202,7 +206,7 @@ public class Launcher extends SubsystemBase {
 
             @Override
             public boolean isFinished() {
-                return time + 250 < System.currentTimeMillis();
+                return time + 200 < System.currentTimeMillis();
             }
 
             @Override
@@ -238,24 +242,24 @@ public class Launcher extends SubsystemBase {
         });
     }
     public boolean atTarget(){
-        return (spinner1.getPosition() == servoTarget) && (spinner2.getPosition() == servoTarget);
+        return !isMoving;
     }
     public Command fire(){
         return fire(fireQueue);
     }
     public Command fire(double[] fires){
         return new SequentialCommandGroup(
-//                new InstantCommand(()-> servoTarget = fires[0]),
-//                new WaitCommand(300),
-//                new WaitUntilCommand(this::atSpeed),
+                new InstantCommand(()-> servoTarget = fires[0]),
+                //new WaitUntilCommand(this::atSpeed),
+                new WaitCommand(200),
                 shoot(),
                 new WaitCommand(100),
                 new InstantCommand(()-> servoTarget = fires[1]),
-                new WaitCommand(200),
+                new WaitCommand(300),
                 shoot(),
                 new WaitCommand(100),
                 new InstantCommand(()-> servoTarget = fires[2]),
-                new WaitCommand(200),
+                new WaitCommand(300),
                 shoot(),
                 new WaitCommand(100),
                 new InstantCommand(()->fireQueue = new double[]{FIRE3, FIRE2, FIRE1}),
@@ -393,11 +397,11 @@ public class Launcher extends SubsystemBase {
     public Command toFull(){
         return new SequentialCommandGroup(
                 toNext(),
-                new WaitCommand(300),
+                new WaitCommand(500),
                 toNext(),
-                new WaitCommand(300),
+                new WaitCommand(500),
                 toNext(),
-                new WaitCommand(300)
+                new WaitCommand(500)
         );
     }
     public int calculateVelo(MotorEx flywheel){
@@ -432,6 +436,8 @@ public class Launcher extends SubsystemBase {
         spinner2.setPosition(servoTarget);
         lift1.setPosition(liftPos);
         lift2.setPosition(liftPos);
+        isMoving = !(lastHold + .01 > indexInput.getVoltage() && lastHold - .01 < indexInput.getVoltage());
+        lastHold = indexInput.getVoltage();
     }
 
     public boolean canShoot() {

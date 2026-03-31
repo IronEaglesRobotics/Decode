@@ -15,7 +15,7 @@ import java.util.List;
 
 public class Cam extends SubsystemBase {
     Limelight3A limelight;
-    Launcher.Motif order = Launcher.Motif.GPP;
+    Launcher.Motif order;
     String teamColor;
     Pose lastPose;
     List<Ball> foundBalls = new ArrayList<>();
@@ -25,10 +25,6 @@ public class Cam extends SubsystemBase {
         limelight.setPollRateHz(30);
         limelight.pipelineSwitch(0);
         limelight.start();
-    }
-
-    public void setPipeline(int i){
-        limelight.pipelineSwitch(i);
     }
 
     public void setOrder(Launcher.Motif order1) {
@@ -97,7 +93,7 @@ public class Cam extends SubsystemBase {
 
     public static class getMotif extends CommandBase {
         Cam camera;
-        Launcher.Motif order = Launcher.Motif.GPP;
+        Launcher.Motif order;
         double time = 0;
 
         public getMotif(Cam temp) {
@@ -106,7 +102,6 @@ public class Cam extends SubsystemBase {
         }
 
         public void initialize() {
-            camera.limelight.pipelineSwitch(3);
             camera.limelight.start();
             time = System.currentTimeMillis();
         }
@@ -123,17 +118,21 @@ public class Cam extends SubsystemBase {
                 if (fiducial.getFiducialId() == 23) {
                     order = Launcher.Motif.PPG;
                 }
+                camera.setOrder(order);
             }
         }
 
         public boolean isFinished() {
-            return ((camera.limelight.getLatestResult() != null))
-                    || time + 1000 < System.currentTimeMillis();
+            return
+                    ((order != null)) ||
+                    time + 100000 < System.currentTimeMillis();
         }
 
         public void end(boolean i) {
+            if (order == null){
+                order = Launcher.Motif.GPP;
+            }
             camera.setOrder(order);
-            camera.limelight.pipelineSwitch(1);
         }
     }
 

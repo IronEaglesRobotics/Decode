@@ -173,7 +173,7 @@ public class Teleop extends OpMode {
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
 //        panelsTelemetry.addData("Drive", manualDrive);
 //        panelsTelemetry.addData("follower Drive", robot.getDrive().getFollower().getTeleopDrive());
-        panelsTelemetry.addData("index", Launcher.servoIndex);
+        panelsTelemetry.addData("index", robot.getLauncher().isMoving);
         telemetry.addData("Loop Time (ms)", getRuntime() * 1000);
         resetRuntime();
         telemetry.update();

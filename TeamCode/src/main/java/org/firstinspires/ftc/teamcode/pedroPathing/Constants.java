@@ -34,11 +34,11 @@ public class Constants {
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         followerConstants.setMass(15.4221);
-        followerConstants.setCoefficientsDrivePIDF(driveCoefficients);
-        followerConstants.setCoefficientsHeadingPIDF(headingCoefficients);
-        followerConstants.setCoefficientsTranslationalPIDF(translationalCoefficients);
-        followerConstants.forwardZeroPowerAcceleration(-47.75);
-        followerConstants.lateralZeroPowerAcceleration(-90.17);
+//        followerConstants.setCoefficientsDrivePIDF(driveCoefficients);
+//        followerConstants.setCoefficientsHeadingPIDF(headingCoefficients);
+//        followerConstants.setCoefficientsTranslationalPIDF(translationalCoefficients);
+        followerConstants.forwardZeroPowerAcceleration(-54.45);
+        followerConstants.lateralZeroPowerAcceleration(-91.61);
         followerConstants.setCentripetalScaling(0.0002);
         return new FollowerBuilder(followerConstants,hardwareMap)
                 .pathConstraints(pathConstraints)
@@ -56,8 +56,8 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(44.21)
-            .yVelocity(37.97)
+            .xVelocity(51.79)
+            .yVelocity(51.05)
             .useBrakeModeInTeleOp(true);
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(14.21/25.4)
