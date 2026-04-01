@@ -69,7 +69,7 @@ public class Launcher extends SubsystemBase {
     public static int closeSpeed = -2000;
     //2 flywheel: -805
     //1 flywheel: -2000
-    public static int farSpeed = -2650;
+    public static int farSpeed = -2675;
     //2 flywheel: -975
     //1 flywheel: -2650
     public static int autoSpeed = -1925;
@@ -207,6 +207,32 @@ public class Launcher extends SubsystemBase {
             @Override
             public boolean isFinished() {
                 return time + 200 < System.currentTimeMillis();
+            }
+
+            @Override
+            public Set<Subsystem> getRequirements() {
+                return Collections.emptySet();
+            }
+
+            @Override
+            public void end(boolean interrupted) {
+                servoPush = 0.05;
+            }
+        };
+    }
+    public Command fastshoot() {
+        return new Command() {
+            double time;
+
+            @Override
+            public void initialize() {
+                servoPush = servoShootPos;
+                time = System.currentTimeMillis();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return time + 100 < System.currentTimeMillis();
             }
 
             @Override

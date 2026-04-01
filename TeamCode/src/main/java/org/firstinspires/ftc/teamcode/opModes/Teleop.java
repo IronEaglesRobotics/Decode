@@ -69,7 +69,7 @@ public class Teleop extends OpMode {
                                 .andThen(robot.getIntake().start())
                                 .andThen(robot.loading())
                                 .andThen(robot.getIntake().stop())
-                                .andThen(robot.getLauncher().backShoot())
+                                .andThen(robot.getLauncher().toZero())
                         ,robot.getIntake().stop().andThen(robot.getLauncher().backShoot())
                 );
         controller1.getGamepadButton(GamepadKeys.Button.B)
@@ -81,9 +81,9 @@ public class Teleop extends OpMode {
         controller2.getGamepadButton(GamepadKeys.Button.Y)
                 .whenPressed(robot.getLauncher().flywheelOff());
         controller2.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON)
-                .whenPressed(robot.getLauncher().shoot());
+                .whenPressed(robot.getLauncher().fastshoot());
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-                .whenPressed(robot.getLauncher().backNext());
+                .whenPressed(robot.getLauncher().toNext());
         controller2.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getLauncher().flywheelOn(true));
         controller2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
