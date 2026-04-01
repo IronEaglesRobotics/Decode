@@ -253,15 +253,15 @@ public class Launcher extends SubsystemBase {
                 //new WaitUntilCommand(this::atSpeed),
                 new WaitCommand(200),
                 shoot(),
-                new WaitCommand(100),
+                new WaitCommand(150),
                 new InstantCommand(()-> servoTarget = fires[1]),
                 new WaitCommand(300),
                 shoot(),
-                new WaitCommand(100),
+                new WaitCommand(150),
                 new InstantCommand(()-> servoTarget = fires[2]),
                 new WaitCommand(300),
                 shoot(),
-                new WaitCommand(100),
+                new WaitCommand(150),
                 new InstantCommand(()->fireQueue = new double[]{FIRE3, FIRE2, FIRE1}),
                 toZero()
         );
