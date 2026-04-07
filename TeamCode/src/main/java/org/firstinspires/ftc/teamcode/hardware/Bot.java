@@ -24,8 +24,8 @@ public class Bot extends Robot {
     Drive drive;
     Launcher launcher;
     Intake intake;
-    Servo lift1;
-    Servo lift2;
+//    Servo lift1;
+//    Servo lift2;
     static boolean started = false;
     static long time = 0;
     List<LynxModule> allHubs;
@@ -40,9 +40,9 @@ public class Bot extends Robot {
         } else {
             drive = new Drive(hardwareMap,gamepad);
         }
-        lift1 = hardwareMap.get(Servo.class,"lift1");
-        lift2 = hardwareMap.get(Servo.class,"lift2");
-        lift2.setDirection(Servo.Direction.REVERSE);
+//        lift1 = hardwareMap.get(Servo.class,"lift1");
+//        lift2 = hardwareMap.get(Servo.class,"lift2");
+//        lift2.setDirection(Servo.Direction.REVERSE);
         allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs){
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
@@ -59,9 +59,9 @@ public class Bot extends Robot {
         } else {
             drive = new Drive(hardwareMap,gamepad);
         }
-        lift1 = hardwareMap.get(Servo.class,"lift1");
-        lift2 = hardwareMap.get(Servo.class,"lift2");
-        lift2.setDirection(Servo.Direction.REVERSE);
+//        lift1 = hardwareMap.get(Servo.class,"lift1");
+//        lift2 = hardwareMap.get(Servo.class,"lift2");
+//        lift2.setDirection(Servo.Direction.REVERSE);
         allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs){
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
@@ -97,15 +97,15 @@ public class Bot extends Robot {
     }
     public Command Lift(){
         return new InstantCommand(()-> {
-            lift1.setPosition(1);
-            lift2.setPosition(1);
+//            lift1.setPosition(1);
+//            lift2.setPosition(1);
             }
         );
     }
     public Command Drop(){
         return new InstantCommand(()-> {
-            lift1.setPosition(0);
-            lift2.setPosition(0);
+//            lift1.setPosition(0);
+//            lift2.setPosition(0);
         }
         );
     }

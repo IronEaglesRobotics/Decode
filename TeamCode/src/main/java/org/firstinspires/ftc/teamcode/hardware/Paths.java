@@ -32,7 +32,7 @@ public class Paths {
         double closeAim = isBlue ? 129 : 50;
         double seeObelisk = isBlue ? 70 : 105;
         double pickUp = isBlue ? 187 : -7;
-        double farAim = isBlue ? 115 : 72;
+        double farAim = isBlue ? 116 : 70;
         double cornerZ = !isBlue ? 245 : 335;
 
         Path1 = new Pose(shootX, 103.500, Math.toRadians(closeAim));

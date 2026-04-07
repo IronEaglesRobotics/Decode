@@ -159,65 +159,57 @@ public class AutoFar extends OpMode {
                 state = States.idle;
                 break;
             case settingLaunch:
-                lastState = States.settingLaunch;
                 nextState = lines > 1 ? States.pickFar : States.finish;
                 new WaitCommand(delay)
                         .andThen(
-                                new SequentialCommandGroup(
-                                        robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
-                                                .alongWith(farPathShoot().get()),
-                                        new WaitUntilCommand(robot.getLauncher()::canShoot),
-                                        robot.getLauncher().fire(),
-                                        new WaitCommand(150),
-                                        new InstantCommand(()->state = nextState)))
+                            new SequentialCommandGroup(
+                                new InstantCommand(()->robot.getLauncher().setOrder(robot.getCamera().getOrder())),
+                                robot.getLauncher().setLaunch(Launcher.Picked.Second,robot.getCamera().getOrder())
+                                        .alongWith(farPathShoot().get()),
+                                new WaitUntilCommand(robot.getLauncher()::atTarget),
+                                new DeferredCommand(()->robot.getLauncher().fire(),Collections.emptyList()),
+                                new InstantCommand(()->state = nextState)
+                                        .alongWith(robot.getLauncher().toShoot())
+                            )
+                        )
                         .schedule();
                 state = States.idle;
                 break;
             case pickFar:
                 finished = false;
-                lastState = States.pickFar;
+                lastState = States.pick2;
                 nextState = lines > 2 ? States.pick2 : States.finish;
                 wantsShoot = false;
-                new ParallelCommandGroup(
-                        new SequentialCommandGroup(
-                            robot.getLauncher().toZero(),
-                            Pick3(),
-                            new DeferredCommand(farPathShoot(), Collections.emptyList()),
-                            new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                            robot.getLauncher().fire(),
-                            new InstantCommand(() -> state = nextState)
+                new SequentialCommandGroup(
+                        robot.getLauncher().toZero(),
+                        Pick3(),
+                        new ParallelCommandGroup(
+                                new DeferredCommand(farPathShoot(),Collections.emptyList()),
+                                robot.getLauncher().toFull()
+                                        .andThen(robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder()))
                         ),
-                        new SequentialCommandGroup (
-                            new WaitUntilCommand(
-                                    ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                            != Launcher.Color.Nothing || Bot.hasBeen(3000)),
-                            robot.getLauncher().toFull(),
-                            robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder())
-                        )
+                        new WaitUntilCommand(robot.getLauncher()::atTarget),
+                        new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
+                        new InstantCommand(()->state = nextState)
                 ).schedule();
                 state = States.idle;
                 break;
             case pick2:
                 finished = false;
                 lastState = States.pick2;
-                nextState = lines > 3 ? (hitGate ? States.pickCorner : States.pick1) : States.finish;
+                nextState = lines > 3 ? States.pickCorner : States.finish;
                 wantsShoot = false;
-                new ParallelCommandGroup(
-                    new SequentialCommandGroup(
+                new SequentialCommandGroup(
                         robot.getLauncher().toZero(),
                         Pick2(),
-                        new DeferredCommand(farPathShoot(), Collections.emptyList()),
-                        new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                        robot.getLauncher().fire(),
-                        new InstantCommand(() -> state = nextState)
-                    ),
-                    new SequentialCommandGroup (
-                        new WaitUntilCommand(
-                                ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                        != Launcher.Color.Nothing || Bot.hasBeen(6000)),
-                        robot.getLauncher().toFull(),
-                        robot.getLauncher().setLaunch(Launcher.Picked.Second,robot.getCamera().getOrder())
-                    )
+                        new ParallelCommandGroup(
+                                new DeferredCommand(farPathShoot(),Collections.emptyList()),
+                                robot.getLauncher().toFull()
+                                        .andThen(robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder()))
+                        ),
+                        new WaitUntilCommand(robot.getLauncher()::atTarget),
+                        new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
+                        new InstantCommand(()->state = nextState)
                 ).schedule();
                 state = States.idle;
                 break;
@@ -226,22 +218,17 @@ public class AutoFar extends OpMode {
                 lastState = States.pick1;
                 nextState = States.finish;
                 wantsShoot = false;
-                new ParallelCommandGroup(
-                    new SequentialCommandGroup(
+                new SequentialCommandGroup(
                         robot.getLauncher().toZero(),
                         Pick1(),
-                        new DeferredCommand(farPathShoot(), Collections.emptyList()),
-                        new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                        robot.getLauncher().fire(),
-                        new InstantCommand(() -> state = nextState)
-                    ),
-                    new SequentialCommandGroup (
-                        new WaitUntilCommand(
-                                ()->robot.getLauncher().getColor(robot.getLauncher().cs1)
-                                        != Launcher.Color.Nothing || Bot.hasBeen(3000)),
-                        robot.getLauncher().toFull(),
-                        robot.getLauncher().setLaunch(Launcher.Picked.Third,robot.getCamera().getOrder())
-                    )
+                        new ParallelCommandGroup(
+                                new DeferredCommand(farPathShoot(),Collections.emptyList()),
+                                robot.getLauncher().toFull()
+                                        .andThen(robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder()))
+                        ),
+                        new WaitUntilCommand(robot.getLauncher()::atTarget),
+                        new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
+                        new InstantCommand(()->state = nextState)
                 ).schedule();
                 state = States.idle;
                 break;
@@ -252,9 +239,9 @@ public class AutoFar extends OpMode {
                         .addPath(new BezierLine(robot.getDrive().getPose(),
                                 new Pose(
                                         color == Alliance.Blue ? 0 : 144,
-                                        31)))
-                        .setLinearHeadingInterpolation(robot.getDrive().getZ(),
-                                Math.toRadians(color == Alliance.Blue ? 135 : 45))
+                                        28)))
+                        .setLinearHeadingInterpolation(Math.toRadians(color == Alliance.Blue ? 180 : 0),
+                                Math.toRadians(color == Alliance.Blue ? 135 : 45),1,.8)
                         .build();
                 PathChain path3 = robot.getDrive().getFollower().pathBuilder()
                         .addPath(new BezierLine(new Pose(
@@ -273,25 +260,22 @@ public class AutoFar extends OpMode {
                         ))
                         .setConstantHeadingInterpolation(Math.toRadians(color == Alliance.Blue ? 135 : 45))
                         .build();
-                robot.getDrive().pathCommand(path2)
-                        .andThen(new WaitCommand(lines == 4 ? 2500 : 5000))
-                        .andThen(robot.getDrive().pathCommand(path3))
-                        .andThen(robot.getDrive().pathCommand(path4))
-                        .andThen(new SequentialCommandGroup(
-                                new DeferredCommand(farPathShoot(), Collections.emptyList()),
-                                new WaitUntilCommand(()->robot.getLauncher().canShoot()),
-                                robot.getLauncher().fire(),
-                                new InstantCommand(() -> state = nextState)))
-                        .schedule();
-                new SequentialCommandGroup (
+                new SequentialCommandGroup(
                         robot.getLauncher().toZero(),
-                        robot.getIntake().start(),
-                        new WaitCommand(1500),
-                        new WaitUntilCommand(()->robot.getDrive().getFollower().isBusy()),
-                        robot.getLauncher().toFull(),
-                        robot.getIntake().reverse(),
-                        robot.getLauncher().setLaunch(robot.getCamera().getOrder()),
-                        robot.getIntake().stop()
+                        robot.getDrive().pathCommand(path2),
+                        new WaitCommand(5000),
+                        robot.getDrive().pathCommand(path3),
+                        new ParallelCommandGroup(
+                                new SequentialCommandGroup(
+                                        robot.getDrive().pathCommand(path4),
+                                        new DeferredCommand(farPathShoot(),Collections.emptyList())
+                                    ),
+                                robot.getLauncher().toFull()
+                                        .andThen(robot.getLauncher().setLaunch(Launcher.Picked.First,robot.getCamera().getOrder()))
+                        ),
+                        new WaitUntilCommand(robot.getLauncher()::atTarget),
+                        new DeferredCommand(()->robot.getLauncher().fire(), Collections.emptyList()),
+                        new InstantCommand(()->state = nextState)
                 ).schedule();
                 state = States.idle;
                 break;

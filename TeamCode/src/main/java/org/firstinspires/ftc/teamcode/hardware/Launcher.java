@@ -12,7 +12,6 @@ import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.Subsystem;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
@@ -57,8 +56,9 @@ public class Launcher extends SubsystemBase {
     private static final double LOAD1 = 0.0925;
     private static final double LOAD2 = 0.2775;
     private static final double LOAD3 = 0.4625;
+    private static final double LOAD4 = 0.626;
 
-    private static final double[] POSITIONS = {FIRE1,LOAD1,FIRE2,LOAD2,FIRE3,LOAD3,FIRE4};
+    private static final double[] POSITIONS = {FIRE1,LOAD1,FIRE2,LOAD2,FIRE3,LOAD3,FIRE4,LOAD4,FIRE5};
     public static final double[][][] fireCalculator = {
             {{FIRE3,FIRE2,FIRE1},{FIRE4,FIRE3,FIRE2},{FIRE3,FIRE4,FIRE2}},
             {{FIRE4,FIRE3,FIRE2},{FIRE3,FIRE4,FIRE2},{FIRE3,FIRE2,FIRE1}},
@@ -72,7 +72,8 @@ public class Launcher extends SubsystemBase {
     public static int farSpeed = -2675;
     //2 flywheel: -975
     //1 flywheel: -2650
-    public static int autoSpeed = -1925;
+    public static int autoCloseSpeed = -1925;
+    public static int autoFarSpeed = -2700;
     public static double power = .43;
     public static double servoPush = 0;
     public static double servoShootPos = 0.3;
@@ -156,7 +157,7 @@ public class Launcher extends SubsystemBase {
         return new InstantCommand(()->{
             flyWheel1.setRunMode(Motor.RunMode.VelocityControl);
             flyWheel2.setRunMode(Motor.RunMode.VelocityControl);
-            speed1 = isClose? autoSpeed:farSpeed;
+            speed1 = isClose? autoCloseSpeed :autoFarSpeed;
             //speed2 = isClose? closeSpeed:farSpeed;
 //            flyWheel1.setPower(-power);
 //            flyWheel2.setPower(power);
@@ -268,7 +269,7 @@ public class Launcher extends SubsystemBase {
         });
     }
     public boolean atTarget(){
-        return !isMoving;
+        return Utilities.isClose(indexInput.getVoltage() / indexInput.getMaxVoltage(),servoTarget);
     }
     public Command fire(){
         return fire(fireQueue);
@@ -435,7 +436,7 @@ public class Launcher extends SubsystemBase {
     }
     public boolean atSpeed(){
         return Math.abs(speed1 + calculateVelo(flyWheel1)) < 30 && Math.abs(speed1 + calculateVelo(flyWheel2)) < 30 &&
-                speed1 <= autoSpeed;
+                speed1 <= autoCloseSpeed;
     }
     public double getSpeed1() {
         return speed1;
@@ -466,9 +467,6 @@ public class Launcher extends SubsystemBase {
         lastHold = indexInput.getVoltage();
     }
 
-    public boolean canShoot() {
-        return servoIndex % 2 == 0;
-    }
 
     public static class Loading extends CommandBase{
         Launcher launcher;

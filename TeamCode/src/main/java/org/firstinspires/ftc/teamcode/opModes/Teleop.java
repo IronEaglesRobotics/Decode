@@ -46,8 +46,14 @@ public class Teleop extends OpMode {
 
     boolean aprilCentric = false;
     // 1. Create Logger
+    DataLogger logger = new DataLogger("4/7 logs");
     JoinedTelemetry panelsTelemetry;
     public static double speedCap = .75;
+
+    List<LynxModule> lynxController;
+
+    public Teleop() throws IOException {
+    }
 
     @Override
     public void init() {
@@ -56,6 +62,12 @@ public class Teleop extends OpMode {
         controller2 = new GamepadEx(gamepad2);
         if (Storage.getInstance().resetSpindexer){
             robot.getLauncher().resetEncoder();
+        }
+        lynxController = hardwareMap.getAll(LynxModule.class);
+        try {
+            logger.addHeaderLine("times", "voltage", "current");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         robot.getDrive().getFollower().setStartingPose(Storage.getInstance().pose);
         robot.getDrive().getFollower().update();
@@ -68,10 +80,9 @@ public class Teleop extends OpMode {
                         robot.getLauncher().toZero()
                                 .andThen(robot.getIntake().start())
                                 .andThen(robot.loading())
+                                .andThen(robot.getLauncher().backShoot())
                                 .andThen(robot.getIntake().stop())
-                                .andThen(robot.getLauncher().toZero())
-                        ,robot.getIntake().stop().andThen(robot.getLauncher().backShoot())
-                );
+                        ,robot.getIntake().stop());
         controller1.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(robot.getIntake().stop());
         controller1.getGamepadButton(GamepadKeys.Button.X)
@@ -113,6 +124,18 @@ public class Teleop extends OpMode {
     public void loop(){
         controller1.readButtons();
         controller2.readButtons();
+        List<Double> voltages = new ArrayList<>();
+        List<Double> current = new ArrayList<>();
+
+        for (int i = 0; i < lynxController.size(); i++){
+            voltages.add(lynxController.get(i).getInputVoltage(VoltageUnit.VOLTS));
+            current.add(lynxController.get(i).getCurrent(CurrentUnit.AMPS));
+        }
+        try {
+            logger.addDataLine(System.currentTimeMillis(),voltages,current);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         robot.getDrive().getFollower().update();
 
         if(gamepad1.right_bumper){
@@ -173,7 +196,7 @@ public class Teleop extends OpMode {
 //        panelsTelemetry.addData("flywheel 2", robot.getLauncher().calculateVelo(robot.getLauncher().flyWheel2));
 //        panelsTelemetry.addData("Drive", manualDrive);
 //        panelsTelemetry.addData("follower Drive", robot.getDrive().getFollower().getTeleopDrive());
-        panelsTelemetry.addData("index", robot.getLauncher().isMoving);
+        panelsTelemetry.addData("index", robot.getLauncher().atTarget());
         telemetry.addData("Loop Time (ms)", getRuntime() * 1000);
         resetRuntime();
         telemetry.update();
@@ -184,6 +207,7 @@ public class Teleop extends OpMode {
     public void stop() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().reset();
+        logger.close();
         super.stop();
     }
 }
