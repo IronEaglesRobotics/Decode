@@ -39,17 +39,18 @@ public class Config {
 
     public static final Config red = Config.builder()
             .team("red")
-            .goalPose(new Pose(4, 141, 0).mirror())
+            .goalPose(new Pose(9, 141, 0).mirror())
 
             .startPose(new Pose(27.5, 131.5, Math.toRadians(270+53)).mirror())
             .scorePose(new Pose(60, 82, Math.toRadians(20)).mirror())
+            .shootPose(new Pose(60, 95, Math.toRadians(20)).mirror())
             .pickup1Pose(new Pose(22, 83, Math.toRadians(0)).mirror())
             .pickup1Control(new Pose(41, 78, Math.toRadians(0)).mirror())
 
-            .pickup2Pose(new Pose(17, 55, Math.toRadians(180)).mirror())
-            .pickup2Control(new Pose(57, 57, Math.toRadians(0)).mirror())
+            .pickup2Pose(new Pose(17, 58, Math.toRadians(180)).mirror())
+            .pickup2Control(new Pose(55, 61, Math.toRadians(0)).mirror())
 
-            .openGate(new Pose (22,65,Math.toRadians(360-30)).mirror())
+            .openGate(new Pose (21,65,Math.toRadians(360-30)).mirror())
 
             .pickup3Control(new Pose(20, 54, Math.toRadians(0)).mirror())
             .pickup3Pose(new Pose(17, 50 , Math.toRadians(360-30)).mirror())
@@ -81,8 +82,10 @@ public class Config {
             .team("blue")
             .goalPose(new Pose(4, 137, 0))
 
-            .startPose(new Pose(31.5, 129.410, Math.toRadians(270+53)))
+            .startPose(new Pose(29, 129.410, Math.toRadians(270+53)))
             .scorePose(new Pose(60, 83, Math.toRadians(20)))
+            .shootPose(new Pose(60, 95, Math.toRadians(20)))
+
             .pickup1Pose(new Pose(22, 82, Math.toRadians(0)))
             .pickup1Control(new Pose(41, 78, Math.toRadians(0)))
 
@@ -107,8 +110,9 @@ public class Config {
             .team("blue")
             .goalPose(new Pose(4, 137, 0))
 
-            .startPose(new Pose(31.5, 129.410, Math.toRadians(270+53)))
+            .startPose(new Pose(30.5, 129.410, Math.toRadians(270+53)))
             .scorePose(new Pose(60, 83, Math.toRadians(20)))
+            .shootPose(new Pose(60, 95, Math.toRadians(20)))
 
             .pickup1Pose(new Pose(20, 73, Math.toRadians(10)))
             .pickup1Control(new Pose(15, 84, Math.toRadians(0)))
@@ -119,10 +123,16 @@ public class Config {
 //            .pickup2Control2(new Pose(30, 65, Math.toRadians(0)))
 
 
-            .openGate(new Pose (20,68,Math.toRadians(90)))
+            .openGate(new Pose (22,68,Math.toRadians(90)))
+            .gateControl(new Pose (21,68,Math.toRadians(90)))
 
-            .pickup3Control(new Pose(20, 54, Math.toRadians(0)))
-            .pickup3Pose(new Pose(17, 50 , Math.toRadians(360-30)))
+
+//            .pickup3Control(new Pose(20, 54, Math.toRadians(0)))
+//            .pickup3Pose(new Pose(17, 50 , Math.toRadians(360-30)))
+//
+            .pickup3Control(new Pose(35, 24, Math.toRadians(0)))
+            .pickup3Pose(new Pose(17, 28 , Math.toRadians(0)))
+
             .pickup3Transition(new Pose(15, 56, Math.toRadians(360-30)))
             .pickup3Control2(new Pose(27, 53, Math.toRadians(0)))
 
@@ -131,6 +141,41 @@ public class Config {
             .pickup4Control(new Pose(72, 27, Math.toRadians(0)))
             .pickup4End(new Pose(15, 28, Math.toRadians(0)))
             .parkPose(new Pose(25, 60, Math.toRadians(0)))
+            .build();
+
+    public static final Config redGate = Config.builder()
+            .team("red")
+            .goalPose(new Pose(7, 137, 0).mirror())
+
+            .startPose(new Pose(27.25, 129.410, Math.toRadians(270+53)).mirror())
+            .scorePose(new Pose(60, 83, Math.toRadians(20)).mirror())
+            .shootPose(new Pose(60, 95, Math.toRadians(20)).mirror())
+
+            .pickup1Pose(new Pose(20, 73, Math.toRadians(10)).mirror())
+            .pickup1Control(new Pose(15, 84, Math.toRadians(0)).mirror())
+//            .pickup1Control2(new Pose(32, 73, Math.toRadians(0)))
+
+            .pickup2Pose(new Pose(27, 55, Math.toRadians(0)).mirror())
+            .pickup2Control(new Pose(58, 53, Math.toRadians(0)).mirror())
+//            .pickup2Control2(new Pose(30, 65, Math.toRadians(0)))
+
+
+            .openGate(new Pose (22,68,Math.toRadians(90)).mirror())
+            .gateControl(new Pose (21,68,Math.toRadians(90)).mirror())
+//            .pickup3Control(new Pose(20, 54, Math.toRadians(0)))
+//            .pickup3Pose(new Pose(17, 50 , Math.toRadians(360-30)))
+//
+            .pickup3Control(new Pose(35, 24, Math.toRadians(0)).mirror())
+            .pickup3Pose(new Pose(17, 28 , Math.toRadians(0)).mirror())
+
+            .pickup3Transition(new Pose(15, 56, Math.toRadians(360-30)).mirror())
+            .pickup3Control2(new Pose(27, 53, Math.toRadians(0)).mirror())
+
+            .pickup4Pose(new Pose(23, 28, Math.toRadians(0)).mirror())
+
+            .pickup4Control(new Pose(72, 27, Math.toRadians(0)).mirror())
+            .pickup4End(new Pose(15, 28, Math.toRadians(0)).mirror())
+            .parkPose(new Pose(25, 60, Math.toRadians(0)).mirror())
             .build();
 
 
@@ -147,10 +192,23 @@ public class Config {
             .pickup2Pose(new Pose(14, 20, Math.toRadians(360-60)))
             .build();
 
-    public static final Config blueFarStack = Config.builder()
+    public static final Config blueFarPark = Config.builder()
             .team("blue")
             .goalPose(new Pose(7.5, 133, Math.toRadians(0)))
             .startPose(new Pose(47, 6, Math.toRadians(0)))
+            .scorePose(new Pose(54, 12, Math.toRadians(0)))
+
+            .pickup1Pose(new Pose(25, 10, Math.toRadians(0)))
+            .pickup1Control(new Pose(6, 28, Math.toRadians(180)))
+
+            .pickup2Control(new Pose(2, -4, Math.toRadians(180)))
+            .pickup2Pose(new Pose(14, 20, Math.toRadians(360-60)))
+            .build();
+
+    public static final Config blueFarStack = Config.builder()
+            .team("blue")
+            .goalPose(new Pose(7.5, 133, Math.toRadians(0)))
+            .startPose(new Pose(47, 4.5, Math.toRadians(0)))
             .scorePose(new Pose(54, 12, Math.toRadians(0)))
 
             .pickup1Pose(new Pose(13, 11, Math.toRadians(90)))
@@ -160,7 +218,7 @@ public class Config {
             .pickup2Pose(new Pose(15, 40, Math.toRadians(0)))
 
             .pickup3Control(new Pose(51.4,5.3,Math.toRadians(30)))
-            .pickup3Pose(new Pose(13,6,Math.toRadians(0)))
+            .pickup3Pose(new Pose(13,6,Math.toRadians(30)))
 
             .pickup4Control(new Pose(36,15,Math.toRadians(0)))
             .pickup4Pose(new Pose(13,19,Math.toRadians(0)))
@@ -170,7 +228,7 @@ public class Config {
     public static final Config redFarStack = Config.builder()
             .team("red")
             .goalPose(new Pose(10, 133, Math.toRadians(0)).mirror())
-            .startPose(new Pose(47, 6, Math.toRadians(0)).mirror())
+            .startPose(new Pose(47, 4.5, Math.toRadians(0)).mirror())
             .scorePose(new Pose(54, 12, Math.toRadians(0)).mirror())
 
             .pickup1Pose(new Pose(14.5, 10, Math.toRadians(85)).mirror())
@@ -202,7 +260,7 @@ public class Config {
             .shootPoseFar(new Pose(72, 13, Math.toRadians(118)))
             .resetPose(new Pose(9, 8, Math.toRadians(90)))
 //            .resetPose(new Pose(135, 8, Math.toRadians(90)))
-            .goalPose(new Pose(140, 132, 0))
+            .goalPose(new Pose(132, 137, 0))
             .build();
 
 

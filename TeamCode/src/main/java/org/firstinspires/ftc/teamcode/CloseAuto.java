@@ -9,7 +9,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
@@ -110,12 +109,12 @@ public class CloseAuto extends OpMode {
 
 
         launchBatch4 = follower().pathBuilder()
-                .addPath(new BezierLine(this.config.getPickup4Pose(), this.config.getScorePose()))
+                .addPath(new BezierLine(this.config.getPickup4Pose(), this.config.getShootPose()))
                 .setTangentHeadingInterpolation()
                 .build();
 
         park = follower().pathBuilder()
-                .addPath(new BezierLine(this.config.getScorePose(), this.config.getParkPose()))
+                .addPath(new BezierLine(this.config.getShootPose(), this.config.getParkPose()))
                 .setTangentHeadingInterpolation()
                 .setReversed()
                 .build();
@@ -335,5 +334,9 @@ public class CloseAuto extends OpMode {
 
     }
 
-
+    @Override
+    public void stop() {
+        Storage.turretPose = robot.getTurret().getRelativeTurretPose();
+        Storage.pose = robot.getFollower().getPose();
+    }
 }

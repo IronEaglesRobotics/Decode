@@ -46,11 +46,19 @@ public class TeleOPBlue extends OpMode {
     private double dOffset = 0;
     private double error = 0;
 
+    private boolean adjust = true;
+
 
     @Override
     public void init() {
         robot = new RobotNew().init(hardwareMap);
         robot.getFollower().update();
+
+        if(Storage.pose!=null) {
+            robot.getFollower().setPose(Storage.pose);
+        }
+        RobotNew.Turret.TURRETSTARTINGOFFSET = Storage.turretPose;
+
         controller1 = new GamepadEx(gamepad1);
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -71,7 +79,7 @@ public class TeleOPBlue extends OpMode {
         telemetryM.update();
         error = robot.getTurret().getLimeError(true);
 
-        distance = robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), aimPose.getX(), aimPose.getY());
+        distance =  robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), aimPose.getX(), aimPose.getY());
 
         if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             far = !far;
@@ -80,11 +88,16 @@ public class TeleOPBlue extends OpMode {
 //        power = robot.getShooter().calculateShooterPower(distance + dOffset );
 //        hood = robot.getShooter().calculateHoodPose(distance +dOffset);
 
-        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance + dOffset);
+        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance + dOffset +7.5);
         power = result.y1;
         hood = result.z;
 
-        robot.getShooter().setShot(power, hood);
+        if(adjust) {
+            robot.getShooter().setShot(power, hood);
+        } else {
+            robot.getShooter().setShot(power,hood,true);
+        }
+
 
         if (controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER) && (error < -2 || error > 2) && distance > 120) {
             offset -= error;
@@ -112,7 +125,15 @@ public class TeleOPBlue extends OpMode {
                     -controller1.getRightX() * .6, true // Robot Centric
             );
         }
-//
+
+        if(controller1.wasJustPressed(GamepadKeys.Button.X)){
+            offset = 0;
+        }
+
+        if(controller1.wasJustPressed(GamepadKeys.Button.DPAD_UP)){
+            Storage.turretPose = 0;
+        }
+        //
 //        if (!automatedDrive) {
 //            robot.getFollower().setTeleOpDrive(
 //                    controller1.getLeftY(),
@@ -176,6 +197,16 @@ public class TeleOPBlue extends OpMode {
         telemetryM.addData("turret current",robot.getTurret().getCurrent() );
         telemetryM.addData("lime x", error);
         telemetryM.addData("intake current", robot.intake.getCurrent());
+        telemetryM.addData("Saved Turret Pose", Storage.turretPose);
+        telemetryM.addData("Turret Pose", robot.getTurret().getGlobalTurretPose(robot.getFollower().getHeading()));
+
         telemetryM.update(telemetry);
     }
+
+    @Override
+    public void stop() {
+        Storage.turretPose = robot.getTurret().getRelativeTurretPose();
+        Storage.pose = robot.getFollower().getPose();
+    }
+
 }

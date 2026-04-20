@@ -9,7 +9,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
@@ -19,8 +18,8 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
 //@Disabled
-@Autonomous(name = "Far Auto")
-public class FarAuto extends OpMode {
+@Autonomous(name = "Far Park")
+public class FarPark extends OpMode {
 
 
     private RobotNew robot;
@@ -56,8 +55,8 @@ public class FarAuto extends OpMode {
 
     public void buildPaths() {
         getPickup1 = robot.getFollower().pathBuilder()
-                .addPath(new BezierCurve(this.config.getStartPose(), this.config.getPickup1Control(), this.config.getPickup1Pose()))
-                .setLinearHeadingInterpolation(this.config.getStartPose().getHeading(), this.config.getPickup1Pose().getHeading())
+                .addPath(new BezierLine(this.config.getStartPose(), this.config.getPickup1Pose()))
+                .setConstantHeadingInterpolation(this.config.getPickup1Pose().getHeading())
 //                .setReversed()
                 .build();
 
@@ -95,7 +94,7 @@ public class FarAuto extends OpMode {
         switch (pathState) {
             case 0: // Go to Launch 1 location
                 robot.getIntake().close();
-                setPathState(1);
+                setPathState(2);
                 break;
             case 1: // if at location, launch
                 if (robot.getShooter().atTargetVelocity()) {
@@ -106,18 +105,18 @@ public class FarAuto extends OpMode {
                 }
                 break;
             case 2: //is the robot done launching? if yes, go to pickup 1 and stop shooter
-                if (getRuntime() > timer) {
-                    robot.intake.intake();
-                    robot.intake.close();
+//                if (getRuntime() > timer) {
+//                    robot.intake.intake();
+//                    robot.intake.close();
                     follower().followPath(getPickup1, .85, true);
-                    timer = getRuntime() + 3.5;
+//                    timer = getRuntime() + 3.5;
                     setPathState(3);
-                }
+//                }
                 break;
             case 3://if Got all 3 of first batch || patch ended 1.5 secs passed, go to launch pose
                 if (!follower().isBusy() || timer < getRuntime()) {
-                    follower().followPath(launchBatch1, true);
-                    setPathState(4);
+//                    follower().followPath(launchBatch1, true);
+                    setPathState(-1);
 //                    timer = getRuntime() + .9;
                 }
                 break;
@@ -164,7 +163,7 @@ public class FarAuto extends OpMode {
                 }
                 break;
             case 8: //if all balls are launched, reset the shooter and go to next position
-                if (getRuntime() > timer && getRuntime() < 27) {
+                if (getRuntime() > timer) {
                     robot.intake.intake();
                     robot.intake.close();
 //                    follower().followPath(getPickup2, true);
@@ -195,7 +194,7 @@ public class FarAuto extends OpMode {
     @Override
     public void init_loop() {
         if (this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            this.config = Config.blueFar;
+            this.config = Config.blueFarPark;
         } else if (this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
             this.config = Config.redFar;
         }

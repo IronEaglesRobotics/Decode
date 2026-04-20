@@ -76,7 +76,7 @@ public class GateOpenAuto extends OpMode {
         getPickup2 = robot.getFollower().pathBuilder()
                 .addPath(new BezierCurve(this.config.getScorePose(), config.getPickup2Control(), this.config.getPickup2Pose()))
                 .setConstantHeadingInterpolation(this.config.getPickup2Pose().getHeading())
-                .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getOpenGate()))
+                .addPath(new BezierLine(this.config.getPickup2Pose(), this.config.getGateControl()))
                 .setLinearHeadingInterpolation(config.getPickup2Pose().getHeading(),this.config.getOpenGate().getHeading())
                 .addParametricCallback(.99, (() -> timer = getRuntime() + 1.5))
 //                .setReversed()
@@ -104,7 +104,7 @@ public class GateOpenAuto extends OpMode {
 
 
         launchBatch3 = follower().pathBuilder()
-                .addPath(new BezierLine(this.config.getPickup3Pose(), this.config.getScorePose()))
+                .addPath(new BezierLine(this.config.getPickup3Pose(), this.config.getShootPose()))
                 .setTangentHeadingInterpolation()
                 .build();
 
@@ -123,7 +123,7 @@ public class GateOpenAuto extends OpMode {
                 .build();
 
         park = follower().pathBuilder()
-                .addPath(new BezierLine(this.config.getScorePose(), this.config.getParkPose()))
+                .addPath(new BezierLine(this.config.getShootPose(), this.config.getParkPose()))
                 .setTangentHeadingInterpolation()
                 .setReversed()
                 .build();
@@ -156,7 +156,7 @@ public class GateOpenAuto extends OpMode {
                 if (!follower().isBusy() && timer < getRuntime()) {
                     follower().followPath(launchBatch1, true);
                     setPathState(4);
-                    timer = getRuntime() + .9;
+                    timer = getRuntime() + 1.25;
                 }
                 break;
             case 4: //if at launch pos and shooter fast enough, then shoot
@@ -192,7 +192,7 @@ public class GateOpenAuto extends OpMode {
                     robot.intake.close();
                     runs++;
                     follower().followPath(openGate, .8, true);
-                    timer = getRuntime();
+                    timer = getRuntime() + 1;
                     setPathState(100);
 //                    timer = getRuntime() + 4;
 
@@ -295,8 +295,8 @@ public class GateOpenAuto extends OpMode {
     public void init_loop() {
         if (this.controller1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             this.config = Config.blueGate;
-        } else if (this.controller1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
-            this.config = Config.red;
+        } else if (this.controller1.wasJustPressed(GamepadKeys.Button .RIGHT_BUMPER)) {
+            this.config = Config.redGate;
         }
 //        else if (this.controller1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT)) {
 //            this.config = Config.blue2;

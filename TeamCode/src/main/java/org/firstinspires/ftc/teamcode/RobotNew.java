@@ -2,24 +2,19 @@ package org.firstinspires.ftc.teamcode;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.controller.PIDController;
-import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.motors.MotorGroup;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.Map;
@@ -243,7 +238,7 @@ public class RobotNew {
             table.put(125.0, new Metrics(0.9, 0.78));
             table.put(139.0, new Metrics(0.94, 0.8));
             table.put(151.0, new Metrics(1.0, 0.95));
-            table.put(250.0, new Metrics(1.0, .9));
+            table.put(320.0, new Metrics(1.0, .9));
         }
 
         public static Metrics getInterpolatedValue(double x) {
@@ -333,6 +328,14 @@ public class RobotNew {
 //            }
         }
 
+        public void hoodSet(double hood,boolean set) {
+//            if (pos < .3) {
+//                hood.set(pos);
+//            } else {
+            this.hood.set(hood);
+//            }
+        }
+
         public double calculateShooterPower(double distance) {
 //            double x = distance;
             if (distance > 160) {
@@ -371,7 +374,7 @@ public class RobotNew {
         public static double EXTERNAL_GEAR_RATIO = 10;
         public static double ENCODER_TICKS_PER_REV = 145.1;
         public static double MINPOWER = .15;
-        public static double TURRETSTARTINGOFFSET = 2; // NEEDS TO CHANGE
+        public static double TURRETSTARTINGOFFSET = 2;
 
         private PIDController pid;
         public static double p = .8, i = 0, d = 0.01;
@@ -409,8 +412,7 @@ public class RobotNew {
             double finalTarget = Math.max(0, Math.min(correctedTarget, 330 - 5));
             targetTicks = degreeToTicks(finalTarget);
             turret.setTargetPosition(degreeToTicks(finalTarget));
-            turret.setPower(.8);
-
+            turret.setPower(1);
         }
 
         public double getLimeError(boolean blue) {
@@ -422,7 +424,7 @@ public class RobotNew {
                 if (blue) {
                     return result.getTx() - 3;
                 } else {
-                    return result.getTx() + 2 ;
+                    return result.getTx() - 3 ;
                 }
             } else {
                 return 0;
@@ -446,11 +448,11 @@ public class RobotNew {
             return (ticks / TICKS_PER_DEGREE);
         }
 
-        private double getRelativeTurretPose() {
+        public double getRelativeTurretPose() {
             return ticksToDegree(turret.getCurrentPosition()) + TURRETSTARTINGOFFSET;
         }
 
-        public double getCorrectedTurretPose(double heading) {
+        public double getGlobalTurretPose(double heading) {
             return getRelativeTurretPose() + (heading);
         }
 

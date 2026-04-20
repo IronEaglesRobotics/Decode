@@ -255,7 +255,7 @@ public class FarAutoStack extends OpMode {
 //        robot.getIntake().intake();
         distance = robot.getGoalDistance(robot.getFollower().getPose().getX(), robot.getFollower().getPose().getY(), config.getGoalPose().getX(), config.getGoalPose().getY());
 
-        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance-2);
+        RobotNew.Shooter.Metrics result = getInterpolatedValue(distance+1);
         power = result.y1;
         hood = result.z;
         robot.getShooter().setShot(power, hood);
@@ -264,7 +264,7 @@ public class FarAutoStack extends OpMode {
         if (!preloads) {
             robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), config.getStartPose().getX(), config.getStartPose().getY()), Math.toDegrees(config.getStartPose().getHeading()));
         } else {
-            robot.getTurret().aim(robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), config.getScorePose().getX(), config.getScorePose().getY()), Math.toDegrees(config.getScorePose().getHeading()));
+            robot.getTurret().aim(3+robot.getTurret().calculateAngle(config.getGoalPose().getX(), config.getGoalPose().getY(), config.getScorePose().getX(), config.getScorePose().getY()), Math.toDegrees(config.getScorePose().getHeading()));
         }
         runAuto();
 
