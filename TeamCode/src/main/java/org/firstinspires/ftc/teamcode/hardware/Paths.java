@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.hardware;
 
 import com.pedropathing.geometry.Pose;
 
-import org.firstinspires.ftc.teamcode.opModes.Auto;
-
 public class Paths {
     public Pose Path1;
     public Pose Path1Ex;

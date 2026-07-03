@@ -33,7 +33,7 @@ public class Constants {
     public static double centripetalScaling = 0;
 
     public static Follower createFollower(HardwareMap hardwareMap) {
-        followerConstants.setMass(15.4221);
+        followerConstants.setMass(11.3);
 //        followerConstants.setCoefficientsDrivePIDF(driveCoefficients);
 //        followerConstants.setCoefficientsHeadingPIDF(headingCoefficients);
 //        followerConstants.setCoefficientsTranslationalPIDF(translationalCoefficients);
