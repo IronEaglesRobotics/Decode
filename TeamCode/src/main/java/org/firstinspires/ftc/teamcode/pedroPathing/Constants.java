@@ -37,8 +37,8 @@ public class Constants {
 //        followerConstants.setCoefficientsDrivePIDF(driveCoefficients);
 //        followerConstants.setCoefficientsHeadingPIDF(headingCoefficients);
 //        followerConstants.setCoefficientsTranslationalPIDF(translationalCoefficients);
-        followerConstants.forwardZeroPowerAcceleration(-54.45);
-        followerConstants.lateralZeroPowerAcceleration(-91.61);
+        followerConstants.forwardZeroPowerAcceleration(-42.85);
+        followerConstants.lateralZeroPowerAcceleration(-68.84);
         followerConstants.setCentripetalScaling(0.0002);
         return new FollowerBuilder(followerConstants,hardwareMap)
                 .pathConstraints(pathConstraints)
@@ -54,17 +54,17 @@ public class Constants {
             .leftFrontMotorName("lf")
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(51.79)
-            .yVelocity(51.05)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .xVelocity(56.69)
+            .yVelocity(53.37)
             .useBrakeModeInTeleOp(true);
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(14.21/25.4)
-            .strafePodX(26.5/25.4)
-            .distanceUnit(DistanceUnit.INCH)
+            .forwardPodY(17.76)
+            .strafePodX(-91.4)
+            .distanceUnit(DistanceUnit.MM)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 }

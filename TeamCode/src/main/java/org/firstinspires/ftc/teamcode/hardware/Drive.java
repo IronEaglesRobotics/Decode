@@ -38,6 +38,10 @@ public class Drive extends SubsystemBase {
         follower.startTeleopDrive(true);
     }
 
+    public void setPose(Pose pose){
+        follower.setPose(pose);
+    }
+
     public FollowPathCommand pathCommand(PathChain paths) {
         return new FollowPathCommand(follower, paths);
     }
